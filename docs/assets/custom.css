@@ -1,0 +1,65 @@
+/* Hide the redundant project-name link in the sidebar nav —
+   the "Home" nav item already serves this purpose. */
+.tsd-navigation > a[href$="modules.html"] {
+  display: none;
+}
+
+/* House icon SVGs — identical except stroke color. */
+/* prettier-ignore */
+#tsd-nav-container {
+  --home-icon-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='3 3.5 18 17'%3E%3Cpath stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m5 12.5 6.159-6.159a1.126 1.126 0 0 1 1.591 0L18.909 12.5M6.5 11v6.375c0 .621.504 1.125 1.125 1.125h2.625v-3.375c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125V18.5h2.625c.621 0 1.125-.504 1.125-1.125V11'/%3E%3C/svg%3E");
+  --home-icon-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='3 3.5 18 17'%3E%3Cpath stroke='%23fff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='m5 12.5 6.159-6.159a1.126 1.126 0 0 1 1.591 0L18.909 12.5M6.5 11v6.375c0 .621.504 1.125 1.125 1.125h2.625v-3.375c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125V18.5h2.625c.621 0 1.125-.504 1.125-1.125V11'/%3E%3C/svg%3E");
+}
+
+/* Add a house icon before the "Home" nav item, styled to match
+   TypeDoc's folder icon (rounded rect border + outline icon inside).
+   CSS border/background respond to theme via var(). The house SVG uses
+   hardcoded stroke colors since CSS var() doesn't work inside data URIs. */
+#tsd-nav-container > li:first-child > a::before {
+  content: "";
+  display: inline-block;
+  box-sizing: border-box;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  margin-right: 0.5rem;
+  vertical-align: -0.25em;
+  border: 1.25px solid var(--color-document);
+  border-radius: 25%;
+  background-color: var(--color-icon-background);
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+/* OS preference (default): follow prefers-color-scheme */
+@media (prefers-color-scheme: light) {
+  #tsd-nav-container > li:first-child > a::before {
+    background-image: var(--home-icon-light);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  #tsd-nav-container > li:first-child > a::before {
+    background-image: var(--home-icon-dark);
+  }
+}
+
+/* Explicit theme overrides */
+:root[data-theme="light"] #tsd-nav-container > li:first-child > a::before {
+  background-image: var(--home-icon-light);
+}
+:root[data-theme="dark"] #tsd-nav-container > li:first-child > a::before {
+  background-image: var(--home-icon-dark);
+}
+
+/* At the middle breakpoint (770px–1199px), hide the page menu (Settings +
+   "On This Page") so only the nav tree shows in the left sidebar. These
+   sections reappear at >= 1200px in their own right-side column.
+
+   I tried to make the hamburger menu work at this breakpoint, but couldn't
+   get this hybrid of the other two breakpoints to work properly. Not ideal,
+   but the default behavior looks atrocious at this breakpoint. */
+@media (min-width: 770px) and (max-width: 1199px) {
+  .page-menu {
+    display: none;
+  }
+}

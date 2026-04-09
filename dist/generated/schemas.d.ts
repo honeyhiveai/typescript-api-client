@@ -748,6 +748,22 @@ export type PostModelEventBatchRequest = {
     };
 };
 /** @inline */
+/** @description Query parameters for GET /events */
+export type GetEventsQuery = {
+    dateRange?: DateRange;
+    filters?: FiltersArray & unknown;
+    /** @description Fields to include in the response */
+    projections?: string[];
+    /** @description If true, skip result ordering for faster queries */
+    ignore_order?: boolean;
+    /** @description Maximum number of results to return */
+    limit?: number;
+    /** @description Page number for pagination */
+    page?: number;
+    /** @description Filter by evaluation/experiment run ID */
+    evaluation_id?: string;
+};
+/** @inline */
 /** @description Date range filter */
 export type DateRange = RelativeDateRange | AbsoluteDateRange;
 /** @inline */
@@ -774,6 +790,7 @@ export type PostEventResponse = {
     success: boolean;
     event_id?: string;
 };
+/** @inline */
 export type GetEventsResponse = {
     events: unknown[];
     totalEvents: number;
@@ -1802,27 +1819,6 @@ export type GetSessionPath = {
 export type DeleteSessionPath = {
     /** @description Session ID (UUIDv4) */
     session_id: string;
-};
-export type GetEventsQuery = {
-    /** @description Date range filter (ISO string or object with $gte/$lte) */
-    dateRange?: string | {
-        /** Format: date-time */
-        $gte?: string;
-        /** Format: date-time */
-        $lte?: string;
-    };
-    /** @description Array of filter objects or JSON string */
-    filters?: Record<string, never>[] | string;
-    /** @description Fields to include in response (array or JSON string) */
-    projections?: string[] | string;
-    /** @description Whether to ignore ordering */
-    ignore_order?: boolean | string;
-    /** @description Maximum number of results (default 1000) */
-    limit?: number | string;
-    /** @description Page number (default 1) */
-    page?: number | string;
-    /** @description Filter by evaluation ID */
-    evaluation_id?: string;
 };
 export type GetEventsChartQuery = {
     /** @description Date range filter (ISO string or object with $gte/$lte) */

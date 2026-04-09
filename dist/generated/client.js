@@ -1,4 +1,4 @@
-// AUTO-GENERATED — do not edit manually. Run `pnpm generate:client` to regenerate.
+// AUTO-GENERATED — do not edit manually. Run `pnpm generate` to regenerate.
 import { createApiClient, unwrap } from '../util.js';
 /** @inline */
 class SessionsNamespace {
@@ -11,7 +11,7 @@ class SessionsNamespace {
      *
      * Start a new session. The request body wraps the session event object under the `session` key, matching the pattern used by POST /events.
      */
-    startSession(options) {
+    start(options) {
         return unwrap(this.#client.POST('/session/start', { body: options.body }));
     }
     /**
@@ -19,7 +19,7 @@ class SessionsNamespace {
      *
      * Add trace events to an existing session. The field is named `logs` for legacy compatibility with the Go ingestion handler.
      */
-    addSessionTraces(options) {
+    addTraces(options) {
         return unwrap(this.#client.POST('/session/{session_id}/traces', {
             params: { path: options.path },
             body: options.body,
@@ -30,7 +30,7 @@ class SessionsNamespace {
      *
      * Retrieve a complete session event tree including all nested events and metadata
      */
-    getSession(options) {
+    get(options) {
         return unwrap(this.#client.GET('/v1/session/{session_id}', { params: { path: options.path } }));
     }
     /**
@@ -38,7 +38,7 @@ class SessionsNamespace {
      *
      * Delete all events associated with the given session ID from both events and aggregates tables
      */
-    deleteSession(options) {
+    delete(options) {
         return unwrap(this.#client.DELETE('/v1/session/{session_id}', { params: { path: options.path } }));
     }
 }
@@ -76,7 +76,7 @@ class EventsNamespace {
      * - `feedback` (object) — Feedback data (e.g. ratings, ground truth).
      * - `user_properties` (object) — User properties associated with the event.
      */
-    createEvent(options) {
+    create(options) {
         return unwrap(this.#client.POST('/events', { body: options.body }));
     }
     /**
@@ -84,23 +84,15 @@ class EventsNamespace {
      *
      * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. The event_id field is required to identify the event to update.
      */
-    updateEvent(options) {
+    update(options) {
         return unwrap(this.#client.PUT('/events', { body: options.body }));
-    }
-    /**
-     * Query events with filters and projections
-     *
-     * Retrieve events with optional filtering, projections, and pagination
-     */
-    getEvents(options) {
-        return unwrap(this.#client.GET('/v1/events', { params: { query: options?.query } }));
     }
     /**
      * Get charting data for events
      *
      * Retrieve aggregated chart data for events with optional grouping and bucketing
      */
-    getEventsChart(options) {
+    getChart(options) {
         return unwrap(this.#client.GET('/v1/events/chart', { params: { query: options?.query } }));
     }
     /**
@@ -108,7 +100,7 @@ class EventsNamespace {
      *
      * Retrieve all nested events for a specific session ID. The `id` parameter is interpreted as a session_id for this operation.
      */
-    getEventsBySessionId(options) {
+    getBySessionId(options) {
         return unwrap(this.#client.GET('/v1/events/{id}', { params: { path: options.path } }));
     }
     /**
@@ -116,7 +108,7 @@ class EventsNamespace {
      *
      * Delete a specific event by event ID. The `id` parameter is interpreted as an event_id for this operation.
      */
-    deleteEvent(options) {
+    delete(options) {
         return unwrap(this.#client.DELETE('/v1/events/{id}', { params: { path: options.path } }));
     }
     /**
@@ -124,7 +116,7 @@ class EventsNamespace {
      *
      * Export events via POST with filtering, projections, and pagination. This is the primary method for retrieving events from HoneyHive.
      */
-    exportEvents(options) {
+    export(options) {
         return unwrap(this.#client.POST('/v1/events/export', { body: options.body }));
     }
     /**
@@ -132,7 +124,7 @@ class EventsNamespace {
      *
      * Create a model event. The event_type is automatically set to 'model'. Please refer to our instrumentation guide for detailed information.
      */
-    createModelEvent(options) {
+    createModel(options) {
         return unwrap(this.#client.POST('/events/model', { body: options.body }));
     }
     /**
@@ -140,7 +132,7 @@ class EventsNamespace {
      *
      * Create multiple events in a single request. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
      */
-    createEventBatch(options) {
+    createBatch(options) {
         return unwrap(this.#client.POST('/events/batch', { body: options.body }));
     }
     /**
@@ -148,7 +140,7 @@ class EventsNamespace {
      *
      * Create multiple model events in a single request. The event_type is automatically set to 'model' for all events. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
      */
-    createModelEventBatch(options) {
+    createModelBatch(options) {
         return unwrap(this.#client.POST('/events/model/batch', { body: options.body }));
     }
 }
@@ -163,7 +155,7 @@ class MetricsNamespace {
      *
      * Retrieve a list of all metrics
      */
-    getMetrics(options) {
+    list(options) {
         return unwrap(this.#client.GET('/v1/metrics', { params: { query: options?.query } }));
     }
     /**
@@ -171,7 +163,7 @@ class MetricsNamespace {
      *
      * Add a new metric
      */
-    createMetric(options) {
+    create(options) {
         return unwrap(this.#client.POST('/v1/metrics', { body: options.body }));
     }
     /**
@@ -179,7 +171,7 @@ class MetricsNamespace {
      *
      * Edit a metric
      */
-    updateMetric(options) {
+    update(options) {
         return unwrap(this.#client.PUT('/v1/metrics', { body: options.body }));
     }
     /**
@@ -187,7 +179,7 @@ class MetricsNamespace {
      *
      * Remove a metric
      */
-    deleteMetric(options) {
+    delete(options) {
         return unwrap(this.#client.DELETE('/v1/metrics', { params: { query: options.query } }));
     }
     /**
@@ -195,7 +187,7 @@ class MetricsNamespace {
      *
      * Execute a metric on a specific event
      */
-    runMetric(options) {
+    run(options) {
         return unwrap(this.#client.POST('/v1/metrics/run_metric', { body: options.body }));
     }
 }
@@ -210,7 +202,7 @@ class DatapointsNamespace {
      *
      * Retrieve datapoints, optionally filtered by a list of datapoint IDs or dataset name.
      */
-    getDatapoints(options) {
+    list(options) {
         return unwrap(this.#client.GET('/v1/datapoints', { params: { query: options?.query } }));
     }
     /**
@@ -218,7 +210,7 @@ class DatapointsNamespace {
      *
      * Create a single datapoint with inputs, history, ground truth, and metadata.
      */
-    createDatapoint(options) {
+    create(options) {
         return unwrap(this.#client.POST('/v1/datapoints', { body: options.body }));
     }
     /**
@@ -226,7 +218,7 @@ class DatapointsNamespace {
      *
      * Create multiple datapoints from events using field mappings and optional filters.
      */
-    batchCreateDatapoints(options) {
+    createBatch(options) {
         return unwrap(this.#client.POST('/v1/datapoints/batch', { body: options.body }));
     }
     /**
@@ -234,7 +226,7 @@ class DatapointsNamespace {
      *
      * Get a single datapoint by its unique identifier.
      */
-    getDatapoint(options) {
+    get(options) {
         return unwrap(this.#client.GET('/v1/datapoints/{datapoint_id}', { params: { path: options.path } }));
     }
     /**
@@ -242,7 +234,7 @@ class DatapointsNamespace {
      *
      * Update fields on an existing datapoint. Only the provided fields are modified.
      */
-    updateDatapoint(options) {
+    update(options) {
         return unwrap(this.#client.PUT('/v1/datapoints/{datapoint_id}', {
             params: { path: options.path },
             body: options.body,
@@ -253,7 +245,7 @@ class DatapointsNamespace {
      *
      * Permanently delete a datapoint by its unique identifier.
      */
-    deleteDatapoint(options) {
+    delete(options) {
         return unwrap(this.#client.DELETE('/v1/datapoints/{datapoint_id}', { params: { path: options.path } }));
     }
 }
@@ -268,7 +260,7 @@ class DatasetsNamespace {
      *
      * Retrieve datasets, optionally filtered by dataset ID or name.
      */
-    getDatasets(options) {
+    list(options) {
         return unwrap(this.#client.GET('/v1/datasets', { params: { query: options?.query } }));
     }
     /**
@@ -276,7 +268,7 @@ class DatasetsNamespace {
      *
      * Create a new dataset with an optional name, description, and initial set of datapoint IDs.
      */
-    createDataset(options) {
+    create(options) {
         return unwrap(this.#client.POST('/v1/datasets', { body: options.body }));
     }
     /**
@@ -284,7 +276,7 @@ class DatasetsNamespace {
      *
      * Update a dataset's name, description, or list of datapoint IDs.
      */
-    updateDataset(options) {
+    update(options) {
         return unwrap(this.#client.PUT('/v1/datasets', { body: options.body }));
     }
     /**
@@ -292,7 +284,7 @@ class DatasetsNamespace {
      *
      * Permanently delete a dataset by its unique identifier.
      */
-    deleteDataset(options) {
+    delete(options) {
         return unwrap(this.#client.DELETE('/v1/datasets', { params: { query: options.query } }));
     }
     /**
@@ -328,7 +320,7 @@ class ExperimentsNamespace {
      *
      * Retrieve the schema and metadata for experiment runs
      */
-    getExperimentRunsSchema(options) {
+    getRunsSchema(options) {
         return unwrap(this.#client.GET('/v1/runs/schema', { params: { query: options?.query } }));
     }
     /**
@@ -336,7 +328,7 @@ class ExperimentsNamespace {
      *
      * List experiment runs with optional filtering by dataset, status, name, date range, and specific run IDs. Results are paginated and sortable.
      */
-    getRuns(options) {
+    listRuns(options) {
         return unwrap(this.#client.GET('/v1/runs', { params: { query: options?.query } }));
     }
     /**
@@ -376,7 +368,7 @@ class ExperimentsNamespace {
      *
      * Retrieve event metrics from ClickHouse for a specific experiment run
      */
-    getExperimentRunMetrics(options) {
+    getRunMetrics(options) {
         return unwrap(this.#client.GET('/v1/runs/{run_id}/metrics', {
             params: { path: options.path, query: options.query },
         }));
@@ -386,7 +378,7 @@ class ExperimentsNamespace {
      *
      * Compute evaluation summary for an experiment run including pass/fail status, metrics, and datapoints
      */
-    getExperimentResult(options) {
+    getResult(options) {
         return unwrap(this.#client.GET('/v1/runs/{run_id}/result', {
             params: { path: options.path, query: options.query },
         }));
@@ -396,7 +388,7 @@ class ExperimentsNamespace {
      *
      * Compare metrics and results between two experiment runs
      */
-    getExperimentComparison(options) {
+    compareRuns(options) {
         return unwrap(this.#client.GET('/v1/runs/{new_run_id}/compare-with/{old_run_id}', {
             params: { path: options.path, query: options.query },
         }));
@@ -406,7 +398,7 @@ class ExperimentsNamespace {
      *
      * Retrieve and compare events between two experiment runs for detailed analysis
      */
-    getExperimentCompareEvents(options) {
+    compareRunEvents(options) {
         return unwrap(this.#client.GET('/v1/runs/compare/events', { params: { query: options.query } }));
     }
 }
@@ -421,7 +413,7 @@ class ConfigurationsNamespace {
      *
      * List configurations with optional filtering by name, environment, and tags.
      */
-    getConfigurations(options) {
+    list(options) {
         return unwrap(this.#client.GET('/v1/configurations', { params: { query: options?.query } }));
     }
     /**
@@ -429,7 +421,7 @@ class ConfigurationsNamespace {
      *
      * Create a new LLM or pipeline configuration with provider, parameters, and environment settings.
      */
-    createConfiguration(options) {
+    create(options) {
         return unwrap(this.#client.POST('/v1/configurations', { body: options.body }));
     }
     /**
@@ -437,7 +429,7 @@ class ConfigurationsNamespace {
      *
      * Update an existing configuration's name, provider, parameters, environment, or tags.
      */
-    updateConfiguration(options) {
+    update(options) {
         return unwrap(this.#client.PUT('/v1/configurations/{configId}', {
             params: { path: options.path },
             body: options.body,
@@ -448,7 +440,7 @@ class ConfigurationsNamespace {
      *
      * Permanently delete a configuration by its unique identifier.
      */
-    deleteConfiguration(options) {
+    delete(options) {
         return unwrap(this.#client.DELETE('/v1/configurations/{configId}', { params: { path: options.path } }));
     }
 }

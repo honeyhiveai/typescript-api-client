@@ -1,4 +1,4 @@
-// AUTO-GENERATED — do not edit manually. Run `pnpm generate:client` to regenerate.
+// AUTO-GENERATED — do not edit manually. Run `pnpm generate` to regenerate.
 
 import { type paths } from './types.js';
 import {
@@ -8,7 +8,6 @@ import {
   type DeleteSessionOptions,
   type CreateEventOptions,
   type UpdateEventOptions,
-  type GetEventsOptions,
   type GetEventsChartOptions,
   type GetEventsBySessionIdOptions,
   type DeleteEventOptions,
@@ -52,7 +51,6 @@ import {
   type GetSessionResponse,
   type DeleteSessionResponse,
   type CreateEventResponse,
-  type GetEventsResponse,
   type GetEventsChartResponse,
   type GetEventsBySessionIdResponse,
   type DeleteEventResponse,
@@ -107,7 +105,7 @@ class SessionsNamespace {
    *
    * Start a new session. The request body wraps the session event object under the `session` key, matching the pattern used by POST /events.
    */
-  public startSession(options: StartSessionOptions): Promise<StartSessionResponse> {
+  public start(options: StartSessionOptions): Promise<StartSessionResponse> {
     return unwrap(this.#client.POST('/session/start', { body: options.body }));
   }
 
@@ -116,7 +114,7 @@ class SessionsNamespace {
    *
    * Add trace events to an existing session. The field is named `logs` for legacy compatibility with the Go ingestion handler.
    */
-  public addSessionTraces(options: AddSessionTracesOptions): Promise<AddSessionTracesResponse> {
+  public addTraces(options: AddSessionTracesOptions): Promise<AddSessionTracesResponse> {
     return unwrap(
       this.#client.POST('/session/{session_id}/traces', {
         params: { path: options.path },
@@ -130,7 +128,7 @@ class SessionsNamespace {
    *
    * Retrieve a complete session event tree including all nested events and metadata
    */
-  public getSession(options: GetSessionOptions): Promise<GetSessionResponse> {
+  public get(options: GetSessionOptions): Promise<GetSessionResponse> {
     return unwrap(this.#client.GET('/v1/session/{session_id}', { params: { path: options.path } }));
   }
 
@@ -139,7 +137,7 @@ class SessionsNamespace {
    *
    * Delete all events associated with the given session ID from both events and aggregates tables
    */
-  public deleteSession(options: DeleteSessionOptions): Promise<DeleteSessionResponse> {
+  public delete(options: DeleteSessionOptions): Promise<DeleteSessionResponse> {
     return unwrap(
       this.#client.DELETE('/v1/session/{session_id}', { params: { path: options.path } }),
     );
@@ -182,7 +180,7 @@ class EventsNamespace {
    * - `feedback` (object) — Feedback data (e.g. ratings, ground truth).
    * - `user_properties` (object) — User properties associated with the event.
    */
-  public createEvent(options: CreateEventOptions): Promise<CreateEventResponse> {
+  public create(options: CreateEventOptions): Promise<CreateEventResponse> {
     return unwrap(this.#client.POST('/events', { body: options.body }));
   }
 
@@ -191,17 +189,8 @@ class EventsNamespace {
    *
    * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. The event_id field is required to identify the event to update.
    */
-  public updateEvent(options: UpdateEventOptions): Promise<void> {
+  public update(options: UpdateEventOptions): Promise<void> {
     return unwrap(this.#client.PUT('/events', { body: options.body }));
-  }
-
-  /**
-   * Query events with filters and projections
-   *
-   * Retrieve events with optional filtering, projections, and pagination
-   */
-  public getEvents(options?: GetEventsOptions): Promise<GetEventsResponse> {
-    return unwrap(this.#client.GET('/v1/events', { params: { query: options?.query } }));
   }
 
   /**
@@ -209,7 +198,7 @@ class EventsNamespace {
    *
    * Retrieve aggregated chart data for events with optional grouping and bucketing
    */
-  public getEventsChart(options?: GetEventsChartOptions): Promise<GetEventsChartResponse> {
+  public getChart(options?: GetEventsChartOptions): Promise<GetEventsChartResponse> {
     return unwrap(this.#client.GET('/v1/events/chart', { params: { query: options?.query } }));
   }
 
@@ -218,7 +207,7 @@ class EventsNamespace {
    *
    * Retrieve all nested events for a specific session ID. The `id` parameter is interpreted as a session_id for this operation.
    */
-  public getEventsBySessionId(
+  public getBySessionId(
     options: GetEventsBySessionIdOptions,
   ): Promise<GetEventsBySessionIdResponse> {
     return unwrap(this.#client.GET('/v1/events/{id}', { params: { path: options.path } }));
@@ -229,7 +218,7 @@ class EventsNamespace {
    *
    * Delete a specific event by event ID. The `id` parameter is interpreted as an event_id for this operation.
    */
-  public deleteEvent(options: DeleteEventOptions): Promise<DeleteEventResponse> {
+  public delete(options: DeleteEventOptions): Promise<DeleteEventResponse> {
     return unwrap(this.#client.DELETE('/v1/events/{id}', { params: { path: options.path } }));
   }
 
@@ -238,7 +227,7 @@ class EventsNamespace {
    *
    * Export events via POST with filtering, projections, and pagination. This is the primary method for retrieving events from HoneyHive.
    */
-  public exportEvents(options: ExportEventsOptions): Promise<ExportEventsResponse> {
+  public export(options: ExportEventsOptions): Promise<ExportEventsResponse> {
     return unwrap(this.#client.POST('/v1/events/export', { body: options.body }));
   }
 
@@ -247,7 +236,7 @@ class EventsNamespace {
    *
    * Create a model event. The event_type is automatically set to 'model'. Please refer to our instrumentation guide for detailed information.
    */
-  public createModelEvent(options: CreateModelEventOptions): Promise<CreateModelEventResponse> {
+  public createModel(options: CreateModelEventOptions): Promise<CreateModelEventResponse> {
     return unwrap(this.#client.POST('/events/model', { body: options.body }));
   }
 
@@ -256,7 +245,7 @@ class EventsNamespace {
    *
    * Create multiple events in a single request. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
    */
-  public createEventBatch(options: CreateEventBatchOptions): Promise<CreateEventBatchResponse> {
+  public createBatch(options: CreateEventBatchOptions): Promise<CreateEventBatchResponse> {
     return unwrap(this.#client.POST('/events/batch', { body: options.body }));
   }
 
@@ -265,7 +254,7 @@ class EventsNamespace {
    *
    * Create multiple model events in a single request. The event_type is automatically set to 'model' for all events. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
    */
-  public createModelEventBatch(
+  public createModelBatch(
     options: CreateModelEventBatchOptions,
   ): Promise<CreateModelEventBatchResponse> {
     return unwrap(this.#client.POST('/events/model/batch', { body: options.body }));
@@ -285,7 +274,7 @@ class MetricsNamespace {
    *
    * Retrieve a list of all metrics
    */
-  public getMetrics(options?: GetMetricsOptions): Promise<GetMetricsResponse> {
+  public list(options?: GetMetricsOptions): Promise<GetMetricsResponse> {
     return unwrap(this.#client.GET('/v1/metrics', { params: { query: options?.query } }));
   }
 
@@ -294,7 +283,7 @@ class MetricsNamespace {
    *
    * Add a new metric
    */
-  public createMetric(options: CreateMetricOptions): Promise<CreateMetricResponse> {
+  public create(options: CreateMetricOptions): Promise<CreateMetricResponse> {
     return unwrap(this.#client.POST('/v1/metrics', { body: options.body }));
   }
 
@@ -303,7 +292,7 @@ class MetricsNamespace {
    *
    * Edit a metric
    */
-  public updateMetric(options: UpdateMetricOptions): Promise<UpdateMetricResponse> {
+  public update(options: UpdateMetricOptions): Promise<UpdateMetricResponse> {
     return unwrap(this.#client.PUT('/v1/metrics', { body: options.body }));
   }
 
@@ -312,7 +301,7 @@ class MetricsNamespace {
    *
    * Remove a metric
    */
-  public deleteMetric(options: DeleteMetricOptions): Promise<DeleteMetricResponse> {
+  public delete(options: DeleteMetricOptions): Promise<DeleteMetricResponse> {
     return unwrap(this.#client.DELETE('/v1/metrics', { params: { query: options.query } }));
   }
 
@@ -321,7 +310,7 @@ class MetricsNamespace {
    *
    * Execute a metric on a specific event
    */
-  public runMetric(options: RunMetricOptions): Promise<RunMetricResponse> {
+  public run(options: RunMetricOptions): Promise<RunMetricResponse> {
     return unwrap(this.#client.POST('/v1/metrics/run_metric', { body: options.body }));
   }
 }
@@ -339,7 +328,7 @@ class DatapointsNamespace {
    *
    * Retrieve datapoints, optionally filtered by a list of datapoint IDs or dataset name.
    */
-  public getDatapoints(options?: GetDatapointsOptions): Promise<GetDatapointsResponse> {
+  public list(options?: GetDatapointsOptions): Promise<GetDatapointsResponse> {
     return unwrap(this.#client.GET('/v1/datapoints', { params: { query: options?.query } }));
   }
 
@@ -348,7 +337,7 @@ class DatapointsNamespace {
    *
    * Create a single datapoint with inputs, history, ground truth, and metadata.
    */
-  public createDatapoint(options: CreateDatapointOptions): Promise<CreateDatapointResponse> {
+  public create(options: CreateDatapointOptions): Promise<CreateDatapointResponse> {
     return unwrap(this.#client.POST('/v1/datapoints', { body: options.body }));
   }
 
@@ -357,7 +346,7 @@ class DatapointsNamespace {
    *
    * Create multiple datapoints from events using field mappings and optional filters.
    */
-  public batchCreateDatapoints(
+  public createBatch(
     options: BatchCreateDatapointsOptions,
   ): Promise<BatchCreateDatapointsResponse> {
     return unwrap(this.#client.POST('/v1/datapoints/batch', { body: options.body }));
@@ -368,7 +357,7 @@ class DatapointsNamespace {
    *
    * Get a single datapoint by its unique identifier.
    */
-  public getDatapoint(options: GetDatapointOptions): Promise<GetDatapointResponse> {
+  public get(options: GetDatapointOptions): Promise<GetDatapointResponse> {
     return unwrap(
       this.#client.GET('/v1/datapoints/{datapoint_id}', { params: { path: options.path } }),
     );
@@ -379,7 +368,7 @@ class DatapointsNamespace {
    *
    * Update fields on an existing datapoint. Only the provided fields are modified.
    */
-  public updateDatapoint(options: UpdateDatapointOptions): Promise<UpdateDatapointResponse> {
+  public update(options: UpdateDatapointOptions): Promise<UpdateDatapointResponse> {
     return unwrap(
       this.#client.PUT('/v1/datapoints/{datapoint_id}', {
         params: { path: options.path },
@@ -393,7 +382,7 @@ class DatapointsNamespace {
    *
    * Permanently delete a datapoint by its unique identifier.
    */
-  public deleteDatapoint(options: DeleteDatapointOptions): Promise<DeleteDatapointResponse> {
+  public delete(options: DeleteDatapointOptions): Promise<DeleteDatapointResponse> {
     return unwrap(
       this.#client.DELETE('/v1/datapoints/{datapoint_id}', { params: { path: options.path } }),
     );
@@ -413,7 +402,7 @@ class DatasetsNamespace {
    *
    * Retrieve datasets, optionally filtered by dataset ID or name.
    */
-  public getDatasets(options?: GetDatasetsOptions): Promise<GetDatasetsResponse> {
+  public list(options?: GetDatasetsOptions): Promise<GetDatasetsResponse> {
     return unwrap(this.#client.GET('/v1/datasets', { params: { query: options?.query } }));
   }
 
@@ -422,7 +411,7 @@ class DatasetsNamespace {
    *
    * Create a new dataset with an optional name, description, and initial set of datapoint IDs.
    */
-  public createDataset(options: CreateDatasetOptions): Promise<CreateDatasetResponse> {
+  public create(options: CreateDatasetOptions): Promise<CreateDatasetResponse> {
     return unwrap(this.#client.POST('/v1/datasets', { body: options.body }));
   }
 
@@ -431,7 +420,7 @@ class DatasetsNamespace {
    *
    * Update a dataset's name, description, or list of datapoint IDs.
    */
-  public updateDataset(options: UpdateDatasetOptions): Promise<UpdateDatasetResponse> {
+  public update(options: UpdateDatasetOptions): Promise<UpdateDatasetResponse> {
     return unwrap(this.#client.PUT('/v1/datasets', { body: options.body }));
   }
 
@@ -440,7 +429,7 @@ class DatasetsNamespace {
    *
    * Permanently delete a dataset by its unique identifier.
    */
-  public deleteDataset(options: DeleteDatasetOptions): Promise<DeleteDatasetResponse> {
+  public delete(options: DeleteDatasetOptions): Promise<DeleteDatasetResponse> {
     return unwrap(this.#client.DELETE('/v1/datasets', { params: { query: options.query } }));
   }
 
@@ -485,7 +474,7 @@ class ExperimentsNamespace {
    *
    * Retrieve the schema and metadata for experiment runs
    */
-  public getExperimentRunsSchema(
+  public getRunsSchema(
     options?: GetExperimentRunsSchemaOptions,
   ): Promise<GetExperimentRunsSchemaResponse> {
     return unwrap(this.#client.GET('/v1/runs/schema', { params: { query: options?.query } }));
@@ -496,7 +485,7 @@ class ExperimentsNamespace {
    *
    * List experiment runs with optional filtering by dataset, status, name, date range, and specific run IDs. Results are paginated and sortable.
    */
-  public getRuns(options?: GetRunsOptions): Promise<GetRunsResponse> {
+  public listRuns(options?: GetRunsOptions): Promise<GetRunsResponse> {
     return unwrap(this.#client.GET('/v1/runs', { params: { query: options?.query } }));
   }
 
@@ -543,7 +532,7 @@ class ExperimentsNamespace {
    *
    * Retrieve event metrics from ClickHouse for a specific experiment run
    */
-  public getExperimentRunMetrics(
+  public getRunMetrics(
     options: GetExperimentRunMetricsOptions,
   ): Promise<GetExperimentRunMetricsResponse> {
     return unwrap(
@@ -558,9 +547,7 @@ class ExperimentsNamespace {
    *
    * Compute evaluation summary for an experiment run including pass/fail status, metrics, and datapoints
    */
-  public getExperimentResult(
-    options: GetExperimentResultOptions,
-  ): Promise<GetExperimentResultResponse> {
+  public getResult(options: GetExperimentResultOptions): Promise<GetExperimentResultResponse> {
     return unwrap(
       this.#client.GET('/v1/runs/{run_id}/result', {
         params: { path: options.path, query: options.query },
@@ -573,7 +560,7 @@ class ExperimentsNamespace {
    *
    * Compare metrics and results between two experiment runs
    */
-  public getExperimentComparison(
+  public compareRuns(
     options: GetExperimentComparisonOptions,
   ): Promise<GetExperimentComparisonResponse> {
     return unwrap(
@@ -588,7 +575,7 @@ class ExperimentsNamespace {
    *
    * Retrieve and compare events between two experiment runs for detailed analysis
    */
-  public getExperimentCompareEvents(
+  public compareRunEvents(
     options: GetExperimentCompareEventsOptions,
   ): Promise<GetExperimentCompareEventsResponse> {
     return unwrap(
@@ -610,7 +597,7 @@ class ConfigurationsNamespace {
    *
    * List configurations with optional filtering by name, environment, and tags.
    */
-  public getConfigurations(options?: GetConfigurationsOptions): Promise<GetConfigurationsResponse> {
+  public list(options?: GetConfigurationsOptions): Promise<GetConfigurationsResponse> {
     return unwrap(this.#client.GET('/v1/configurations', { params: { query: options?.query } }));
   }
 
@@ -619,9 +606,7 @@ class ConfigurationsNamespace {
    *
    * Create a new LLM or pipeline configuration with provider, parameters, and environment settings.
    */
-  public createConfiguration(
-    options: CreateConfigurationOptions,
-  ): Promise<CreateConfigurationResponse> {
+  public create(options: CreateConfigurationOptions): Promise<CreateConfigurationResponse> {
     return unwrap(this.#client.POST('/v1/configurations', { body: options.body }));
   }
 
@@ -630,9 +615,7 @@ class ConfigurationsNamespace {
    *
    * Update an existing configuration's name, provider, parameters, environment, or tags.
    */
-  public updateConfiguration(
-    options: UpdateConfigurationOptions,
-  ): Promise<UpdateConfigurationResponse> {
+  public update(options: UpdateConfigurationOptions): Promise<UpdateConfigurationResponse> {
     return unwrap(
       this.#client.PUT('/v1/configurations/{configId}', {
         params: { path: options.path },
@@ -646,9 +629,7 @@ class ConfigurationsNamespace {
    *
    * Permanently delete a configuration by its unique identifier.
    */
-  public deleteConfiguration(
-    options: DeleteConfigurationOptions,
-  ): Promise<DeleteConfigurationResponse> {
+  public delete(options: DeleteConfigurationOptions): Promise<DeleteConfigurationResponse> {
     return unwrap(
       this.#client.DELETE('/v1/configurations/{configId}', { params: { path: options.path } }),
     );

@@ -110,26 +110,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/v1/events': {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Query events with filters and projections
-         * @description Retrieve events with optional filtering, projections, and pagination
-         */
-        get: operations['getEvents'];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     '/v1/events/chart': {
         parameters: {
             query?: never;
@@ -2636,53 +2616,6 @@ export interface operations {
                 };
             };
             /** @description Bad request (invalid event data or missing required fields) */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getEvents: {
-        parameters: {
-            query?: {
-                /** @description Date range filter (ISO string or object with $gte/$lte) */
-                dateRange?: string | {
-                    /** Format: date-time */
-                    $gte?: string;
-                    /** Format: date-time */
-                    $lte?: string;
-                };
-                /** @description Array of filter objects or JSON string */
-                filters?: Record<string, never>[] | string;
-                /** @description Fields to include in response (array or JSON string) */
-                projections?: string[] | string;
-                /** @description Whether to ignore ordering */
-                ignore_order?: boolean | string;
-                /** @description Maximum number of results (default 1000) */
-                limit?: number | string;
-                /** @description Page number (default 1) */
-                page?: number | string;
-                /** @description Filter by evaluation ID */
-                evaluation_id?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Events retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['GetEventsResponse'];
-                };
-            };
-            /** @description Bad request (missing required scopes or invalid parameters) */
             400: {
                 headers: {
                     [name: string]: unknown;

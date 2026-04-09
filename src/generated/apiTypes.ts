@@ -1,4 +1,4 @@
-// AUTO-GENERATED — do not edit manually. Run `pnpm generate:client` to regenerate.
+// AUTO-GENERATED — do not edit manually. Run `pnpm generate` to regenerate.
 
 import {
   type StartSessionRequest,
@@ -40,7 +40,6 @@ import {
   type GetExperimentComparisonPath,
   type UpdateConfigurationPath,
   type DeleteConfigurationPath,
-  type GetEventsQuery,
   type GetEventsChartQuery,
   type GetMetricsQuery,
   type DeleteMetricQuery,
@@ -81,10 +80,6 @@ export type CreateEventOptions = {
 
 export type UpdateEventOptions = {
   body: UpdateEventRequest;
-};
-
-export type GetEventsOptions = {
-  query?: GetEventsQuery;
 };
 
 export type GetEventsChartOptions = {
@@ -269,7 +264,6 @@ export { type DeleteConfigurationPath };
 
 // ---- Query types ----
 
-export { type GetEventsQuery };
 export { type GetEventsChartQuery };
 export { type GetMetricsQuery };
 export { type DeleteMetricQuery };
@@ -315,7 +309,6 @@ export { type SessionTracesResponse as AddSessionTracesResponse } from './schema
 export { type GetSessionResponse } from './schemas.js';
 export { type DeleteSessionResponse } from './schemas.js';
 export { type PostEventResponse as CreateEventResponse } from './schemas.js';
-export { type GetEventsResponse } from './schemas.js';
 export { type GetEventsChartResponse } from './schemas.js';
 export { type GetEventsBySessionIdResponse } from './schemas.js';
 export { type DeleteEventResponse } from './schemas.js';

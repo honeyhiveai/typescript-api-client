@@ -1,4 +1,4 @@
-import { type StartSessionRequest, type AddSessionTracesRequest, type PostEventRequest as CreateEventRequest, type UpdateEventRequest, type GetEventsLegacyRequest as ExportEventsRequest, type PostModelEventRequest as CreateModelEventRequest, type PostEventBatchRequest as CreateEventBatchRequest, type PostModelEventBatchRequest as CreateModelEventBatchRequest, type CreateMetricRequest, type UpdateMetricRequest, type RunMetricRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type UpdateDatapointRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type AddDatapointsToDatasetRequest as AddDatapointsRequest, type PostExperimentRunRequest as CreateRunRequest, type PutExperimentRunRequest as UpdateRunRequest, type CreateConfigurationRequest, type UpdateConfigurationRequest, type AddSessionTracesPath, type GetSessionPath, type DeleteSessionPath, type GetEventsBySessionIdPath, type DeleteEventPath, type GetDatapointPath, type UpdateDatapointPath, type DeleteDatapointPath, type AddDatapointsPath, type RemoveDatapointPath, type GetRunPath, type UpdateRunPath, type DeleteRunPath, type GetExperimentRunMetricsPath, type GetExperimentResultPath, type GetExperimentComparisonPath, type UpdateConfigurationPath, type DeleteConfigurationPath, type GetEventsQuery, type GetEventsChartQuery, type GetMetricsQuery, type DeleteMetricQuery, type GetDatapointsQuery, type GetDatasetsQuery, type DeleteDatasetQuery, type GetExperimentRunsSchemaQuery, type GetRunsQuery, type GetExperimentRunMetricsQuery, type GetExperimentResultQuery, type GetExperimentComparisonQuery, type GetExperimentCompareEventsQuery, type GetConfigurationsQuery } from './schemas.js';
+import { type StartSessionRequest, type AddSessionTracesRequest, type PostEventRequest as CreateEventRequest, type UpdateEventRequest, type GetEventsLegacyRequest as ExportEventsRequest, type PostModelEventRequest as CreateModelEventRequest, type PostEventBatchRequest as CreateEventBatchRequest, type PostModelEventBatchRequest as CreateModelEventBatchRequest, type CreateMetricRequest, type UpdateMetricRequest, type RunMetricRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type UpdateDatapointRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type AddDatapointsToDatasetRequest as AddDatapointsRequest, type PostExperimentRunRequest as CreateRunRequest, type PutExperimentRunRequest as UpdateRunRequest, type CreateConfigurationRequest, type UpdateConfigurationRequest, type AddSessionTracesPath, type GetSessionPath, type DeleteSessionPath, type GetEventsBySessionIdPath, type DeleteEventPath, type GetDatapointPath, type UpdateDatapointPath, type DeleteDatapointPath, type AddDatapointsPath, type RemoveDatapointPath, type GetRunPath, type UpdateRunPath, type DeleteRunPath, type GetExperimentRunMetricsPath, type GetExperimentResultPath, type GetExperimentComparisonPath, type UpdateConfigurationPath, type DeleteConfigurationPath, type GetEventsChartQuery, type GetMetricsQuery, type DeleteMetricQuery, type GetDatapointsQuery, type GetDatasetsQuery, type DeleteDatasetQuery, type GetExperimentRunsSchemaQuery, type GetRunsQuery, type GetExperimentRunMetricsQuery, type GetExperimentResultQuery, type GetExperimentComparisonQuery, type GetExperimentCompareEventsQuery, type GetConfigurationsQuery } from './schemas.js';
 export type StartSessionOptions = {
     body: StartSessionRequest;
 };
@@ -17,9 +17,6 @@ export type CreateEventOptions = {
 };
 export type UpdateEventOptions = {
     body: UpdateEventRequest;
-};
-export type GetEventsOptions = {
-    query?: GetEventsQuery;
 };
 export type GetEventsChartOptions = {
     query?: GetEventsChartQuery;
@@ -160,7 +157,6 @@ export { type GetExperimentResultPath };
 export { type GetExperimentComparisonPath };
 export { type UpdateConfigurationPath };
 export { type DeleteConfigurationPath };
-export { type GetEventsQuery };
 export { type GetEventsChartQuery };
 export { type GetMetricsQuery };
 export { type DeleteMetricQuery };
@@ -200,7 +196,6 @@ export { type SessionTracesResponse as AddSessionTracesResponse } from './schema
 export { type GetSessionResponse } from './schemas.js';
 export { type DeleteSessionResponse } from './schemas.js';
 export { type PostEventResponse as CreateEventResponse } from './schemas.js';
-export { type GetEventsResponse } from './schemas.js';
 export { type GetEventsChartResponse } from './schemas.js';
 export { type GetEventsBySessionIdResponse } from './schemas.js';
 export { type DeleteEventResponse } from './schemas.js';

@@ -1,3 +1,10 @@
+# [2.0.0-rc3] - 2026-04-14
+
+## Changed
+- Updated dependencies
+- Updated to latest OpenAPI spec
+    - Note: changes to the SDK surface between release candidate versions will not be documented. See the published docs for details of the current spec
+
 # [2.0.0-rc2] - 2026-04-09
 
 ## Changed

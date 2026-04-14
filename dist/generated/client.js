@@ -25,22 +25,6 @@ class SessionsNamespace {
             body: options.body,
         }));
     }
-    /**
-     * Get session tree by session ID
-     *
-     * Retrieve a complete session event tree including all nested events and metadata
-     */
-    get(options) {
-        return unwrap(this.#client.GET('/v1/session/{session_id}', { params: { path: options.path } }));
-    }
-    /**
-     * Delete all events for a session
-     *
-     * Delete all events associated with the given session ID from both events and aggregates tables
-     */
-    delete(options) {
-        return unwrap(this.#client.DELETE('/v1/session/{session_id}', { params: { path: options.path } }));
-    }
 }
 /** @inline */
 class EventsNamespace {
@@ -86,30 +70,6 @@ class EventsNamespace {
      */
     update(options) {
         return unwrap(this.#client.PUT('/events', { body: options.body }));
-    }
-    /**
-     * Get charting data for events
-     *
-     * Retrieve aggregated chart data for events with optional grouping and bucketing
-     */
-    getChart(options) {
-        return unwrap(this.#client.GET('/v1/events/chart', { params: { query: options?.query } }));
-    }
-    /**
-     * Get nested events for a session
-     *
-     * Retrieve all nested events for a specific session ID. The `id` parameter is interpreted as a session_id for this operation.
-     */
-    getBySessionId(options) {
-        return unwrap(this.#client.GET('/v1/events/{id}', { params: { path: options.path } }));
-    }
-    /**
-     * Delete an event
-     *
-     * Delete a specific event by event ID. The `id` parameter is interpreted as an event_id for this operation.
-     */
-    delete(options) {
-        return unwrap(this.#client.DELETE('/v1/events/{id}', { params: { path: options.path } }));
     }
     /**
      * Retrieve events based on filters

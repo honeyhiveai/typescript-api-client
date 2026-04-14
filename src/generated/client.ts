@@ -4,13 +4,8 @@ import { type paths } from './types.js';
 import {
   type StartSessionOptions,
   type AddSessionTracesOptions,
-  type GetSessionOptions,
-  type DeleteSessionOptions,
   type CreateEventOptions,
   type UpdateEventOptions,
-  type GetEventsChartOptions,
-  type GetEventsBySessionIdOptions,
-  type DeleteEventOptions,
   type ExportEventsOptions,
   type CreateModelEventOptions,
   type CreateEventBatchOptions,
@@ -48,12 +43,7 @@ import {
   type DeleteConfigurationOptions,
   type StartSessionResponse,
   type AddSessionTracesResponse,
-  type GetSessionResponse,
-  type DeleteSessionResponse,
   type CreateEventResponse,
-  type GetEventsChartResponse,
-  type GetEventsBySessionIdResponse,
-  type DeleteEventResponse,
   type ExportEventsResponse,
   type CreateModelEventResponse,
   type CreateEventBatchResponse,
@@ -122,26 +112,6 @@ class SessionsNamespace {
       }),
     );
   }
-
-  /**
-   * Get session tree by session ID
-   *
-   * Retrieve a complete session event tree including all nested events and metadata
-   */
-  public get(options: GetSessionOptions): Promise<GetSessionResponse> {
-    return unwrap(this.#client.GET('/v1/session/{session_id}', { params: { path: options.path } }));
-  }
-
-  /**
-   * Delete all events for a session
-   *
-   * Delete all events associated with the given session ID from both events and aggregates tables
-   */
-  public delete(options: DeleteSessionOptions): Promise<DeleteSessionResponse> {
-    return unwrap(
-      this.#client.DELETE('/v1/session/{session_id}', { params: { path: options.path } }),
-    );
-  }
 }
 
 /** @inline */
@@ -191,35 +161,6 @@ class EventsNamespace {
    */
   public update(options: UpdateEventOptions): Promise<void> {
     return unwrap(this.#client.PUT('/events', { body: options.body }));
-  }
-
-  /**
-   * Get charting data for events
-   *
-   * Retrieve aggregated chart data for events with optional grouping and bucketing
-   */
-  public getChart(options?: GetEventsChartOptions): Promise<GetEventsChartResponse> {
-    return unwrap(this.#client.GET('/v1/events/chart', { params: { query: options?.query } }));
-  }
-
-  /**
-   * Get nested events for a session
-   *
-   * Retrieve all nested events for a specific session ID. The `id` parameter is interpreted as a session_id for this operation.
-   */
-  public getBySessionId(
-    options: GetEventsBySessionIdOptions,
-  ): Promise<GetEventsBySessionIdResponse> {
-    return unwrap(this.#client.GET('/v1/events/{id}', { params: { path: options.path } }));
-  }
-
-  /**
-   * Delete an event
-   *
-   * Delete a specific event by event ID. The `id` parameter is interpreted as an event_id for this operation.
-   */
-  public delete(options: DeleteEventOptions): Promise<DeleteEventResponse> {
-    return unwrap(this.#client.DELETE('/v1/events/{id}', { params: { path: options.path } }));
   }
 
   /**

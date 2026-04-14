@@ -97,23 +97,9 @@ export type DeleteConfigurationResponse = {
     acknowledged: boolean;
     deletedCount: number;
 };
-export type GetConfigurationsResponse = Array<{
-    id: string;
-    name: string;
-    /** @enum {string} */
-    type: 'LLM' | 'pipeline';
-    provider: string;
-    parameters: ConfigurationParameters;
-    env: ('dev' | 'staging' | 'prod')[];
-    tags: string[];
-    user_properties?: {
-        [key: string]: unknown;
-    } | null;
-    /** Format: date-time */
-    created_at: string;
-    /** Format: date-time */
-    updated_at?: string | null;
-}>;
+export type GetConfigurationsResponse = {
+    configurations: ConfigurationItem[];
+};
 /** @inline */
 export type DatapointMapping = {
     /** @default [] */
@@ -201,7 +187,9 @@ export type DeleteDatapointParams = {
     datapoint_id: string;
 };
 export type BatchCreateDatapointsRequest = {
+    /** @deprecated */
     events?: string[];
+    /** @deprecated */
     mapping?: DatapointMapping;
     filters?: {
         [key: string]: unknown;
@@ -276,7 +264,8 @@ export type AddDatapointsToDatasetRequest = {
     data: {
         [key: string]: unknown;
     }[];
-    mapping: DatapointMapping & unknown;
+    /** @description Field mapping for inputs, ground truth, and history */
+    mapping: DatapointMapping;
 };
 /** @inline */
 export type RemoveDatapointFromDatasetParams = {
@@ -411,9 +400,151 @@ export type LegacyEvent = {
     [key: string]: unknown;
 };
 /** @inline */
+/** @description Model event object with model-specific fields and legacy aliases */
+export type ModelEvent = {
+    /**
+     * @deprecated
+     * @description Project name (ignored by server — project is determined from API key scope)
+     */
+    project?: string;
+    /** @description Project ID */
+    project_id?: string;
+    /** @description Source of the event (e.g., sdk-python) */
+    source?: string;
+    /** @description Name of the event */
+    event_name?: string;
+    /**
+     * @description Type of event (model, tool, chain, or session)
+     * @enum {string}
+     */
+    event_type?: 'model' | 'tool' | 'chain' | 'session';
+    /** @description Unique event identifier */
+    event_id?: string;
+    /** @description Session this event belongs to */
+    session_id?: string;
+    /** @description Parent event ID in the trace hierarchy */
+    parent_id?: string;
+    /** @description Child event IDs in the trace hierarchy */
+    children_ids?: string[];
+    /** @description Configuration used for this event */
+    config?: {
+        [key: string]: unknown;
+    };
+    /** @description Input data for the event */
+    inputs?: {
+        [key: string]: unknown;
+    };
+    /** @description Output data from the event */
+    outputs?: {
+        [key: string]: unknown;
+    };
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.error for model events
+     */
+    error?: string | null;
+    /** @description Event start time as Unix milliseconds */
+    start_time?: number;
+    /** @description Event end time as Unix milliseconds */
+    end_time?: number;
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.duration for model events
+     */
+    duration?: number;
+    /** @description Arbitrary metadata for the event */
+    metadata?: {
+        [key: string]: unknown;
+    };
+    /** @description Feedback data associated with the event */
+    feedback?: {
+        [key: string]: unknown;
+    };
+    /** @description Metric values computed for the event */
+    metrics?: {
+        [key: string]: unknown;
+    };
+    /** @description User properties associated with the event */
+    user_properties?: {
+        [key: string]: unknown;
+    };
+    /** @description Model identifier (either this or event_name required) */
+    model_name?: string;
+    /** @description Model version string */
+    model_version?: string;
+    /**
+     * @deprecated
+     * @description Legacy alias for model_name
+     */
+    model?: string;
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.messages
+     */
+    messages?: unknown[];
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to outputs.response
+     */
+    response?: unknown;
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.provider
+     */
+    provider?: string;
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.usage
+     */
+    usage?: {
+        [key: string]: unknown;
+    };
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.cost
+     */
+    cost?: unknown;
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.hyperparameters
+     */
+    hyperparameters?: {
+        [key: string]: unknown;
+    };
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.template
+     */
+    template?: unknown;
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.template_inputs
+     */
+    template_inputs?: unknown;
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.tools
+     */
+    tools?: unknown;
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.tool_choice
+     */
+    tool_choice?: unknown;
+    /**
+     * @deprecated
+     * @description Legacy alias — remapped to inputs.response_format
+     */
+    response_format?: unknown;
+} & {
+    [key: string]: unknown;
+};
+/** @inline */
 /** @description Session properties for batch event creation */
 export type SessionProperties = {
     session_name?: string;
+    /** @description Session start time as Unix milliseconds */
+    start_time?: number;
     user_properties?: {
         [key: string]: unknown;
     };
@@ -422,6 +553,39 @@ export type SessionProperties = {
     };
 } & {
     [key: string]: unknown;
+};
+/** @description Request to update an existing event */
+export type UpdateEventRequest = {
+    /** @description Event ID to update */
+    event_id: string;
+    /** @description Metadata fields to merge into the event */
+    metadata?: {
+        [key: string]: unknown;
+    };
+    /** @description Feedback fields to merge into the event */
+    feedback?: {
+        [key: string]: unknown;
+    };
+    /** @description Metric values to merge into the event */
+    metrics?: {
+        [key: string]: unknown;
+    };
+    /** @description Output data to replace on the event (accepts objects, strings, arrays, or scalars) */
+    outputs?: unknown;
+    /** @description Configuration fields to merge into the event */
+    config?: {
+        [key: string]: unknown;
+    };
+    /** @description User properties to merge into the event */
+    user_properties?: {
+        [key: string]: unknown;
+    };
+    /** @description Event duration in milliseconds */
+    duration?: number;
+    /** @description Unix timestamp in milliseconds for event end */
+    end_time?: number;
+    /** @description IDs of child events to set (must be non-empty; an empty array is ignored) */
+    children_ids?: string[];
 };
 /** @description Request to create a new event */
 export type PostEventRequest = {
@@ -487,11 +651,10 @@ export type PostEventRequest = {
         [key: string]: unknown;
     };
 };
-/** @description Request body for GET /events legacy endpoint */
-export type GetEventsLegacyRequest = {
-    /** @description Name of the project */
-    project: string;
-    filters: FiltersArray & unknown;
+/** @description Request body for POST /v1/events/export */
+export type ExportEventsRequest = {
+    /** @description Array of filter criteria to apply */
+    filters?: FiltersArray;
     dateRange?: {
         /** @description ISO String for start of date range */
         $gte: string;
@@ -504,10 +667,14 @@ export type GetEventsLegacyRequest = {
     limit?: number;
     /** @description Page number of results (default 1) */
     page?: number;
+    /** @description If true, skip result ordering for faster queries */
+    ignore_order?: boolean;
+    /** @description Filter by evaluation/experiment run ID */
+    evaluation_id?: string;
 };
 /** @description Request body for POST /events/model */
 export type PostModelEventRequest = {
-    /** @description Full event object for legacy event creation endpoints */
+    /** @description Model event object with model-specific fields and legacy aliases */
     model_event: {
         /**
          * @deprecated
@@ -545,13 +712,19 @@ export type PostModelEventRequest = {
         outputs?: {
             [key: string]: unknown;
         };
-        /** @description Error message if the event failed */
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.error for model events
+         */
         error?: string | null;
         /** @description Event start time as Unix milliseconds */
         start_time?: number;
         /** @description Event end time as Unix milliseconds */
         end_time?: number;
-        /** @description Event duration in milliseconds */
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.duration for model events
+         */
         duration?: number;
         /** @description Arbitrary metadata for the event */
         metadata?: {
@@ -569,6 +742,74 @@ export type PostModelEventRequest = {
         user_properties?: {
             [key: string]: unknown;
         };
+        /** @description Model identifier (either this or event_name required) */
+        model_name?: string;
+        /** @description Model version string */
+        model_version?: string;
+        /**
+         * @deprecated
+         * @description Legacy alias for model_name
+         */
+        model?: string;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.messages
+         */
+        messages?: unknown[];
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to outputs.response
+         */
+        response?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.provider
+         */
+        provider?: string;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.usage
+         */
+        usage?: {
+            [key: string]: unknown;
+        };
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.cost
+         */
+        cost?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.hyperparameters
+         */
+        hyperparameters?: {
+            [key: string]: unknown;
+        };
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.template
+         */
+        template?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.template_inputs
+         */
+        template_inputs?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.tools
+         */
+        tools?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.tool_choice
+         */
+        tool_choice?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.response_format
+         */
+        response_format?: unknown;
     } & {
         [key: string]: unknown;
     };
@@ -647,9 +888,28 @@ export type PostEventBatchRequest = {
      * @description Legacy field name for single_session (backward compatibility)
      */
     is_single_session?: boolean;
+    /**
+     * @deprecated
+     * @description Alias for session_properties (backward compatibility)
+     */
+    session?: {
+        session_name?: string;
+        /** @description Session start time as Unix milliseconds */
+        start_time?: number;
+        user_properties?: {
+            [key: string]: unknown;
+        };
+        metadata?: {
+            [key: string]: unknown;
+        };
+    } & {
+        [key: string]: unknown;
+    };
     /** @description Session properties for batch event creation */
     session_properties?: {
         session_name?: string;
+        /** @description Session start time as Unix milliseconds */
+        start_time?: number;
         user_properties?: {
             [key: string]: unknown;
         };
@@ -700,13 +960,19 @@ export type PostModelEventBatchRequest = {
         outputs?: {
             [key: string]: unknown;
         };
-        /** @description Error message if the event failed */
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.error for model events
+         */
         error?: string | null;
         /** @description Event start time as Unix milliseconds */
         start_time?: number;
         /** @description Event end time as Unix milliseconds */
         end_time?: number;
-        /** @description Event duration in milliseconds */
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.duration for model events
+         */
         duration?: number;
         /** @description Arbitrary metadata for the event */
         metadata?: {
@@ -724,6 +990,74 @@ export type PostModelEventBatchRequest = {
         user_properties?: {
             [key: string]: unknown;
         };
+        /** @description Model identifier (either this or event_name required) */
+        model_name?: string;
+        /** @description Model version string */
+        model_version?: string;
+        /**
+         * @deprecated
+         * @description Legacy alias for model_name
+         */
+        model?: string;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.messages
+         */
+        messages?: unknown[];
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to outputs.response
+         */
+        response?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.provider
+         */
+        provider?: string;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.usage
+         */
+        usage?: {
+            [key: string]: unknown;
+        };
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.cost
+         */
+        cost?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.hyperparameters
+         */
+        hyperparameters?: {
+            [key: string]: unknown;
+        };
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.template
+         */
+        template?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.template_inputs
+         */
+        template_inputs?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.tools
+         */
+        tools?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.tool_choice
+         */
+        tool_choice?: unknown;
+        /**
+         * @deprecated
+         * @description Legacy alias — remapped to inputs.response_format
+         */
+        response_format?: unknown;
     } & {
         [key: string]: unknown;
     })[];
@@ -734,9 +1068,28 @@ export type PostModelEventBatchRequest = {
      * @description Legacy field name for single_session (backward compatibility)
      */
     is_single_session?: boolean;
+    /**
+     * @deprecated
+     * @description Alias for session_properties (backward compatibility)
+     */
+    session?: {
+        session_name?: string;
+        /** @description Session start time as Unix milliseconds */
+        start_time?: number;
+        user_properties?: {
+            [key: string]: unknown;
+        };
+        metadata?: {
+            [key: string]: unknown;
+        };
+    } & {
+        [key: string]: unknown;
+    };
     /** @description Session properties for batch event creation */
     session_properties?: {
         session_name?: string;
+        /** @description Session start time as Unix milliseconds */
+        start_time?: number;
         user_properties?: {
             [key: string]: unknown;
         };
@@ -751,7 +1104,8 @@ export type PostModelEventBatchRequest = {
 /** @description Query parameters for GET /events */
 export type GetEventsQuery = {
     dateRange?: DateRange;
-    filters?: FiltersArray & unknown;
+    /** @description Event filters to apply */
+    filters?: FiltersArray;
     /** @description Fields to include in the response */
     projections?: string[];
     /** @description If true, skip result ordering for faster queries */
@@ -775,16 +1129,6 @@ export type AbsoluteDateRange = {
     $gte: string | number;
     $lte: string | number;
 };
-/** @inline */
-/** @description Path parameters for GET /events/:session_id */
-export type GetEventsBySessionIdParams = {
-    session_id: string;
-};
-/** @inline */
-/** @description Path parameters for DELETE /events/:event_id */
-export type DeleteEventParams = {
-    event_id: string;
-};
 /** @description Response after creating an event */
 export type PostEventResponse = {
     success: boolean;
@@ -795,8 +1139,8 @@ export type GetEventsResponse = {
     events: unknown[];
     totalEvents: number;
 };
-/** @description Response for GET /events legacy endpoint */
-export type GetEventsLegacyResponse = {
+/** @description Response for POST /v1/events/export */
+export type ExportEventsResponse = {
     events: ({
         /**
          * @deprecated
@@ -861,58 +1205,7 @@ export type GetEventsLegacyResponse = {
     } & {
         [key: string]: unknown;
     })[];
-    totalEvents: number;
-};
-/** @description Chart data response for events */
-export type GetEventsChartResponse = {
-    events: unknown[];
-    totalEvents: number;
-};
-/** @description Event node in session tree with nested children */
-export type GetEventsBySessionIdResponse = {
-    event_id: string;
-    /** @enum {string} */
-    event_type: 'session' | 'model' | 'chain' | 'tool';
-    event_name: string;
-    children: unknown[];
-    start_time: number;
-    end_time: number;
-    duration: number;
-    metadata: {
-        num_events?: number;
-        num_model_events?: number;
-        has_feedback?: boolean;
-        cost?: number;
-        total_tokens?: number;
-        prompt_tokens?: number;
-        completion_tokens?: number;
-        scope?: {
-            name?: string;
-        };
-    } & {
-        [key: string]: unknown;
-    };
-    parent_id?: string;
-    session_id?: string;
-    children_ids?: string[];
-    config?: unknown;
-    inputs?: unknown;
-    outputs?: unknown;
-    error?: string;
-    source?: string;
-    user_properties?: unknown;
-    metrics?: unknown;
-    feedback?: unknown;
-    org_id: string;
-    workspace_id?: string;
-    project_id: string;
-} & {
-    [key: string]: unknown;
-};
-/** @description Response for DELETE /events/:event_id */
-export type DeleteEventResponse = {
-    success: boolean;
-    deleted: string;
+    count: number;
 };
 /** @description Response for POST /events/batch */
 export type PostEventBatchResponse = {
@@ -1030,6 +1323,31 @@ export type MetricComparison = {
     new_aggregate?: number;
     difference?: number;
     percentage_change?: number;
+};
+/** @inline */
+export type EventMetricData = {
+    event_name: string;
+    event_type: string;
+    session_id: string;
+    metadata: {
+        datapoint_id?: string;
+    };
+    /** @description Metric name → value, merged from numeric, float, and boolean ClickHouse columns */
+    metrics: {
+        [key: string]: number | boolean;
+    };
+};
+/** @inline */
+export type ComparableEvent = {
+    datapoint_id: string;
+    /** @description Full event record from the first run */
+    event_1: {
+        [key: string]: unknown;
+    };
+    /** @description Full event record from the second run */
+    event_2: {
+        [key: string]: unknown;
+    };
 };
 export type PostExperimentRunRequest = {
     run_id?: string;
@@ -1183,11 +1501,11 @@ export type DeleteExperimentRunParams = {
     run_id: string;
 };
 export type PostExperimentRunResponse = {
-    evaluation?: unknown;
+    evaluation: ExperimentRunObject;
     run_id: string;
 };
 export type PutExperimentRunResponse = {
-    evaluation?: unknown;
+    evaluation: ExperimentRunObject;
     warning?: string;
 };
 export type GetExperimentRunsResponse = {
@@ -1196,7 +1514,7 @@ export type GetExperimentRunsResponse = {
     metrics: string[];
 };
 export type GetExperimentRunResponse = {
-    evaluation?: unknown;
+    evaluation: ExperimentRunObject;
 };
 /** @description Evaluation summary for an experiment run including pass/fail status, metrics, and datapoints */
 export type GetExperimentRunResultResponse = {
@@ -1218,12 +1536,22 @@ export type GetExperimentRunCompareResponse = {
     old_run: ExperimentRunObject;
     new_run: ExperimentRunObject;
 };
+export type GetExperimentRunMetricsResponse = {
+    events: EventMetricData[];
+    /** @description Total number of events matching the query */
+    totalEvents: number;
+};
 export type GetExperimentRunsSchemaResponse = {
     fields: ExperimentSchemaField[];
     datasets: string[];
     mappings: {
         [key: string]: ExperimentSchemaMappingEntry[];
     };
+};
+export type GetExperimentCompareEventsResponse = {
+    events: ComparableEvent[];
+    /** @description Total number of events matching the comparison query */
+    totalEvents: number;
 };
 export type DeleteExperimentRunResponse = {
     id: string;
@@ -1354,7 +1682,7 @@ export type RunMetricRequest = {
     metric: {
         name: string;
         /** @enum {string} */
-        type: 'PYTHON' | 'LLM' | 'HUMAN' | 'COMPOSITE';
+        type: 'LLM' | 'PYTHON';
         criteria: string;
         /** @default  */
         description?: string;
@@ -1397,47 +1725,28 @@ export type RunMetricRequest = {
             filterArray: FiltersArray;
         };
     };
-    event?: unknown;
-};
-export type GetMetricsResponse = Array<{
-    name: string;
-    /** @enum {string} */
-    type: 'PYTHON' | 'LLM' | 'HUMAN' | 'COMPOSITE';
-    criteria: string;
-    description: string | null;
-    /** @enum {string} */
-    return_type: 'float' | 'boolean' | 'string' | 'categorical';
-    enabled_in_prod: boolean;
-    needs_ground_truth: boolean;
-    sampling_percentage: number;
-    model_provider?: string | null;
-    model_name?: string | null;
-    scale?: number | null;
-    threshold?: {
-        min?: number;
-        max?: number;
-        pass_when?: boolean | number;
-        passing_categories?: string[];
-    } | null;
-    categories?: {
-        category: string;
-        score: number | null;
-    }[] | null;
-    child_metrics?: {
-        id?: string;
-        name: string;
-        weight: number;
-        scale?: number | null;
-    }[] | null;
-    filters: {
-        filterArray: FiltersArray;
+    event: {
+        event_type?: string;
+        event_name?: string;
+        inputs?: {
+            [key: string]: unknown;
+        };
+        outputs?: {
+            [key: string]: unknown;
+        };
+        workspace_id?: string;
+        feedback?: {
+            ground_truth?: unknown;
+        } & {
+            [key: string]: unknown;
+        };
+    } & {
+        [key: string]: unknown;
     };
-    id: string;
-    /** Format: date-time */
-    created_at: string;
-    /** Format: date-time */
-    updated_at: string | null;
-}>;
+};
+export type GetMetricsResponse = {
+    metrics: MetricItem[];
+};
 export type CreateMetricResponse = {
     inserted: boolean;
     metric_id: string;
@@ -1448,7 +1757,12 @@ export type UpdateMetricResponse = {
 export type DeleteMetricResponse = {
     deleted: boolean;
 };
-export type RunMetricResponse = unknown;
+export type RunMetricResponse = {
+    success: boolean;
+    loading: boolean;
+    result: boolean | number | string | null;
+    explanation: string | null;
+};
 /** @inline */
 /** @description Project object */
 export type ProjectItem = {
@@ -1679,52 +1993,6 @@ export type PostSessionStartResponse = {
 } & {
     [key: string]: unknown;
 };
-/** @description Event node in session tree with nested children */
-export type GetSessionResponse = {
-    event_id: string;
-    /** @enum {string} */
-    event_type: 'session' | 'model' | 'chain' | 'tool';
-    event_name: string;
-    children: unknown[];
-    start_time: number;
-    end_time: number;
-    duration: number;
-    metadata: {
-        num_events?: number;
-        num_model_events?: number;
-        has_feedback?: boolean;
-        cost?: number;
-        total_tokens?: number;
-        prompt_tokens?: number;
-        completion_tokens?: number;
-        scope?: {
-            name?: string;
-        };
-    } & {
-        [key: string]: unknown;
-    };
-    parent_id?: string;
-    session_id?: string;
-    children_ids?: string[];
-    config?: unknown;
-    inputs?: unknown;
-    outputs?: unknown;
-    error?: string;
-    source?: string;
-    user_properties?: unknown;
-    metrics?: unknown;
-    feedback?: unknown;
-    org_id: string;
-    workspace_id?: string;
-    project_id: string;
-} & {
-    [key: string]: unknown;
-};
-/** @description Confirmation of session deletion */
-export type DeleteSessionResponse = {
-    success: boolean;
-    deleted: string;
-};
 /** @description Response from adding traces to a session */
 export type SessionTracesResponse = {
     success: boolean;
@@ -1735,121 +2003,9 @@ export type TODOSchema = {
     /** @description Placeholder - Zod schema not yet implemented */
     message: string;
 };
-export type UpdateEventRequest = {
-    event_id: string;
-    metadata?: {
-        [key: string]: unknown;
-    };
-    feedback?: {
-        [key: string]: unknown;
-    };
-    metrics?: {
-        [key: string]: unknown;
-    };
-    outputs?: {
-        [key: string]: unknown;
-    };
-    config?: {
-        [key: string]: unknown;
-    };
-    user_properties?: {
-        [key: string]: unknown;
-    };
-    duration?: number;
-};
-/** @inline */
-/**
- * @example {
- *       "event_ids": [
- *         "7f22137a-6911-4ed3-bc36-110f1dde6b66",
- *         "7f22137a-6911-4ed3-bc36-110f1dde6b67"
- *       ],
- *       "errors": [
- *         "Could not create event due to missing inputs",
- *         "Could not create event due to missing source"
- *       ],
- *       "success": true
- *     }
- */
-export type CreateEventBatch500Response = {
-    event_ids?: string[];
-    errors?: string[];
-    success?: boolean;
-};
-/** @inline */
-/**
- * @example {
- *       "event_ids": [
- *         "7f22137a-6911-4ed3-bc36-110f1dde6b66",
- *         "7f22137a-6911-4ed3-bc36-110f1dde6b67"
- *       ],
- *       "errors": [
- *         "Could not create event due to missing model",
- *         "Could not create event due to missing provider"
- *       ],
- *       "success": true
- *     }
- */
-export type CreateModelEventBatch500Response = {
-    event_ids?: string[];
-    errors?: string[];
-    success?: boolean;
-};
-export type GetExperimentRunMetricsResponse = {
-    /** @description Array of event objects with metrics */
-    events?: Record<string, never>[];
-};
-export type GetExperimentCompareEventsResponse = {
-    /** @description Array of matched event pairs from both runs */
-    events?: Record<string, never>[];
-    pagination?: {
-        page?: number;
-        limit?: number;
-        total?: number;
-    };
-};
 export type AddSessionTracesPath = {
     /** @description Session ID to add traces to */
     session_id: string;
-};
-export type GetSessionPath = {
-    /** @description Session ID (UUIDv4) */
-    session_id: string;
-};
-export type DeleteSessionPath = {
-    /** @description Session ID (UUIDv4) */
-    session_id: string;
-};
-export type GetEventsChartQuery = {
-    /** @description Date range filter (ISO string or object with $gte/$lte) */
-    dateRange?: string | {
-        /** Format: date-time */
-        $gte?: string;
-        /** Format: date-time */
-        $lte?: string;
-    };
-    /** @description Array of filter objects or JSON string */
-    filters?: Record<string, never>[] | string;
-    /** @description Metric to aggregate (default 'duration') */
-    metric?: string;
-    /** @description Field to group by */
-    groupBy?: string;
-    /** @description Time bucket for aggregation (default 'hour') */
-    bucket?: 'minute' | 'minutes' | '1m' | 'hour' | 'hours' | '1h' | 'day' | 'days' | '1d' | 'week' | 'weeks' | '1w' | 'month' | 'months' | '1M';
-    /** @description Aggregation function (default 'average') */
-    aggregation?: 'avg' | 'average' | 'mean' | 'p50' | 'p75' | 'p90' | 'p95' | 'p99' | 'count' | 'sum' | 'min' | 'max' | 'median';
-    /** @description Filter by evaluation ID */
-    evaluation_id?: string;
-    /** @description Filter to only experiment events */
-    only_experiments?: boolean | string;
-};
-export type GetEventsBySessionIdPath = {
-    /** @description Session ID (UUIDv4) - retrieves all events belonging to this session */
-    id: string;
-};
-export type DeleteEventPath = {
-    /** @description Event ID (UUIDv4) - the specific event to delete */
-    id: string;
 };
 export type GetMetricsQuery = {
     /** @description Filter by metric type */

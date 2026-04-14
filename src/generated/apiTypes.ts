@@ -5,7 +5,7 @@ import {
   type AddSessionTracesRequest,
   type PostEventRequest as CreateEventRequest,
   type UpdateEventRequest,
-  type GetEventsLegacyRequest as ExportEventsRequest,
+  type ExportEventsRequest,
   type PostModelEventRequest as CreateModelEventRequest,
   type PostEventBatchRequest as CreateEventBatchRequest,
   type PostModelEventBatchRequest as CreateModelEventBatchRequest,
@@ -23,10 +23,6 @@ import {
   type CreateConfigurationRequest,
   type UpdateConfigurationRequest,
   type AddSessionTracesPath,
-  type GetSessionPath,
-  type DeleteSessionPath,
-  type GetEventsBySessionIdPath,
-  type DeleteEventPath,
   type GetDatapointPath,
   type UpdateDatapointPath,
   type DeleteDatapointPath,
@@ -40,7 +36,6 @@ import {
   type GetExperimentComparisonPath,
   type UpdateConfigurationPath,
   type DeleteConfigurationPath,
-  type GetEventsChartQuery,
   type GetMetricsQuery,
   type DeleteMetricQuery,
   type GetDatapointsQuery,
@@ -66,32 +61,12 @@ export type AddSessionTracesOptions = {
   body: AddSessionTracesRequest;
 };
 
-export type GetSessionOptions = {
-  path: GetSessionPath;
-};
-
-export type DeleteSessionOptions = {
-  path: DeleteSessionPath;
-};
-
 export type CreateEventOptions = {
   body: CreateEventRequest;
 };
 
 export type UpdateEventOptions = {
   body: UpdateEventRequest;
-};
-
-export type GetEventsChartOptions = {
-  query?: GetEventsChartQuery;
-};
-
-export type GetEventsBySessionIdOptions = {
-  path: GetEventsBySessionIdPath;
-};
-
-export type DeleteEventOptions = {
-  path: DeleteEventPath;
 };
 
 export type ExportEventsOptions = {
@@ -244,10 +219,6 @@ export type DeleteConfigurationOptions = {
 // ---- Path types ----
 
 export { type AddSessionTracesPath };
-export { type GetSessionPath };
-export { type DeleteSessionPath };
-export { type GetEventsBySessionIdPath };
-export { type DeleteEventPath };
 export { type GetDatapointPath };
 export { type UpdateDatapointPath };
 export { type DeleteDatapointPath };
@@ -264,7 +235,6 @@ export { type DeleteConfigurationPath };
 
 // ---- Query types ----
 
-export { type GetEventsChartQuery };
 export { type GetMetricsQuery };
 export { type DeleteMetricQuery };
 export { type GetDatapointsQuery };
@@ -306,13 +276,8 @@ export { type UpdateConfigurationRequest };
 
 export { type PostSessionStartResponse as StartSessionResponse } from './schemas.js';
 export { type SessionTracesResponse as AddSessionTracesResponse } from './schemas.js';
-export { type GetSessionResponse } from './schemas.js';
-export { type DeleteSessionResponse } from './schemas.js';
 export { type PostEventResponse as CreateEventResponse } from './schemas.js';
-export { type GetEventsChartResponse } from './schemas.js';
-export { type GetEventsBySessionIdResponse } from './schemas.js';
-export { type DeleteEventResponse } from './schemas.js';
-export { type GetEventsLegacyResponse as ExportEventsResponse } from './schemas.js';
+export { type ExportEventsResponse } from './schemas.js';
 export { type PostEventResponse as CreateModelEventResponse } from './schemas.js';
 export { type PostEventBatchResponse as CreateEventBatchResponse } from './schemas.js';
 export { type PostEventBatchResponse as CreateModelEventBatchResponse } from './schemas.js';

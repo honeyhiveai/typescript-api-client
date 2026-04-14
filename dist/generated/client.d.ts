@@ -1,5 +1,5 @@
 import { type paths } from './types.js';
-import { type StartSessionOptions, type AddSessionTracesOptions, type GetSessionOptions, type DeleteSessionOptions, type CreateEventOptions, type UpdateEventOptions, type GetEventsChartOptions, type GetEventsBySessionIdOptions, type DeleteEventOptions, type ExportEventsOptions, type CreateModelEventOptions, type CreateEventBatchOptions, type CreateModelEventBatchOptions, type GetMetricsOptions, type CreateMetricOptions, type UpdateMetricOptions, type DeleteMetricOptions, type RunMetricOptions, type GetDatapointsOptions, type CreateDatapointOptions, type BatchCreateDatapointsOptions, type GetDatapointOptions, type UpdateDatapointOptions, type DeleteDatapointOptions, type GetDatasetsOptions, type CreateDatasetOptions, type UpdateDatasetOptions, type DeleteDatasetOptions, type AddDatapointsOptions, type RemoveDatapointOptions, type GetExperimentRunsSchemaOptions, type GetRunsOptions, type CreateRunOptions, type GetRunOptions, type UpdateRunOptions, type DeleteRunOptions, type GetExperimentRunMetricsOptions, type GetExperimentResultOptions, type GetExperimentComparisonOptions, type GetExperimentCompareEventsOptions, type GetConfigurationsOptions, type CreateConfigurationOptions, type UpdateConfigurationOptions, type DeleteConfigurationOptions, type StartSessionResponse, type AddSessionTracesResponse, type GetSessionResponse, type DeleteSessionResponse, type CreateEventResponse, type GetEventsChartResponse, type GetEventsBySessionIdResponse, type DeleteEventResponse, type ExportEventsResponse, type CreateModelEventResponse, type CreateEventBatchResponse, type CreateModelEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetExperimentRunsSchemaResponse, type GetRunsResponse, type CreateRunResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetExperimentRunMetricsResponse, type GetExperimentResultResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetConfigurationsResponse, type CreateConfigurationResponse, type UpdateConfigurationResponse, type DeleteConfigurationResponse } from './apiTypes.js';
+import { type StartSessionOptions, type AddSessionTracesOptions, type CreateEventOptions, type UpdateEventOptions, type ExportEventsOptions, type CreateModelEventOptions, type CreateEventBatchOptions, type CreateModelEventBatchOptions, type GetMetricsOptions, type CreateMetricOptions, type UpdateMetricOptions, type DeleteMetricOptions, type RunMetricOptions, type GetDatapointsOptions, type CreateDatapointOptions, type BatchCreateDatapointsOptions, type GetDatapointOptions, type UpdateDatapointOptions, type DeleteDatapointOptions, type GetDatasetsOptions, type CreateDatasetOptions, type UpdateDatasetOptions, type DeleteDatasetOptions, type AddDatapointsOptions, type RemoveDatapointOptions, type GetExperimentRunsSchemaOptions, type GetRunsOptions, type CreateRunOptions, type GetRunOptions, type UpdateRunOptions, type DeleteRunOptions, type GetExperimentRunMetricsOptions, type GetExperimentResultOptions, type GetExperimentComparisonOptions, type GetExperimentCompareEventsOptions, type GetConfigurationsOptions, type CreateConfigurationOptions, type UpdateConfigurationOptions, type DeleteConfigurationOptions, type StartSessionResponse, type AddSessionTracesResponse, type CreateEventResponse, type ExportEventsResponse, type CreateModelEventResponse, type CreateEventBatchResponse, type CreateModelEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetExperimentRunsSchemaResponse, type GetRunsResponse, type CreateRunResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetExperimentRunMetricsResponse, type GetExperimentResultResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetConfigurationsResponse, type CreateConfigurationResponse, type UpdateConfigurationResponse, type DeleteConfigurationResponse } from './apiTypes.js';
 import { type ClientConfig, createApiClient } from '../util.js';
 /** @inline */
 declare class SessionsNamespace {
@@ -17,18 +17,6 @@ declare class SessionsNamespace {
      * Add trace events to an existing session. The field is named `logs` for legacy compatibility with the Go ingestion handler.
      */
     addTraces(options: AddSessionTracesOptions): Promise<AddSessionTracesResponse>;
-    /**
-     * Get session tree by session ID
-     *
-     * Retrieve a complete session event tree including all nested events and metadata
-     */
-    get(options: GetSessionOptions): Promise<GetSessionResponse>;
-    /**
-     * Delete all events for a session
-     *
-     * Delete all events associated with the given session ID from both events and aggregates tables
-     */
-    delete(options: DeleteSessionOptions): Promise<DeleteSessionResponse>;
 }
 /** @inline */
 declare class EventsNamespace {
@@ -69,24 +57,6 @@ declare class EventsNamespace {
      * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. The event_id field is required to identify the event to update.
      */
     update(options: UpdateEventOptions): Promise<void>;
-    /**
-     * Get charting data for events
-     *
-     * Retrieve aggregated chart data for events with optional grouping and bucketing
-     */
-    getChart(options?: GetEventsChartOptions): Promise<GetEventsChartResponse>;
-    /**
-     * Get nested events for a session
-     *
-     * Retrieve all nested events for a specific session ID. The `id` parameter is interpreted as a session_id for this operation.
-     */
-    getBySessionId(options: GetEventsBySessionIdOptions): Promise<GetEventsBySessionIdResponse>;
-    /**
-     * Delete an event
-     *
-     * Delete a specific event by event ID. The `id` parameter is interpreted as an event_id for this operation.
-     */
-    delete(options: DeleteEventOptions): Promise<DeleteEventResponse>;
     /**
      * Retrieve events based on filters
      *

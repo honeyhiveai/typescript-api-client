@@ -39,30 +39,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/v1/session/{session_id}': {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get session tree by session ID
-         * @description Retrieve a complete session event tree including all nested events and metadata
-         */
-        get: operations['getSession'];
-        put?: never;
-        post?: never;
-        /**
-         * Delete all events for a session
-         * @description Delete all events associated with the given session ID from both events and aggregates tables
-         */
-        delete: operations['deleteSession'];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     '/events': {
         parameters: {
             query?: never;
@@ -105,50 +81,6 @@ export interface paths {
          */
         post: operations['createEvent'];
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    '/v1/events/chart': {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get charting data for events
-         * @description Retrieve aggregated chart data for events with optional grouping and bucketing
-         */
-        get: operations['getEventsChart'];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    '/v1/events/{id}': {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get nested events for a session
-         * @description Retrieve all nested events for a specific session ID. The `id` parameter is interpreted as a session_id for this operation.
-         */
-        get: operations['getEventsBySessionId'];
-        put?: never;
-        post?: never;
-        /**
-         * Delete an event
-         * @description Delete a specific event by event ID. The `id` parameter is interpreted as an event_id for this operation.
-         */
-        delete: operations['deleteEvent'];
         options?: never;
         head?: never;
         patch?: never;
@@ -736,7 +668,9 @@ export interface components {
             acknowledged: boolean;
             deletedCount: number;
         };
-        GetConfigurationsResponse: components['schemas']['ConfigurationItem'][];
+        GetConfigurationsResponse: {
+            configurations: components['schemas']['ConfigurationItem'][];
+        };
         DatapointMapping: {
             /** @default [] */
             inputs?: string[];
@@ -823,7 +757,9 @@ export interface components {
             datapoint_id: string;
         };
         BatchCreateDatapointsRequest: {
+            /** @deprecated */
             events?: string[];
+            /** @deprecated */
             mapping?: components['schemas']['DatapointMapping'];
             filters?: {
                 [key: string]: unknown;
@@ -901,7 +837,8 @@ export interface components {
             data: {
                 [key: string]: unknown;
             }[];
-            mapping: components['schemas']['DatapointMapping'] & unknown;
+            /** @description Field mapping for inputs, ground truth, and history */
+            mapping: components['schemas']['DatapointMapping'];
         };
         RemoveDatapointFromDatasetParams: {
             /** @description Unique identifier of the dataset */
@@ -1028,9 +965,150 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** @description Model event object with model-specific fields and legacy aliases */
+        ModelEvent: {
+            /**
+             * @deprecated
+             * @description Project name (ignored by server — project is determined from API key scope)
+             */
+            project?: string;
+            /** @description Project ID */
+            project_id?: string;
+            /** @description Source of the event (e.g., sdk-python) */
+            source?: string;
+            /** @description Name of the event */
+            event_name?: string;
+            /**
+             * @description Type of event (model, tool, chain, or session)
+             * @enum {string}
+             */
+            event_type?: 'model' | 'tool' | 'chain' | 'session';
+            /** @description Unique event identifier */
+            event_id?: string;
+            /** @description Session this event belongs to */
+            session_id?: string;
+            /** @description Parent event ID in the trace hierarchy */
+            parent_id?: string;
+            /** @description Child event IDs in the trace hierarchy */
+            children_ids?: string[];
+            /** @description Configuration used for this event */
+            config?: {
+                [key: string]: unknown;
+            };
+            /** @description Input data for the event */
+            inputs?: {
+                [key: string]: unknown;
+            };
+            /** @description Output data from the event */
+            outputs?: {
+                [key: string]: unknown;
+            };
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.error for model events
+             */
+            error?: string | null;
+            /** @description Event start time as Unix milliseconds */
+            start_time?: number;
+            /** @description Event end time as Unix milliseconds */
+            end_time?: number;
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.duration for model events
+             */
+            duration?: number;
+            /** @description Arbitrary metadata for the event */
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** @description Feedback data associated with the event */
+            feedback?: {
+                [key: string]: unknown;
+            };
+            /** @description Metric values computed for the event */
+            metrics?: {
+                [key: string]: unknown;
+            };
+            /** @description User properties associated with the event */
+            user_properties?: {
+                [key: string]: unknown;
+            };
+            /** @description Model identifier (either this or event_name required) */
+            model_name?: string;
+            /** @description Model version string */
+            model_version?: string;
+            /**
+             * @deprecated
+             * @description Legacy alias for model_name
+             */
+            model?: string;
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.messages
+             */
+            messages?: unknown[];
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to outputs.response
+             */
+            response?: unknown;
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.provider
+             */
+            provider?: string;
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.usage
+             */
+            usage?: {
+                [key: string]: unknown;
+            };
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.cost
+             */
+            cost?: unknown;
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.hyperparameters
+             */
+            hyperparameters?: {
+                [key: string]: unknown;
+            };
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.template
+             */
+            template?: unknown;
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.template_inputs
+             */
+            template_inputs?: unknown;
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.tools
+             */
+            tools?: unknown;
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.tool_choice
+             */
+            tool_choice?: unknown;
+            /**
+             * @deprecated
+             * @description Legacy alias — remapped to inputs.response_format
+             */
+            response_format?: unknown;
+        } & {
+            [key: string]: unknown;
+        };
         /** @description Session properties for batch event creation */
         SessionProperties: {
             session_name?: string;
+            /** @description Session start time as Unix milliseconds */
+            start_time?: number;
             user_properties?: {
                 [key: string]: unknown;
             };
@@ -1039,6 +1117,39 @@ export interface components {
             };
         } & {
             [key: string]: unknown;
+        };
+        /** @description Request to update an existing event */
+        UpdateEventRequest: {
+            /** @description Event ID to update */
+            event_id: string;
+            /** @description Metadata fields to merge into the event */
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** @description Feedback fields to merge into the event */
+            feedback?: {
+                [key: string]: unknown;
+            };
+            /** @description Metric values to merge into the event */
+            metrics?: {
+                [key: string]: unknown;
+            };
+            /** @description Output data to replace on the event (accepts objects, strings, arrays, or scalars) */
+            outputs?: unknown;
+            /** @description Configuration fields to merge into the event */
+            config?: {
+                [key: string]: unknown;
+            };
+            /** @description User properties to merge into the event */
+            user_properties?: {
+                [key: string]: unknown;
+            };
+            /** @description Event duration in milliseconds */
+            duration?: number;
+            /** @description Unix timestamp in milliseconds for event end */
+            end_time?: number;
+            /** @description IDs of child events to set (must be non-empty; an empty array is ignored) */
+            children_ids?: string[];
         };
         /** @description Request to create a new event */
         PostEventRequest: {
@@ -1104,11 +1215,10 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** @description Request body for GET /events legacy endpoint */
-        GetEventsLegacyRequest: {
-            /** @description Name of the project */
-            project: string;
-            filters: components['schemas']['FiltersArray'] & unknown;
+        /** @description Request body for POST /v1/events/export */
+        ExportEventsRequest: {
+            /** @description Array of filter criteria to apply */
+            filters?: components['schemas']['FiltersArray'];
             dateRange?: {
                 /** @description ISO String for start of date range */
                 $gte: string;
@@ -1121,10 +1231,14 @@ export interface components {
             limit?: number;
             /** @description Page number of results (default 1) */
             page?: number;
+            /** @description If true, skip result ordering for faster queries */
+            ignore_order?: boolean;
+            /** @description Filter by evaluation/experiment run ID */
+            evaluation_id?: string;
         };
         /** @description Request body for POST /events/model */
         PostModelEventRequest: {
-            /** @description Full event object for legacy event creation endpoints */
+            /** @description Model event object with model-specific fields and legacy aliases */
             model_event: {
                 /**
                  * @deprecated
@@ -1162,13 +1276,19 @@ export interface components {
                 outputs?: {
                     [key: string]: unknown;
                 };
-                /** @description Error message if the event failed */
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.error for model events
+                 */
                 error?: string | null;
                 /** @description Event start time as Unix milliseconds */
                 start_time?: number;
                 /** @description Event end time as Unix milliseconds */
                 end_time?: number;
-                /** @description Event duration in milliseconds */
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.duration for model events
+                 */
                 duration?: number;
                 /** @description Arbitrary metadata for the event */
                 metadata?: {
@@ -1186,6 +1306,74 @@ export interface components {
                 user_properties?: {
                     [key: string]: unknown;
                 };
+                /** @description Model identifier (either this or event_name required) */
+                model_name?: string;
+                /** @description Model version string */
+                model_version?: string;
+                /**
+                 * @deprecated
+                 * @description Legacy alias for model_name
+                 */
+                model?: string;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.messages
+                 */
+                messages?: unknown[];
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to outputs.response
+                 */
+                response?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.provider
+                 */
+                provider?: string;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.usage
+                 */
+                usage?: {
+                    [key: string]: unknown;
+                };
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.cost
+                 */
+                cost?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.hyperparameters
+                 */
+                hyperparameters?: {
+                    [key: string]: unknown;
+                };
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.template
+                 */
+                template?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.template_inputs
+                 */
+                template_inputs?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.tools
+                 */
+                tools?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.tool_choice
+                 */
+                tool_choice?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.response_format
+                 */
+                response_format?: unknown;
             } & {
                 [key: string]: unknown;
             };
@@ -1264,9 +1452,28 @@ export interface components {
              * @description Legacy field name for single_session (backward compatibility)
              */
             is_single_session?: boolean;
+            /**
+             * @deprecated
+             * @description Alias for session_properties (backward compatibility)
+             */
+            session?: {
+                session_name?: string;
+                /** @description Session start time as Unix milliseconds */
+                start_time?: number;
+                user_properties?: {
+                    [key: string]: unknown;
+                };
+                metadata?: {
+                    [key: string]: unknown;
+                };
+            } & {
+                [key: string]: unknown;
+            };
             /** @description Session properties for batch event creation */
             session_properties?: {
                 session_name?: string;
+                /** @description Session start time as Unix milliseconds */
+                start_time?: number;
                 user_properties?: {
                     [key: string]: unknown;
                 };
@@ -1317,13 +1524,19 @@ export interface components {
                 outputs?: {
                     [key: string]: unknown;
                 };
-                /** @description Error message if the event failed */
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.error for model events
+                 */
                 error?: string | null;
                 /** @description Event start time as Unix milliseconds */
                 start_time?: number;
                 /** @description Event end time as Unix milliseconds */
                 end_time?: number;
-                /** @description Event duration in milliseconds */
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.duration for model events
+                 */
                 duration?: number;
                 /** @description Arbitrary metadata for the event */
                 metadata?: {
@@ -1341,6 +1554,74 @@ export interface components {
                 user_properties?: {
                     [key: string]: unknown;
                 };
+                /** @description Model identifier (either this or event_name required) */
+                model_name?: string;
+                /** @description Model version string */
+                model_version?: string;
+                /**
+                 * @deprecated
+                 * @description Legacy alias for model_name
+                 */
+                model?: string;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.messages
+                 */
+                messages?: unknown[];
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to outputs.response
+                 */
+                response?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.provider
+                 */
+                provider?: string;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.usage
+                 */
+                usage?: {
+                    [key: string]: unknown;
+                };
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.cost
+                 */
+                cost?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.hyperparameters
+                 */
+                hyperparameters?: {
+                    [key: string]: unknown;
+                };
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.template
+                 */
+                template?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.template_inputs
+                 */
+                template_inputs?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.tools
+                 */
+                tools?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.tool_choice
+                 */
+                tool_choice?: unknown;
+                /**
+                 * @deprecated
+                 * @description Legacy alias — remapped to inputs.response_format
+                 */
+                response_format?: unknown;
             } & {
                 [key: string]: unknown;
             })[];
@@ -1351,9 +1632,28 @@ export interface components {
              * @description Legacy field name for single_session (backward compatibility)
              */
             is_single_session?: boolean;
+            /**
+             * @deprecated
+             * @description Alias for session_properties (backward compatibility)
+             */
+            session?: {
+                session_name?: string;
+                /** @description Session start time as Unix milliseconds */
+                start_time?: number;
+                user_properties?: {
+                    [key: string]: unknown;
+                };
+                metadata?: {
+                    [key: string]: unknown;
+                };
+            } & {
+                [key: string]: unknown;
+            };
             /** @description Session properties for batch event creation */
             session_properties?: {
                 session_name?: string;
+                /** @description Session start time as Unix milliseconds */
+                start_time?: number;
                 user_properties?: {
                     [key: string]: unknown;
                 };
@@ -1367,7 +1667,8 @@ export interface components {
         /** @description Query parameters for GET /events */
         GetEventsQuery: {
             dateRange?: components['schemas']['DateRange'];
-            filters?: components['schemas']['FiltersArray'] & unknown;
+            /** @description Event filters to apply */
+            filters?: components['schemas']['FiltersArray'];
             /** @description Fields to include in the response */
             projections?: string[];
             /** @description If true, skip result ordering for faster queries */
@@ -1388,25 +1689,6 @@ export interface components {
             $gte: string | number;
             $lte: string | number;
         };
-        /** @description Query parameters for GET /events/chart */
-        GetEventsChartQuery: {
-            dateRange?: components['schemas']['DateRange'];
-            filters?: components['schemas']['FiltersArray'];
-            metric?: string;
-            groupBy?: string;
-            bucket?: string;
-            aggregation?: string;
-            evaluation_id?: string;
-            only_experiments?: boolean;
-        };
-        /** @description Path parameters for GET /events/:session_id */
-        GetEventsBySessionIdParams: {
-            session_id: string;
-        };
-        /** @description Path parameters for DELETE /events/:event_id */
-        DeleteEventParams: {
-            event_id: string;
-        };
         /** @description Response after creating an event */
         PostEventResponse: {
             success: boolean;
@@ -1416,8 +1698,8 @@ export interface components {
             events: unknown[];
             totalEvents: number;
         };
-        /** @description Response for GET /events legacy endpoint */
-        GetEventsLegacyResponse: {
+        /** @description Response for POST /v1/events/export */
+        ExportEventsResponse: {
             events: ({
                 /**
                  * @deprecated
@@ -1482,58 +1764,7 @@ export interface components {
             } & {
                 [key: string]: unknown;
             })[];
-            totalEvents: number;
-        };
-        /** @description Chart data response for events */
-        GetEventsChartResponse: {
-            events: unknown[];
-            totalEvents: number;
-        };
-        /** @description Event node in session tree with nested children */
-        GetEventsBySessionIdResponse: {
-            event_id: string;
-            /** @enum {string} */
-            event_type: 'session' | 'model' | 'chain' | 'tool';
-            event_name: string;
-            children: unknown[];
-            start_time: number;
-            end_time: number;
-            duration: number;
-            metadata: {
-                num_events?: number;
-                num_model_events?: number;
-                has_feedback?: boolean;
-                cost?: number;
-                total_tokens?: number;
-                prompt_tokens?: number;
-                completion_tokens?: number;
-                scope?: {
-                    name?: string;
-                };
-            } & {
-                [key: string]: unknown;
-            };
-            parent_id?: string;
-            session_id?: string;
-            children_ids?: string[];
-            config?: unknown;
-            inputs?: unknown;
-            outputs?: unknown;
-            error?: string;
-            source?: string;
-            user_properties?: unknown;
-            metrics?: unknown;
-            feedback?: unknown;
-            org_id: string;
-            workspace_id?: string;
-            project_id: string;
-        } & {
-            [key: string]: unknown;
-        };
-        /** @description Response for DELETE /events/:event_id */
-        DeleteEventResponse: {
-            success: boolean;
-            deleted: string;
+            count: number;
         };
         /** @description Response for POST /events/batch */
         PostEventBatchResponse: {
@@ -1639,6 +1870,29 @@ export interface components {
             new_aggregate?: number;
             difference?: number;
             percentage_change?: number;
+        };
+        EventMetricData: {
+            event_name: string;
+            event_type: string;
+            session_id: string;
+            metadata: {
+                datapoint_id?: string;
+            };
+            /** @description Metric name → value, merged from numeric, float, and boolean ClickHouse columns */
+            metrics: {
+                [key: string]: number | boolean;
+            };
+        };
+        ComparableEvent: {
+            datapoint_id: string;
+            /** @description Full event record from the first run */
+            event_1: {
+                [key: string]: unknown;
+            };
+            /** @description Full event record from the second run */
+            event_2: {
+                [key: string]: unknown;
+            };
         };
         PostExperimentRunRequest: {
             run_id?: string;
@@ -1797,11 +2051,11 @@ export interface components {
             evaluation_id?: string;
         };
         PostExperimentRunResponse: {
-            evaluation?: unknown;
+            evaluation: components['schemas']['ExperimentRunObject'];
             run_id: string;
         };
         PutExperimentRunResponse: {
-            evaluation?: unknown;
+            evaluation: components['schemas']['ExperimentRunObject'];
             warning?: string;
         };
         GetExperimentRunsResponse: {
@@ -1810,7 +2064,7 @@ export interface components {
             metrics: string[];
         };
         GetExperimentRunResponse: {
-            evaluation?: unknown;
+            evaluation: components['schemas']['ExperimentRunObject'];
         };
         /** @description Evaluation summary for an experiment run including pass/fail status, metrics, and datapoints */
         GetExperimentRunResultResponse: {
@@ -1832,12 +2086,22 @@ export interface components {
             old_run: components['schemas']['ExperimentRunObject'];
             new_run: components['schemas']['ExperimentRunObject'];
         };
+        GetExperimentRunMetricsResponse: {
+            events: components['schemas']['EventMetricData'][];
+            /** @description Total number of events matching the query */
+            totalEvents: number;
+        };
         GetExperimentRunsSchemaResponse: {
             fields: components['schemas']['ExperimentSchemaField'][];
             datasets: string[];
             mappings: {
                 [key: string]: components['schemas']['ExperimentSchemaMappingEntry'][];
             };
+        };
+        GetExperimentCompareEventsResponse: {
+            events: components['schemas']['ComparableEvent'][];
+            /** @description Total number of events matching the comparison query */
+            totalEvents: number;
         };
         DeleteExperimentRunResponse: {
             id: string;
@@ -1977,7 +2241,7 @@ export interface components {
             metric: {
                 name: string;
                 /** @enum {string} */
-                type: 'PYTHON' | 'LLM' | 'HUMAN' | 'COMPOSITE';
+                type: 'LLM' | 'PYTHON';
                 criteria: string;
                 /** @default  */
                 description?: string;
@@ -2020,9 +2284,28 @@ export interface components {
                     filterArray: components['schemas']['FiltersArray'];
                 };
             };
-            event?: unknown;
+            event: {
+                event_type?: string;
+                event_name?: string;
+                inputs?: {
+                    [key: string]: unknown;
+                };
+                outputs?: {
+                    [key: string]: unknown;
+                };
+                workspace_id?: string;
+                feedback?: {
+                    ground_truth?: unknown;
+                } & {
+                    [key: string]: unknown;
+                };
+            } & {
+                [key: string]: unknown;
+            };
         };
-        GetMetricsResponse: components['schemas']['MetricItem'][];
+        GetMetricsResponse: {
+            metrics: components['schemas']['MetricItem'][];
+        };
         CreateMetricResponse: {
             inserted: boolean;
             metric_id: string;
@@ -2033,7 +2316,12 @@ export interface components {
         DeleteMetricResponse: {
             deleted: boolean;
         };
-        RunMetricResponse: unknown;
+        RunMetricResponse: {
+            success: boolean;
+            loading: boolean;
+            result: boolean | number | string | null;
+            explanation: string | null;
+        };
         /** @description Project object */
         ProjectItem: {
             id: string;
@@ -2258,52 +2546,6 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /** @description Event node in session tree with nested children */
-        GetSessionResponse: {
-            event_id: string;
-            /** @enum {string} */
-            event_type: 'session' | 'model' | 'chain' | 'tool';
-            event_name: string;
-            children: unknown[];
-            start_time: number;
-            end_time: number;
-            duration: number;
-            metadata: {
-                num_events?: number;
-                num_model_events?: number;
-                has_feedback?: boolean;
-                cost?: number;
-                total_tokens?: number;
-                prompt_tokens?: number;
-                completion_tokens?: number;
-                scope?: {
-                    name?: string;
-                };
-            } & {
-                [key: string]: unknown;
-            };
-            parent_id?: string;
-            session_id?: string;
-            children_ids?: string[];
-            config?: unknown;
-            inputs?: unknown;
-            outputs?: unknown;
-            error?: string;
-            source?: string;
-            user_properties?: unknown;
-            metrics?: unknown;
-            feedback?: unknown;
-            org_id: string;
-            workspace_id?: string;
-            project_id: string;
-        } & {
-            [key: string]: unknown;
-        };
-        /** @description Confirmation of session deletion */
-        DeleteSessionResponse: {
-            success: boolean;
-            deleted: string;
-        };
         /** @description Response from adding traces to a session */
         SessionTracesResponse: {
             success: boolean;
@@ -2312,77 +2554,6 @@ export interface components {
         TODOSchema: {
             /** @description Placeholder - Zod schema not yet implemented */
             message: string;
-        };
-        UpdateEventRequest: {
-            event_id: string;
-            metadata?: {
-                [key: string]: unknown;
-            };
-            feedback?: {
-                [key: string]: unknown;
-            };
-            metrics?: {
-                [key: string]: unknown;
-            };
-            outputs?: {
-                [key: string]: unknown;
-            };
-            config?: {
-                [key: string]: unknown;
-            };
-            user_properties?: {
-                [key: string]: unknown;
-            };
-            duration?: number;
-        };
-        /**
-         * @example {
-         *       "event_ids": [
-         *         "7f22137a-6911-4ed3-bc36-110f1dde6b66",
-         *         "7f22137a-6911-4ed3-bc36-110f1dde6b67"
-         *       ],
-         *       "errors": [
-         *         "Could not create event due to missing inputs",
-         *         "Could not create event due to missing source"
-         *       ],
-         *       "success": true
-         *     }
-         */
-        CreateEventBatch500Response: {
-            event_ids?: string[];
-            errors?: string[];
-            success?: boolean;
-        };
-        /**
-         * @example {
-         *       "event_ids": [
-         *         "7f22137a-6911-4ed3-bc36-110f1dde6b66",
-         *         "7f22137a-6911-4ed3-bc36-110f1dde6b67"
-         *       ],
-         *       "errors": [
-         *         "Could not create event due to missing model",
-         *         "Could not create event due to missing provider"
-         *       ],
-         *       "success": true
-         *     }
-         */
-        CreateModelEventBatch500Response: {
-            event_ids?: string[];
-            errors?: string[];
-            success?: boolean;
-        };
-        GetExperimentRunMetricsResponse: {
-            /** @description Array of event objects with metrics */
-            events?: Record<string, never>[];
-        };
-        GetExperimentCompareEventsResponse: {
-            /** @description Array of matched event pairs from both runs */
-            events?: Record<string, never>[];
-            pagination?: {
-                page?: number;
-                limit?: number;
-                total?: number;
-            };
         };
     };
     responses: never;
@@ -2441,87 +2612,6 @@ export interface operations {
                 content: {
                     'application/json': components['schemas']['SessionTracesResponse'];
                 };
-            };
-        };
-    };
-    getSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Session ID (UUIDv4) */
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Session tree with nested events */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['GetSessionResponse'];
-                };
-            };
-            /** @description Missing required scope: org_id */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Session not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Error fetching session */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    deleteSession: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Session ID (UUIDv4) */
-                session_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Session deleted successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['DeleteSessionResponse'];
-                };
-            };
-            /** @description Invalid session ID or missing required scope */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Error deleting session */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -2624,115 +2714,6 @@ export interface operations {
             };
         };
     };
-    getEventsChart: {
-        parameters: {
-            query?: {
-                /** @description Date range filter (ISO string or object with $gte/$lte) */
-                dateRange?: string | {
-                    /** Format: date-time */
-                    $gte?: string;
-                    /** Format: date-time */
-                    $lte?: string;
-                };
-                /** @description Array of filter objects or JSON string */
-                filters?: Record<string, never>[] | string;
-                /** @description Metric to aggregate (default 'duration') */
-                metric?: string;
-                /** @description Field to group by */
-                groupBy?: string;
-                /** @description Time bucket for aggregation (default 'hour') */
-                bucket?: 'minute' | 'minutes' | '1m' | 'hour' | 'hours' | '1h' | 'day' | 'days' | '1d' | 'week' | 'weeks' | '1w' | 'month' | 'months' | '1M';
-                /** @description Aggregation function (default 'average') */
-                aggregation?: 'avg' | 'average' | 'mean' | 'p50' | 'p75' | 'p90' | 'p95' | 'p99' | 'count' | 'sum' | 'min' | 'max' | 'median';
-                /** @description Filter by evaluation ID */
-                evaluation_id?: string;
-                /** @description Filter to only experiment events */
-                only_experiments?: boolean | string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Chart data retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['GetEventsChartResponse'];
-                };
-            };
-            /** @description Bad request (missing required scopes or invalid parameters) */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    getEventsBySessionId: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Session ID (UUIDv4) - retrieves all events belonging to this session */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Session events retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['GetEventsBySessionIdResponse'];
-                };
-            };
-            /** @description Bad request (missing required scopes or invalid session ID) */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    deleteEvent: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Event ID (UUIDv4) - the specific event to delete */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Event deleted successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    'application/json': components['schemas']['DeleteEventResponse'];
-                };
-            };
-            /** @description Bad request (missing required scopes or invalid event ID) */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     exportEvents: {
         parameters: {
             query?: never;
@@ -2742,7 +2723,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['GetEventsLegacyRequest'];
+                'application/json': components['schemas']['ExportEventsRequest'];
             };
         };
         responses: {
@@ -2752,7 +2733,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    'application/json': components['schemas']['GetEventsLegacyResponse'];
+                    'application/json': components['schemas']['ExportEventsResponse'];
                 };
             };
         };
@@ -2824,9 +2805,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    'application/json': components['schemas']['CreateEventBatch500Response'];
-                };
+                content?: never;
             };
         };
     };
@@ -2866,9 +2845,7 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    'application/json': components['schemas']['CreateModelEventBatch500Response'];
-                };
+                content?: never;
             };
         };
     };
@@ -2886,7 +2863,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description A list of metrics */
+            /** @description Metrics retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -3656,7 +3633,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description An array of configurations */
+            /** @description Configurations retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;

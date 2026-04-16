@@ -22,7 +22,10 @@ on:
         required: true
         type: string
       dry_run:
-        description: "Dry run — validate everything without publishing or creating a release"
+        # Note: npm publish --dry-run does NOT exercise OIDC auth, and the
+        # GitHub Release step is skipped. Dry run mostly validates the package
+        # contents and the changelog extraction.
+        description: "Dry run — skip the actual npm publish and GitHub Release"
         type: boolean
         default: true
 
@@ -77,14 +80,6 @@ jobs:
             echo "prerelease_flag=" >> "$GITHUB_OUTPUT"
           fi
 
-      # Authentication is handled via OIDC (Trusted Publishers) — npm CLI
-      # auto-detects the OIDC environment. Provenance is generated automatically.
-      - name: Publish to npm
-        run: |
-          npm publish \
-            --tag ${{ steps.release-type.outputs.dist_tag }} \
-            ${{ inputs.dry_run && '--dry-run' || '' }}
-
       - name: Extract changelog entry
         shell: bash
         run: |
@@ -102,6 +97,11 @@ jobs:
         run: |
           echo "::notice::Would run: gh release create v${INPUT_VERSION} --title v${INPUT_VERSION} --notes-file release_notes.md ${{ steps.release-type.outputs.prerelease_flag }}"
 
+      # GitHub Release is created BEFORE npm publish so a partial failure is
+      # recoverable: GitHub Releases can be deleted/recreated freely, but
+      # npm publish is irreversible — the same version cannot be republished.
+      # If npm publish fails, just rerun the workflow; the existence check
+      # below will skip recreating the release.
       - name: Create GitHub Release
         if: ${{ !inputs.dry_run }}
         id: gh-release
@@ -118,6 +118,14 @@ jobs:
               ${{ steps.release-type.outputs.prerelease_flag }}
             echo "release_status=created" >> "$GITHUB_OUTPUT"
           fi
+
+      # Authentication is handled via OIDC (Trusted Publishers) — npm CLI
+      # auto-detects the OIDC environment. Provenance is generated automatically.
+      - name: Publish to npm
+        run: |
+          npm publish \
+            --tag ${{ steps.release-type.outputs.dist_tag }} \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
 
       - name: Summary
         run: |

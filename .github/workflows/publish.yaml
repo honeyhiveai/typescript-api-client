@@ -90,13 +90,24 @@ jobs:
       # Authentication is handled via OIDC (Trusted Publishers) — npm CLI
       # auto-detects the OIDC environment. Provenance is generated
       # automatically, no --provenance flag needed.
+      - name: Determine npm dist-tag
+        id: dist-tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$INPUT_VERSION" == *-* ]]; then
+            echo "tag=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Dry run — npm publish
         if: inputs.dry_run == true && steps.npm-check.outputs.already_published == 'false'
-        run: npm publish --dry-run
+        run: npm publish --tag ${{ steps.dist-tag.outputs.tag }} --dry-run
 
       - name: Publish to npm
         if: inputs.dry_run == false && steps.npm-check.outputs.already_published == 'false'
-        run: npm publish
+        run: npm publish --tag ${{ steps.dist-tag.outputs.tag }}
 
       # ── Extract changelog for release notes ───────────────────────────
       - name: Extract changelog entry
@@ -139,10 +150,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v${INPUT_VERSION}" \
-            --title "v${INPUT_VERSION}" \
-            --notes-file release_notes.md \
-            ${{ steps.prerelease.outputs.is_prerelease == 'true' && '--prerelease' || '' }}
+          if gh release view "v${INPUT_VERSION}" &>/dev/null; then
+            echo "::notice::GitHub Release v${INPUT_VERSION} already exists — skipping"
+          else
+            gh release create "v${INPUT_VERSION}" \
+              --title "v${INPUT_VERSION}" \
+              --notes-file release_notes.md \
+              ${{ steps.prerelease.outputs.is_prerelease == 'true' && '--prerelease' || '' }}
+          fi
 
       # ── Dry run notice ────────────────────────────────────────────────
       - name: Dry run — summary

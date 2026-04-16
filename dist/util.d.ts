@@ -4,10 +4,19 @@ import createClient, { type ClientOptions, type Middleware } from 'openapi-fetch
  * from openapi-fetch, but replace 'baseUrl' with 'serverUrl' for consistency
  * with our other SDKs.
  */
-export interface ClientConfig extends Omit<ClientOptions, 'baseUrl'> {
+export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'> {
     apiKey?: string;
     serverUrl?: string;
     middleware?: Middleware[];
+    /**
+     * @internal HoneyHive use only. Overrides the default SDK provenance headers
+     * with custom values (e.g. for the CLI or frontend).
+     */
+    _internal_provenance?: {
+        package: 'cp-frontend' | '@honeyhive/cli';
+        version: string;
+    };
+    headers?: Record<string, string>;
 }
 export declare function createApiClient<Paths extends {}>(options: ClientConfig): ReturnType<typeof createClient<Paths>>;
 /** Structural match for both branches of openapi-fetch's FetchResponse union. */

@@ -1,6 +1,8 @@
 import axios from 'axios';
 import createClient, { type ClientOptions, type Middleware } from 'openapi-fetch';
 
+import { SDK_VERSION } from './generated/version.js';
+
 /**
  * Gets an environment variable value, or returns the default value if the
  * environment variable is not set.
@@ -20,10 +22,26 @@ function getEnv(key: string, defaultValue?: string): string | undefined {
  * from openapi-fetch, but replace 'baseUrl' with 'serverUrl' for consistency
  * with our other SDKs.
  */
-export interface ClientConfig extends Omit<ClientOptions, 'baseUrl'> {
+export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'> {
   apiKey?: string;
   serverUrl?: string;
   middleware?: Middleware[];
+
+  /**
+   * @internal HoneyHive use only. Overrides the default SDK provenance headers
+   * with custom values (e.g. for the CLI or frontend).
+   */
+  _internal_provenance?: {
+    // Constrain the type to known values to further discourage
+    // customers from setting something arbitrary
+    package: 'cp-frontend' | '@honeyhive/cli';
+    version: string;
+  };
+
+  // Technically speaking headers can be more complicated than this (e.g.
+  // arrays), but to keep the implementation simple we constrain headers to how
+  // most people use them anyways
+  headers?: Record<string, string>;
 }
 
 /**
@@ -44,7 +62,7 @@ function querySerializer(queryParams: Record<string, unknown>): string {
 export function createApiClient<Paths extends {}>(
   options: ClientConfig,
 ): ReturnType<typeof createClient<Paths>> {
-  const { apiKey, serverUrl, middleware, ...clientOptions } = options;
+  const { apiKey, serverUrl, middleware, _internal_provenance, ...clientOptions } = options;
   const resolvedApiKey = apiKey ?? getEnv('HH_API_KEY');
   // When middleware is provided, it is assumed to handle authentication itself.
   if (!resolvedApiKey && !middleware?.length) {
@@ -53,7 +71,15 @@ export function createApiClient<Paths extends {}>(
     );
   }
 
-  const headers: Record<string, string> = {};
+  const provenance = _internal_provenance ?? {
+    package: '@honeyhive/api-client',
+    version: SDK_VERSION,
+  };
+  const headers: Record<string, string> = {
+    'hh-client-package': provenance.package,
+    'hh-client-version': provenance.version,
+    'hh-client-language': 'typescript',
+  };
   if (resolvedApiKey) {
     headers.Authorization = `Bearer ${resolvedApiKey}`;
   }
@@ -64,10 +90,7 @@ export function createApiClient<Paths extends {}>(
     baseUrl: serverUrl ?? getEnv('HH_API_URL', 'https://api.honeyhive.ai'),
     headers: {
       ...headers,
-      // User-supplied headers override Authorization to allow custom auth schemes.
-      // Cast is safe: ClientConfig.headers is typed as HeadersOptions (which includes
-      // Headers and [string,string][]), but callers always pass plain objects in practice.
-      ...(clientOptions.headers as Record<string, string>),
+      ...clientOptions.headers,
     },
   });
 

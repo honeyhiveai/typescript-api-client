@@ -1,5 +1,6 @@
 import axios from 'axios';
 import createClient from 'openapi-fetch';
+import { SDK_VERSION } from './generated/version.js';
 /**
  * Gets an environment variable value, or returns the default value if the
  * environment variable is not set.
@@ -28,13 +29,21 @@ function querySerializer(queryParams) {
 }
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- needs to match openapi-fetch's own createClient<Paths extends {}> signature
 export function createApiClient(options) {
-    const { apiKey, serverUrl, middleware, ...clientOptions } = options;
+    const { apiKey, serverUrl, middleware, _internal_provenance, ...clientOptions } = options;
     const resolvedApiKey = apiKey ?? getEnv('HH_API_KEY');
     // When middleware is provided, it is assumed to handle authentication itself.
     if (!resolvedApiKey && !middleware?.length) {
         throw new Error('Missing API key: provide apiKey in options or set the HH_API_KEY environment variable');
     }
-    const headers = {};
+    const provenance = _internal_provenance ?? {
+        package: '@honeyhive/api-client',
+        version: SDK_VERSION,
+    };
+    const headers = {
+        'hh-client-package': provenance.package,
+        'hh-client-version': provenance.version,
+        'hh-client-language': 'typescript',
+    };
     if (resolvedApiKey) {
         headers.Authorization = `Bearer ${resolvedApiKey}`;
     }
@@ -44,9 +53,6 @@ export function createApiClient(options) {
         baseUrl: serverUrl ?? getEnv('HH_API_URL', 'https://api.honeyhive.ai'),
         headers: {
             ...headers,
-            // User-supplied headers override Authorization to allow custom auth schemes.
-            // Cast is safe: ClientConfig.headers is typed as HeadersOptions (which includes
-            // Headers and [string,string][]), but callers always pass plain objects in practice.
             ...clientOptions.headers,
         },
     });

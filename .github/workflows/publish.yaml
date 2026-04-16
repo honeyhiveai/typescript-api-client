@@ -40,15 +40,21 @@ jobs:
       INPUT_VERSION: ${{ inputs.version }}
 
     steps:
+      # Actions are pinned to commit SHAs (not tags) because this workflow has
+      # id-token: write for npm OIDC publishing. A compromised tag on a
+      # third-party action could exfiltrate the OIDC token. Update SHAs
+      # intentionally; verify the corresponding release on the action's repo
+      # before bumping.
+
       # ── Checkout at the release tag ───────────────────────────────────
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.0
         with:
           ref: "v${{ inputs.version }}"
 
       # ── Setup Node.js ─────────────────────────────────────────────────
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
@@ -82,9 +88,13 @@ jobs:
           fi
 
       # ── Install dependencies ──────────────────────────────────────────
+      # --ignore-scripts: defense in depth. A compromised transitive dep's
+      # postinstall would otherwise execute with the OIDC token in env.
+      # The package has no scripts of its own and runtime deps don't need
+      # them to publish.
       - name: Install dependencies
         if: steps.npm-check.outputs.already_published == 'false'
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       # ── Publish to npm ────────────────────────────────────────────────
       # Authentication is handled via OIDC (Trusted Publishers) — npm CLI
@@ -110,8 +120,9 @@ jobs:
         run: npm publish --tag ${{ steps.dist-tag.outputs.tag }}
 
       # ── Extract changelog for release notes ───────────────────────────
+      # Always runs (including in dry runs) so a malformed regex or missing
+      # CHANGELOG header surfaces during validation, not on real publish.
       - name: Extract changelog entry
-        if: inputs.dry_run == false
         id: changelog
         shell: bash
         run: |
@@ -130,19 +141,29 @@ jobs:
 
       # ── Determine if this is a pre-release ────────────────────────────
       - name: Check pre-release status
-        if: inputs.dry_run == false
         id: prerelease
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$INPUT_VERSION"
-
           # Any version with a hyphen (e.g. 2.0.0-rc.2) is a pre-release per semver
-          if [[ "$VERSION" == *-* ]]; then
+          if [[ "$INPUT_VERSION" == *-* ]]; then
             echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
           fi
+
+      # ── Dry run — validate release inputs ─────────────────────────────
+      - name: Dry run — validate release inputs
+        if: inputs.dry_run == true
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -s release_notes.md ]]; then
+            echo "::error::release_notes.md is missing or empty"
+            exit 1
+          fi
+          PRERELEASE_FLAG="${{ steps.prerelease.outputs.is_prerelease == 'true' && '--prerelease' || '' }}"
+          echo "::notice::Would run: gh release create v${INPUT_VERSION} --title v${INPUT_VERSION} --notes-file release_notes.md ${PRERELEASE_FLAG}"
 
       # ── Create GitHub Release ─────────────────────────────────────────
       - name: Create GitHub Release

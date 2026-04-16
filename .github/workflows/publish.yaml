@@ -1,0 +1,157 @@
+# Publishes the TypeScript API client SDK to npm and creates a GitHub Release.
+#
+# Expects the sync workflow in hive-kube to have already pushed the built code
+# and tag (v{version}) to this repo's main branch.
+#
+# Uses npm Trusted Publishers (OIDC) — no NPM_TOKEN secret needed. Configure
+# the trust relationship on npmjs.com under the package's "Trusted Publisher"
+# settings: org=honeyhiveai, repo=typescript-api-client, workflow=publish.yaml.
+#
+# Idempotent: skips npm publish if the version already exists on the registry.
+
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: >
+          SDK version to publish (e.g. 2.0.0-rc.2). Must match the tag
+          and package.json version in this repo.
+        required: true
+        type: string
+      dry_run:
+        description: "Dry run — validate everything without publishing or creating a release"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency: publish
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      INPUT_VERSION: ${{ inputs.version }}
+
+    steps:
+      # ── Checkout at the release tag ───────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: "v${{ inputs.version }}"
+
+      # ── Setup Node.js ─────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      # ── Validate ──────────────────────────────────────────────────────
+      - name: Validate version matches package.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$INPUT_VERSION"
+          ACTUAL=$(jq -r '.version' package.json)
+          if [[ "$ACTUAL" != "$VERSION" ]]; then
+            echo "::error::Input version '$VERSION' does not match package.json version '$ACTUAL'"
+            exit 1
+          fi
+          echo "::notice::Version $VERSION validated against package.json"
+
+      - name: Check if version already exists on npm
+        id: npm-check
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$INPUT_VERSION"
+          PACKAGE=$(jq -r '.name' package.json)
+
+          if npm view "${PACKAGE}@${VERSION}" version 2>/dev/null; then
+            echo "already_published=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::${PACKAGE}@${VERSION} already exists on npm — skipping publish"
+          else
+            echo "already_published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Install dependencies ──────────────────────────────────────────
+      - name: Install dependencies
+        if: steps.npm-check.outputs.already_published == 'false'
+        run: npm ci
+
+      # ── Publish to npm ────────────────────────────────────────────────
+      # Authentication is handled via OIDC (Trusted Publishers) — npm CLI
+      # auto-detects the OIDC environment. Provenance is generated
+      # automatically, no --provenance flag needed.
+      - name: Dry run — npm publish
+        if: inputs.dry_run == true && steps.npm-check.outputs.already_published == 'false'
+        run: npm publish --dry-run
+
+      - name: Publish to npm
+        if: inputs.dry_run == false && steps.npm-check.outputs.already_published == 'false'
+        run: npm publish
+
+      # ── Extract changelog for release notes ───────────────────────────
+      - name: Extract changelog entry
+        if: inputs.dry_run == false
+        id: changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$INPUT_VERSION"
+
+          VERSION_RE=$(printf '%s' "$VERSION" | sed 's/[.[\*^$()+?{|]/\\&/g')
+
+          if grep -qE "^## \[${VERSION_RE}\]" CHANGELOG.md; then
+            sed -n "/^## \[${VERSION_RE}\]/,/^## \[/{/^## \[${VERSION_RE}\]/p;/^## \[/!p}" CHANGELOG.md > release_notes.md
+          else
+            printf '## [%s]\n\nNo changelog entry found.\n' "$VERSION" > release_notes.md
+          fi
+
+          cat release_notes.md
+
+      # ── Determine if this is a pre-release ────────────────────────────
+      - name: Check pre-release status
+        if: inputs.dry_run == false
+        id: prerelease
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$INPUT_VERSION"
+
+          # Any version with a hyphen (e.g. 2.0.0-rc.2) is a pre-release per semver
+          if [[ "$VERSION" == *-* ]]; then
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Create GitHub Release ─────────────────────────────────────────
+      - name: Create GitHub Release
+        if: inputs.dry_run == false
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${INPUT_VERSION}" \
+            --title "v${INPUT_VERSION}" \
+            --notes-file release_notes.md \
+            ${{ steps.prerelease.outputs.is_prerelease == 'true' && '--prerelease' || '' }}
+
+      # ── Dry run notice ────────────────────────────────────────────────
+      - name: Dry run — summary
+        if: inputs.dry_run == true
+        run: echo "::notice::Dry run complete. No packages were published and no releases were created."
+
+      # ── Summary ───────────────────────────────────────────────────────
+      - name: Summary
+        if: inputs.dry_run == false
+        run: |
+          PACKAGE=$(jq -r '.name' package.json)
+          echo "::notice::Published ${PACKAGE}@${INPUT_VERSION} to npm and created GitHub Release v${INPUT_VERSION}"

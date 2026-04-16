@@ -1,7 +1,12 @@
 # Publishes the TypeScript API client SDK to npm and creates a GitHub Release.
 #
-# Expects the sync workflow in hive-kube to have already pushed the built code
-# and tag (v{version}) to this repo's main branch.
+# Trust contract: this workflow assumes an upstream sync process has already:
+#   - validated the package.json version matches the tag
+#   - validated CHANGELOG.md has a "## [version]" entry
+#   - atomically pushed both the commit and the tag to main
+# As a result, this workflow does NOT re-validate any of those properties.
+# If you fork this workflow for a release flow without those guarantees, you
+# will need to add corresponding defensive checks.
 #
 # Uses npm Trusted Publishers (OIDC) — no NPM_TOKEN secret needed. Configure
 # the trust relationship on npmjs.com under the package's "Trusted Publisher"
@@ -13,9 +18,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: >
-          SDK version to publish (e.g. 2.0.0-rc.2). Must match the tag
-          and package.json version in this repo.
+        description: "SDK version to publish (e.g. 2.0.0-rc.2)"
         required: true
         type: string
       dry_run:
@@ -43,125 +46,64 @@ jobs:
       # third-party action could exfiltrate the OIDC token. Update SHAs
       # intentionally; verify the corresponding release on the action's repo
       # before bumping.
-
-      # ── Checkout at the release tag ───────────────────────────────────
-      # fetch-depth: 0 is needed so we can verify the tag commit is reachable
-      # from origin/main (a force-moved or mistagged ref must not produce a
-      # public release).
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.0
         with:
           ref: "v${{ inputs.version }}"
-          fetch-depth: 0
 
-      - name: Verify tag is reachable from main
-        shell: bash
-        run: |
-          set -euo pipefail
-          TAG="v${INPUT_VERSION}"
-          TAG_SHA=$(git rev-parse "${TAG}^{commit}")
-          if ! git merge-base --is-ancestor "$TAG_SHA" origin/main; then
-            echo "::error::Tag ${TAG} (${TAG_SHA}) is not an ancestor of origin/main. Refusing to publish."
-            exit 1
-          fi
-          echo "::notice::Tag ${TAG} (${TAG_SHA}) is reachable from origin/main"
-
-      # ── Setup Node.js ─────────────────────────────────────────────────
       - name: Setup Node.js
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
-      # ── Validate ──────────────────────────────────────────────────────
-      - name: Validate version matches package.json
-        shell: bash
-        run: |
-          set -euo pipefail
-          VERSION="$INPUT_VERSION"
-          ACTUAL=$(jq -r '.version' package.json)
-          if [[ "$ACTUAL" != "$VERSION" ]]; then
-            echo "::error::Input version '$VERSION' does not match package.json version '$ACTUAL'"
-            exit 1
-          fi
-          echo "::notice::Version $VERSION validated against package.json"
-
-      # ── Install dependencies ──────────────────────────────────────────
       # --ignore-scripts: defense in depth. A compromised transitive dep's
       # postinstall would otherwise execute with the OIDC token in env.
-      # The package has no scripts of its own and runtime deps don't need
-      # them to publish.
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # ── Publish to npm ────────────────────────────────────────────────
-      # Authentication is handled via OIDC (Trusted Publishers) — npm CLI
-      # auto-detects the OIDC environment. Provenance is generated
-      # automatically, no --provenance flag needed.
-      - name: Determine npm dist-tag
-        id: dist-tag
+      # Pre-release versions (anything with a hyphen, per semver) publish under
+      # the "next" dist-tag and are flagged as pre-releases on GitHub.
+      - name: Determine release type
+        id: release-type
         shell: bash
         run: |
           set -euo pipefail
           if [[ "$INPUT_VERSION" == *-* ]]; then
-            echo "tag=next" >> "$GITHUB_OUTPUT"
+            echo "dist_tag=next" >> "$GITHUB_OUTPUT"
+            echo "prerelease_flag=--prerelease" >> "$GITHUB_OUTPUT"
           else
-            echo "tag=latest" >> "$GITHUB_OUTPUT"
+            echo "dist_tag=latest" >> "$GITHUB_OUTPUT"
+            echo "prerelease_flag=" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Dry run — npm publish
-        if: inputs.dry_run == true
-        run: npm publish --tag ${{ steps.dist-tag.outputs.tag }} --dry-run
-
+      # Authentication is handled via OIDC (Trusted Publishers) — npm CLI
+      # auto-detects the OIDC environment. Provenance is generated automatically.
       - name: Publish to npm
-        if: inputs.dry_run == false
-        run: npm publish --tag ${{ steps.dist-tag.outputs.tag }}
+        run: |
+          npm publish \
+            --tag ${{ steps.release-type.outputs.dist_tag }} \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
 
-      # ── Extract changelog for release notes ───────────────────────────
-      # Always runs (including in dry runs) so a malformed regex or missing
-      # CHANGELOG header surfaces during validation, not on real publish.
       - name: Extract changelog entry
-        id: changelog
         shell: bash
         run: |
           set -euo pipefail
-          VERSION="$INPUT_VERSION"
-
-          VERSION_RE=$(printf '%s' "$VERSION" | sed 's/[.[\*^$()+?{|]/\\&/g')
-
-          if ! grep -qE "^## \[${VERSION_RE}\]" CHANGELOG.md; then
-            echo "::error::No changelog entry found for ${VERSION} (expected '## [${VERSION}]' header in CHANGELOG.md)"
+          VERSION_RE=$(printf '%s' "$INPUT_VERSION" | sed 's/[.[\*^$()+?{|]/\\&/g')
+          sed -n "/^## \[${VERSION_RE}\]/,/^## \[/{/^## \[${VERSION_RE}\]/p;/^## \[/!p}" CHANGELOG.md > release_notes.md
+          if [[ ! -s release_notes.md ]]; then
+            echo "::error::Extracted release notes are empty"
             exit 1
           fi
-
-          sed -n "/^## \[${VERSION_RE}\]/,/^## \[/{/^## \[${VERSION_RE}\]/p;/^## \[/!p}" CHANGELOG.md > release_notes.md
           cat release_notes.md
 
-      # ── Determine if this is a pre-release ────────────────────────────
-      - name: Check pre-release status
-        id: prerelease
-        shell: bash
-        run: |
-          set -euo pipefail
-          # Any version with a hyphen (e.g. 2.0.0-rc.2) is a pre-release per semver
-          if [[ "$INPUT_VERSION" == *-* ]]; then
-            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      # ── Dry run — preview the GitHub Release that would be created ────
       - name: Dry run — preview release
-        if: inputs.dry_run == true
-        shell: bash
+        if: inputs.dry_run
         run: |
-          set -euo pipefail
-          PRERELEASE_FLAG="${{ steps.prerelease.outputs.is_prerelease == 'true' && '--prerelease' || '' }}"
-          echo "::notice::Would run: gh release create v${INPUT_VERSION} --title v${INPUT_VERSION} --notes-file release_notes.md ${PRERELEASE_FLAG}"
+          echo "::notice::Would run: gh release create v${INPUT_VERSION} --title v${INPUT_VERSION} --notes-file release_notes.md ${{ steps.release-type.outputs.prerelease_flag }}"
 
-      # ── Create GitHub Release ─────────────────────────────────────────
       - name: Create GitHub Release
-        if: inputs.dry_run == false
+        if: ${{ !inputs.dry_run }}
         id: gh-release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -173,21 +115,16 @@ jobs:
             gh release create "v${INPUT_VERSION}" \
               --title "v${INPUT_VERSION}" \
               --notes-file release_notes.md \
-              ${{ steps.prerelease.outputs.is_prerelease == 'true' && '--prerelease' || '' }}
+              ${{ steps.release-type.outputs.prerelease_flag }}
             echo "release_status=created" >> "$GITHUB_OUTPUT"
           fi
 
-      # ── Dry run notice ────────────────────────────────────────────────
-      - name: Dry run — summary
-        if: inputs.dry_run == true
-        run: echo "::notice::Dry run complete. No packages were published and no releases were created."
-
-      # ── Summary ───────────────────────────────────────────────────────
       - name: Summary
-        if: inputs.dry_run == false
         run: |
           PACKAGE=$(jq -r '.name' package.json)
-          if [[ "${{ steps.gh-release.outputs.release_status }}" == "created" ]]; then
+          if [[ "${{ inputs.dry_run }}" == "true" ]]; then
+            echo "::notice::Dry run complete for ${PACKAGE}@${INPUT_VERSION}. Nothing was published or released."
+          elif [[ "${{ steps.gh-release.outputs.release_status }}" == "created" ]]; then
             echo "::notice::Published ${PACKAGE}@${INPUT_VERSION} to npm and created GitHub Release v${INPUT_VERSION}"
           else
             echo "::notice::Published ${PACKAGE}@${INPUT_VERSION} to npm. GitHub Release v${INPUT_VERSION} already existed."

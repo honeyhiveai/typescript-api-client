@@ -115,13 +115,13 @@ jobs:
           echo "should_sync=true" >> "$GITHUB_OUTPUT"
           echo "::notice::GitHub Release ${VERSION} exists and tag SHA matches upstream run; proceeding with docs sync."
 
-      - name: Generate Propolis token for docs repo
+      - name: Generate Forager token for docs repo
         id: app-token
         if: ${{ steps.verify-release.outputs.should_sync == 'true' }}
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.PROPOLIS_APP_ID }}
-          private-key: ${{ secrets.PROPOLIS_PRIVATE_KEY }}
+          app-id: ${{ vars.GH_APP_FORAGER_APP_ID }}
+          private-key: ${{ secrets.GH_APP_FORAGER_PRIVATE_KEY }}
           owner: honeyhiveai
           repositories: honeyhive-ai-docs
 

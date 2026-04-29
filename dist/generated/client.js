@@ -1,4 +1,4 @@
-// AUTO-GENERATED — do not edit manually. Run `pnpm generate` to regenerate.
+// AUTO-GENERATED — do not edit manually. Run `pnpm generate:client` to regenerate.
 import { createApiClient, unwrap } from '../util.js';
 /** @inline */
 class SessionsNamespace {
@@ -59,6 +59,14 @@ class EventsNamespace {
      * - `metrics` (object) — Custom metrics.
      * - `feedback` (object) — Feedback data (e.g. ratings, ground truth).
      * - `user_properties` (object) — User properties associated with the event.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *   "success": true
+     * }
+     * ```
      */
     create(options) {
         return unwrap(this.#client.POST('/events', { body: options.body }));
@@ -67,6 +75,41 @@ class EventsNamespace {
      * Update an event
      *
      * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. The event_id field is required to identify the event to update.
+     *
+     * @example Request body
+     * ```json
+     * {
+     *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *   "metadata": {
+     *     "cost": 0.00008,
+     *     "completion_tokens": 23,
+     *     "prompt_tokens": 35,
+     *     "total_tokens": 58
+     *   },
+     *   "feedback": {
+     *     "rating": 5
+     *   },
+     *   "metrics": {
+     *     "num_words": 2
+     *   },
+     *   "outputs": {
+     *     "role": "assistant",
+     *     "content": "Hello world"
+     *   },
+     *   "config": {
+     *     "template": [
+     *       {
+     *         "role": "system",
+     *         "content": "Hello, {{ name }}!"
+     *       }
+     *     ]
+     *   },
+     *   "user_properties": {
+     *     "user_id": "691b1f94-d38c-4e92-b051-5e03fee9ff86"
+     *   },
+     *   "duration": 42
+     * }
+     * ```
      */
     update(options) {
         return unwrap(this.#client.PUT('/events', { body: options.body }));
@@ -74,15 +117,23 @@ class EventsNamespace {
     /**
      * Retrieve events based on filters
      *
-     * Export events via POST with filtering, projections, and pagination. This is the primary method for retrieving events from HoneyHive.
+     * Search events via POST with filtering and pagination. This is the primary method for retrieving events from HoneyHive.
      */
-    export(options) {
-        return unwrap(this.#client.POST('/v1/events/export', { body: options.body }));
+    search(options) {
+        return unwrap(this.#client.POST('/v1/events/search', { body: options.body }));
     }
     /**
      * Create a new model event
      *
      * Create a model event. The event_type is automatically set to 'model'. Please refer to our instrumentation guide for detailed information.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *   "success": true
+     * }
+     * ```
      */
     createModel(options) {
         return unwrap(this.#client.POST('/events/model', { body: options.body }));
@@ -91,6 +142,18 @@ class EventsNamespace {
      * Create a batch of events
      *
      * Create multiple events in a single request. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "event_ids": [
+     *     "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *     "7f22137a-6911-4ed3-bc36-110f1dde6b67"
+     *   ],
+     *   "session_id": "caf77ace-3417-4da4-944d-f4a0688f3c23",
+     *   "success": true
+     * }
+     * ```
      */
     createBatch(options) {
         return unwrap(this.#client.POST('/events/batch', { body: options.body }));
@@ -99,9 +162,28 @@ class EventsNamespace {
      * Create a batch of model events
      *
      * Create multiple model events in a single request. The event_type is automatically set to 'model' for all events. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "event_ids": [
+     *     "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *     "7f22137a-6911-4ed3-bc36-110f1dde6b67"
+     *   ],
+     *   "success": true
+     * }
+     * ```
      */
     createModelBatch(options) {
         return unwrap(this.#client.POST('/events/model/batch', { body: options.body }));
+    }
+    /**
+     * Get events schema
+     *
+     * Retrieve the schema and metadata for experiment events
+     */
+    getEventsSchema(options) {
+        return unwrap(this.#client.GET('/v1/events/schema', { params: { query: options?.query } }));
     }
 }
 /** @inline */
@@ -232,20 +314,23 @@ class DatasetsNamespace {
         return unwrap(this.#client.POST('/v1/datasets', { body: options.body }));
     }
     /**
-     * Update a dataset
-     *
-     * Update a dataset's name, description, or list of datapoint IDs.
-     */
-    update(options) {
-        return unwrap(this.#client.PUT('/v1/datasets', { body: options.body }));
-    }
-    /**
      * Delete a dataset
      *
      * Permanently delete a dataset by its unique identifier.
      */
     delete(options) {
         return unwrap(this.#client.DELETE('/v1/datasets', { params: { query: options.query } }));
+    }
+    /**
+     * Update a dataset
+     *
+     * Update a dataset's name, description, or list of datapoint IDs.
+     */
+    update(options) {
+        return unwrap(this.#client.PUT('/v1/datasets/{dataset_id}', {
+            params: { path: options.path },
+            body: options.body,
+        }));
     }
     /**
      * Add datapoints to a dataset
@@ -274,14 +359,6 @@ class ExperimentsNamespace {
     #client;
     constructor(client) {
         this.#client = client;
-    }
-    /**
-     * Get experiment runs schema
-     *
-     * Retrieve the schema and metadata for experiment runs
-     */
-    getRunsSchema(options) {
-        return unwrap(this.#client.GET('/v1/runs/schema', { params: { query: options?.query } }));
     }
     /**
      * Get a list of evaluation runs
@@ -336,7 +413,7 @@ class ExperimentsNamespace {
     /**
      * Retrieve experiment result
      *
-     * Compute evaluation summary for an experiment run including pass/fail status, metrics, and datapoints
+     * Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
      */
     getResult(options) {
         return unwrap(this.#client.GET('/v1/runs/{run_id}/result', {
@@ -360,6 +437,56 @@ class ExperimentsNamespace {
      */
     compareRunEvents(options) {
         return unwrap(this.#client.GET('/v1/runs/compare/events', { params: { query: options.query } }));
+    }
+}
+/** @inline */
+class QueuesNamespace {
+    #client;
+    constructor(client) {
+        this.#client = client;
+    }
+    /**
+     * List annotation queues
+     *
+     * List annotation queues for the current project scope, optionally filtered by enabled status.
+     */
+    list(options) {
+        return unwrap(this.#client.GET('/v1/queues', { params: { query: options?.query } }));
+    }
+    /**
+     * Create an annotation queue
+     *
+     * Create a new annotation queue with a name, optional description, filters, and an initial set of event IDs to add.
+     */
+    create(options) {
+        return unwrap(this.#client.POST('/v1/queues', { body: options.body }));
+    }
+    /**
+     * Get an annotation queue
+     *
+     * Retrieve a single annotation queue by its unique identifier.
+     */
+    get(options) {
+        return unwrap(this.#client.GET('/v1/queues/{queue_id}', { params: { path: options.path } }));
+    }
+    /**
+     * Update an annotation queue
+     *
+     * Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
+     */
+    update(options) {
+        return unwrap(this.#client.PUT('/v1/queues/{queue_id}', {
+            params: { path: options.path },
+            body: options.body,
+        }));
+    }
+    /**
+     * Delete an annotation queue
+     *
+     * Soft-delete an annotation queue by its unique identifier.
+     */
+    delete(options) {
+        return unwrap(this.#client.DELETE('/v1/queues/{queue_id}', { params: { path: options.path } }));
     }
 }
 /** @inline */
@@ -412,6 +539,7 @@ export class Client {
     datapoints;
     datasets;
     experiments;
+    queues;
     configurations;
     constructor(options = {}) {
         this.#client = createApiClient(options);
@@ -421,6 +549,7 @@ export class Client {
         this.datapoints = new DatapointsNamespace(this.#client);
         this.datasets = new DatasetsNamespace(this.#client);
         this.experiments = new ExperimentsNamespace(this.#client);
+        this.queues = new QueuesNamespace(this.#client);
         this.configurations = new ConfigurationsNamespace(this.#client);
     }
 }

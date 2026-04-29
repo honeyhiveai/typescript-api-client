@@ -96,10 +96,31 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Retrieve events based on filters
-         * @description Export events via POST with filtering, projections, and pagination. This is the primary method for retrieving events from HoneyHive.
+         * Retrieve events based on filters (deprecated)
+         * @deprecated
+         * @description Deprecated. Use `POST /v1/events/search` instead.
          */
-        post: operations['exportEvents'];
+        post: operations['exportEventsLegacy'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/v1/events/search': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retrieve events based on filters
+         * @description Search events via POST with filtering and pagination. This is the primary method for retrieving events from HoneyHive.
+         */
+        post: operations['searchEvents'];
         delete?: never;
         options?: never;
         head?: never;
@@ -303,10 +324,11 @@ export interface paths {
          */
         get: operations['getDatasets'];
         /**
-         * Update a dataset
-         * @description Update a dataset's name, description, or list of datapoint IDs.
+         * Update a dataset (deprecated)
+         * @deprecated
+         * @description Deprecated. Use `PUT /v1/datasets/{dataset_id}` instead.
          */
-        put: operations['updateDataset'];
+        put: operations['updateDatasetLegacy'];
         /**
          * Create a dataset
          * @description Create a new dataset with an optional name, description, and initial set of datapoint IDs.
@@ -317,6 +339,26 @@ export interface paths {
          * @description Permanently delete a dataset by its unique identifier.
          */
         delete: operations['deleteDataset'];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/v1/datasets/{dataset_id}': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update a dataset
+         * @description Update a dataset's name, description, or list of datapoint IDs.
+         */
+        put: operations['updateDataset'];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -362,7 +404,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    '/v1/runs/schema': {
+    '/v1/events/schema': {
         parameters: {
             query?: never;
             header?: never;
@@ -370,10 +412,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get experiment runs schema
-         * @description Retrieve the schema and metadata for experiment runs
+         * Get events schema
+         * @description Retrieve the schema and metadata for experiment events
          */
-        get: operations['getExperimentRunsSchema'];
+        get: operations['getEventsSchema'];
         put?: never;
         post?: never;
         delete?: never;
@@ -463,7 +505,7 @@ export interface paths {
         };
         /**
          * Retrieve experiment result
-         * @description Compute evaluation summary for an experiment run including pass/fail status, metrics, and datapoints
+         * @description Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
          */
         get: operations['getExperimentResult'];
         put?: never;
@@ -509,6 +551,58 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/v1/queues': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List annotation queues
+         * @description List annotation queues for the current project scope, optionally filtered by enabled status.
+         */
+        get: operations['getQueues'];
+        put?: never;
+        /**
+         * Create an annotation queue
+         * @description Create a new annotation queue with a name, optional description, filters, and an initial set of event IDs to add.
+         */
+        post: operations['createQueue'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/v1/queues/{queue_id}': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get an annotation queue
+         * @description Retrieve a single annotation queue by its unique identifier.
+         */
+        get: operations['getQueue'];
+        /**
+         * Update an annotation queue
+         * @description Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
+         */
+        put: operations['updateQueue'];
+        post?: never;
+        /**
+         * Delete an annotation queue
+         * @description Soft-delete an annotation queue by its unique identifier.
+         */
+        delete: operations['deleteQueue'];
         options?: never;
         head?: never;
         patch?: never;
@@ -615,6 +709,7 @@ export interface components {
             /** Format: date-time */
             updated_at?: string | null;
         };
+        /** @description Request body for POST /configurations */
         CreateConfigurationRequest: {
             name: string;
             /**
@@ -630,6 +725,7 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** @description Request body for PUT /configurations */
         UpdateConfigurationRequest: {
             name: string;
             /**
@@ -645,6 +741,7 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
+        /** @description Query parameters for GET /configurations */
         GetConfigurationsQuery: {
             /** @description Filter configurations by name */
             name?: string;
@@ -653,10 +750,12 @@ export interface components {
             /** @description Filter configurations by tags */
             tags?: string;
         };
+        /** @description Response for POST /configurations */
         CreateConfigurationResponse: {
             acknowledged: boolean;
             insertedId: string;
         };
+        /** @description Response for PUT /configurations */
         UpdateConfigurationResponse: {
             acknowledged: boolean;
             modifiedCount: number;
@@ -664,10 +763,12 @@ export interface components {
             upsertedCount: number;
             matchedCount: number;
         };
+        /** @description Response for DELETE /configurations */
         DeleteConfigurationResponse: {
             acknowledged: boolean;
             deletedCount: number;
         };
+        /** @description Response for GET /configurations */
         GetConfigurationsResponse: {
             configurations: components['schemas']['ConfigurationItem'][];
         };
@@ -705,16 +806,19 @@ export interface components {
             updated_at?: string;
             linked_datasets?: string[];
         };
+        /** @description Query parameters for GET /datapoints */
         GetDatapointsQuery: {
             /** @description List of datapoint IDs to fetch */
             datapoint_ids?: string[];
             /** @description Dataset name to filter by */
             dataset_name?: string;
         };
+        /** @description Path parameters for GET /datapoints/{datapoint_id} */
         GetDatapointParams: {
             /** @description Unique identifier of the datapoint */
             datapoint_id: string;
         };
+        /** @description Request body for POST /datapoints */
         CreateDatapointRequest: {
             /** @default {} */
             inputs?: {
@@ -734,6 +838,7 @@ export interface components {
             /** @default [] */
             linked_datasets?: string[];
         };
+        /** @description Request body for PUT /datapoints/{datapoint_id} */
         UpdateDatapointRequest: {
             inputs?: {
                 [key: string]: unknown;
@@ -750,12 +855,15 @@ export interface components {
             linked_event?: string;
             linked_datasets?: string[];
         };
+        /** @description Path parameters for PUT /datapoints/{datapoint_id} */
         UpdateDatapointParams: {
             datapoint_id: string;
         };
+        /** @description Path parameters for DELETE /datapoints/{datapoint_id} */
         DeleteDatapointParams: {
             datapoint_id: string;
         };
+        /** @description Request body for POST /datapoints/batch */
         BatchCreateDatapointsRequest: {
             /** @deprecated */
             events?: string[];
@@ -771,27 +879,29 @@ export interface components {
             selectAll?: boolean;
             dataset_id?: string;
         };
+        /** @description Response for GET /datapoints */
         GetDatapointsResponse: {
             datapoints: components['schemas']['Datapoint'][];
         };
+        /** @description Response for GET /datapoints/{datapoint_id} */
         GetDatapointResponse: {
             datapoint: components['schemas']['Datapoint'][];
         };
+        /** @description Response for POST /datapoints */
         CreateDatapointResponse: {
             inserted: boolean;
-            result: {
-                insertedIds: string[];
-            };
+            result: components['schemas']['CreateDatapointResponseResult'];
         };
+        /** @description Response for PUT /datapoints/{datapoint_id} */
         UpdateDatapointResponse: {
             updated: boolean;
-            result: {
-                modifiedCount: number;
-            };
+            result: components['schemas']['UpdateDatapointResponseResult'];
         };
+        /** @description Response for DELETE /datapoints/{datapoint_id} */
         DeleteDatapointResponse: {
             deleted: boolean;
         };
+        /** @description Response for POST /datapoints/batch */
         BatchCreateDatapointsResponse: {
             inserted: boolean;
             insertedIds: string[];
@@ -804,6 +914,7 @@ export interface components {
             created_at?: string;
             updated_at?: string;
         };
+        /** @description Request body for POST /datasets */
         CreateDatasetRequest: {
             /**
              * @description Name of the dataset
@@ -818,7 +929,20 @@ export interface components {
              */
             datapoints?: string[];
         };
+        /** @description Request body for PUT /datasets/{dataset_id} */
         UpdateDatasetRequest: {
+            /** @description New dataset name */
+            name?: string;
+            /** @description New dataset description */
+            description?: string;
+            /** @description Updated list of datapoint IDs */
+            datapoints?: string[];
+        };
+        /**
+         * @deprecated
+         * @description Request body for PUT /datasets (deprecated — use PUT /datasets/{dataset_id})
+         */
+        LegacyUpdateDatasetRequest: {
             /** @description Unique identifier of the dataset to update */
             dataset_id: string;
             /** @description New dataset name */
@@ -828,10 +952,12 @@ export interface components {
             /** @description Updated list of datapoint IDs */
             datapoints?: string[];
         };
+        /** @description Query parameters for DELETE /datasets */
         DeleteDatasetQuery: {
             /** @description Unique identifier of the dataset to delete */
             dataset_id: string;
         };
+        /** @description Request body for POST /datasets/{dataset_id}/datapoints */
         AddDatapointsToDatasetRequest: {
             /** @description Array of datapoint data objects to add */
             data: {
@@ -840,12 +966,14 @@ export interface components {
             /** @description Field mapping for inputs, ground truth, and history */
             mapping: components['schemas']['DatapointMapping'];
         };
+        /** @description Path parameters for DELETE /datasets/{dataset_id}/datapoints/{datapoint_id} */
         RemoveDatapointFromDatasetParams: {
             /** @description Unique identifier of the dataset */
             dataset_id: string;
             /** @description Unique identifier of the datapoint to remove */
             datapoint_id: string;
         };
+        /** @description Response for POST /datasets */
         CreateDatasetResponse: {
             inserted: boolean;
             result: components['schemas']['InsertResult'];
@@ -853,22 +981,27 @@ export interface components {
         InsertResult: {
             insertedId: string;
         };
+        /** @description Response for PUT /datasets */
         UpdateDatasetResponse: {
             result: components['schemas']['Dataset'];
         };
+        /** @description Response for GET /datasets */
         GetDatasetsResponse: {
             datasets: components['schemas']['Dataset'][];
         };
+        /** @description Response for DELETE /datasets */
         DeleteDatasetResponse: {
             result: components['schemas']['DeleteResult'];
         };
         DeleteResult: {
             id: string;
         };
+        /** @description Response for POST /datasets/{dataset_id}/datapoints */
         AddDatapointsResponse: {
             inserted: boolean;
             datapoint_ids: string[];
         };
+        /** @description Response for DELETE /datasets/{dataset_id}/datapoints/{datapoint_id} */
         RemoveDatapointResponse: {
             dereferenced: boolean;
             message: string;
@@ -882,6 +1015,16 @@ export interface components {
             type: 'string' | 'number' | 'boolean' | 'datetime';
         };
         FiltersArray: components['schemas']['SingleFilter'][];
+        EventSearchFilter: {
+            field: string;
+            /** @enum {string} */
+            operator: 'exists' | 'not exists' | 'is' | 'is not' | 'contains' | 'not contains' | 'greater than' | 'less than' | 'after' | 'before';
+            value: string | number | boolean | null;
+            /** @enum {string} */
+            type?: 'string' | 'number' | 'boolean' | 'datetime';
+        };
+        EventSearchFiltersArray: components['schemas']['EventSearchFilter'][];
+        /** @description Minimal event object used by evaluation and session endpoints; permissive (passthrough) */
         Event: {
             event_id: string;
             project_id: string;
@@ -894,9 +1037,7 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
-            feedback?: {
-                ground_truth?: unknown;
-            };
+            feedback?: components['schemas']['EventFeedback'];
         } & {
             [key: string]: unknown;
         };
@@ -1153,78 +1294,27 @@ export interface components {
         };
         /** @description Request to create a new event */
         PostEventRequest: {
-            /** @description Full event object for legacy event creation endpoints */
-            event: {
-                /**
-                 * @deprecated
-                 * @description Project name (ignored by server — project is determined from API key scope)
-                 */
-                project?: string;
-                /** @description Project ID */
-                project_id?: string;
-                /** @description Source of the event (e.g., sdk-python) */
-                source?: string;
-                /** @description Name of the event */
-                event_name?: string;
-                /** @enum {string} */
-                event_type: 'model' | 'tool' | 'chain' | 'session';
-                /** @description Unique event identifier */
-                event_id?: string;
-                /** @description Session this event belongs to */
-                session_id?: string;
-                /** @description Parent event ID in the trace hierarchy */
-                parent_id?: string;
-                /** @description Child event IDs in the trace hierarchy */
-                children_ids?: string[];
-                /** @description Configuration used for this event */
-                config?: {
-                    [key: string]: unknown;
-                };
-                inputs: {
-                    [key: string]: unknown;
-                };
-                /** @description Output data from the event */
-                outputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Error message if the event failed */
-                error?: string | null;
-                /** @description Event start time as Unix milliseconds */
-                start_time?: number;
-                /** @description Event end time as Unix milliseconds */
-                end_time?: number;
-                /** @description Event duration in milliseconds */
-                duration?: number;
-                /** @description Arbitrary metadata for the event */
-                metadata?: {
-                    [key: string]: unknown;
-                };
-                /** @description Feedback data associated with the event */
-                feedback?: {
-                    [key: string]: unknown;
-                };
-                /** @description Metric values computed for the event */
-                metrics?: {
-                    [key: string]: unknown;
-                };
-                /** @description User properties associated with the event */
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            };
+            event: components['schemas']['PostEventRequestEvent'];
+        };
+        /** @description Request body for POST /v1/events/search */
+        SearchEventsRequest: {
+            /** @description Array of filter criteria to apply */
+            filters?: components['schemas']['EventSearchFiltersArray'];
+            dateRange?: components['schemas']['SearchEventsRequestDateRange'];
+            /** @description Limit number of results (default 1000, max 7500) */
+            limit?: number;
+            /** @description Page number of results (default 1) */
+            page?: number;
+            /** @description If true, skip result ordering for faster queries */
+            ignore_order?: boolean;
+            /** @description Filter by evaluation/experiment run ID */
+            evaluation_id?: string;
         };
         /** @description Request body for POST /v1/events/export */
-        ExportEventsRequest: {
+        LegacyExportEventsRequest: {
             /** @description Array of filter criteria to apply */
             filters?: components['schemas']['FiltersArray'];
-            dateRange?: {
-                /** @description ISO String for start of date range */
-                $gte: string;
-                /** @description ISO String for end of date range */
-                $lte: string;
-            };
+            dateRange?: components['schemas']['LegacyExportEventsRequestDateRange'];
             /** @description Fields to include in the response */
             projections?: string[];
             /** @description Limit number of results (default 1000, max 7500) */
@@ -1238,213 +1328,12 @@ export interface components {
         };
         /** @description Request body for POST /events/model */
         PostModelEventRequest: {
-            /** @description Model event object with model-specific fields and legacy aliases */
-            model_event: {
-                /**
-                 * @deprecated
-                 * @description Project name (ignored by server — project is determined from API key scope)
-                 */
-                project?: string;
-                /** @description Project ID */
-                project_id?: string;
-                /** @description Source of the event (e.g., sdk-python) */
-                source?: string;
-                /** @description Name of the event */
-                event_name?: string;
-                /**
-                 * @description Type of event (model, tool, chain, or session)
-                 * @enum {string}
-                 */
-                event_type?: 'model' | 'tool' | 'chain' | 'session';
-                /** @description Unique event identifier */
-                event_id?: string;
-                /** @description Session this event belongs to */
-                session_id?: string;
-                /** @description Parent event ID in the trace hierarchy */
-                parent_id?: string;
-                /** @description Child event IDs in the trace hierarchy */
-                children_ids?: string[];
-                /** @description Configuration used for this event */
-                config?: {
-                    [key: string]: unknown;
-                };
-                /** @description Input data for the event */
-                inputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Output data from the event */
-                outputs?: {
-                    [key: string]: unknown;
-                };
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.error for model events
-                 */
-                error?: string | null;
-                /** @description Event start time as Unix milliseconds */
-                start_time?: number;
-                /** @description Event end time as Unix milliseconds */
-                end_time?: number;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.duration for model events
-                 */
-                duration?: number;
-                /** @description Arbitrary metadata for the event */
-                metadata?: {
-                    [key: string]: unknown;
-                };
-                /** @description Feedback data associated with the event */
-                feedback?: {
-                    [key: string]: unknown;
-                };
-                /** @description Metric values computed for the event */
-                metrics?: {
-                    [key: string]: unknown;
-                };
-                /** @description User properties associated with the event */
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-                /** @description Model identifier (either this or event_name required) */
-                model_name?: string;
-                /** @description Model version string */
-                model_version?: string;
-                /**
-                 * @deprecated
-                 * @description Legacy alias for model_name
-                 */
-                model?: string;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.messages
-                 */
-                messages?: unknown[];
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to outputs.response
-                 */
-                response?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.provider
-                 */
-                provider?: string;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.usage
-                 */
-                usage?: {
-                    [key: string]: unknown;
-                };
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.cost
-                 */
-                cost?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.hyperparameters
-                 */
-                hyperparameters?: {
-                    [key: string]: unknown;
-                };
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.template
-                 */
-                template?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.template_inputs
-                 */
-                template_inputs?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.tools
-                 */
-                tools?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.tool_choice
-                 */
-                tool_choice?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.response_format
-                 */
-                response_format?: unknown;
-            } & {
-                [key: string]: unknown;
-            };
+            model_event: components['schemas']['ModelEvent'];
         };
         /** @description Request body for POST /events/batch */
         PostEventBatchRequest: {
             /** @description Array of events to create */
-            events: ({
-                /**
-                 * @deprecated
-                 * @description Project name (ignored by server — project is determined from API key scope)
-                 */
-                project?: string;
-                /** @description Project ID */
-                project_id?: string;
-                /** @description Source of the event (e.g., sdk-python) */
-                source?: string;
-                /** @description Name of the event */
-                event_name?: string;
-                /**
-                 * @description Type of event (model, tool, chain, or session)
-                 * @enum {string}
-                 */
-                event_type?: 'model' | 'tool' | 'chain' | 'session';
-                /** @description Unique event identifier */
-                event_id?: string;
-                /** @description Session this event belongs to */
-                session_id?: string;
-                /** @description Parent event ID in the trace hierarchy */
-                parent_id?: string;
-                /** @description Child event IDs in the trace hierarchy */
-                children_ids?: string[];
-                /** @description Configuration used for this event */
-                config?: {
-                    [key: string]: unknown;
-                };
-                /** @description Input data for the event */
-                inputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Output data from the event */
-                outputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Error message if the event failed */
-                error?: string | null;
-                /** @description Event start time as Unix milliseconds */
-                start_time?: number;
-                /** @description Event end time as Unix milliseconds */
-                end_time?: number;
-                /** @description Event duration in milliseconds */
-                duration?: number;
-                /** @description Arbitrary metadata for the event */
-                metadata?: {
-                    [key: string]: unknown;
-                };
-                /** @description Feedback data associated with the event */
-                feedback?: {
-                    [key: string]: unknown;
-                };
-                /** @description Metric values computed for the event */
-                metrics?: {
-                    [key: string]: unknown;
-                };
-                /** @description User properties associated with the event */
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            })[];
+            events: components['schemas']['LegacyEvent'][];
             /** @description If true, all events share the same session */
             single_session?: boolean;
             /**
@@ -1456,175 +1345,13 @@ export interface components {
              * @deprecated
              * @description Alias for session_properties (backward compatibility)
              */
-            session?: {
-                session_name?: string;
-                /** @description Session start time as Unix milliseconds */
-                start_time?: number;
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-                metadata?: {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            };
-            /** @description Session properties for batch event creation */
-            session_properties?: {
-                session_name?: string;
-                /** @description Session start time as Unix milliseconds */
-                start_time?: number;
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-                metadata?: {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            };
+            session?: components['schemas']['SessionProperties'];
+            session_properties?: components['schemas']['SessionProperties'];
         };
         /** @description Request body for POST /events/model/batch */
         PostModelEventBatchRequest: {
             /** @description Array of model events to create */
-            model_events: ({
-                /**
-                 * @deprecated
-                 * @description Project name (ignored by server — project is determined from API key scope)
-                 */
-                project?: string;
-                /** @description Project ID */
-                project_id?: string;
-                /** @description Source of the event (e.g., sdk-python) */
-                source?: string;
-                /** @description Name of the event */
-                event_name?: string;
-                /**
-                 * @description Type of event (model, tool, chain, or session)
-                 * @enum {string}
-                 */
-                event_type?: 'model' | 'tool' | 'chain' | 'session';
-                /** @description Unique event identifier */
-                event_id?: string;
-                /** @description Session this event belongs to */
-                session_id?: string;
-                /** @description Parent event ID in the trace hierarchy */
-                parent_id?: string;
-                /** @description Child event IDs in the trace hierarchy */
-                children_ids?: string[];
-                /** @description Configuration used for this event */
-                config?: {
-                    [key: string]: unknown;
-                };
-                /** @description Input data for the event */
-                inputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Output data from the event */
-                outputs?: {
-                    [key: string]: unknown;
-                };
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.error for model events
-                 */
-                error?: string | null;
-                /** @description Event start time as Unix milliseconds */
-                start_time?: number;
-                /** @description Event end time as Unix milliseconds */
-                end_time?: number;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.duration for model events
-                 */
-                duration?: number;
-                /** @description Arbitrary metadata for the event */
-                metadata?: {
-                    [key: string]: unknown;
-                };
-                /** @description Feedback data associated with the event */
-                feedback?: {
-                    [key: string]: unknown;
-                };
-                /** @description Metric values computed for the event */
-                metrics?: {
-                    [key: string]: unknown;
-                };
-                /** @description User properties associated with the event */
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-                /** @description Model identifier (either this or event_name required) */
-                model_name?: string;
-                /** @description Model version string */
-                model_version?: string;
-                /**
-                 * @deprecated
-                 * @description Legacy alias for model_name
-                 */
-                model?: string;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.messages
-                 */
-                messages?: unknown[];
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to outputs.response
-                 */
-                response?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.provider
-                 */
-                provider?: string;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.usage
-                 */
-                usage?: {
-                    [key: string]: unknown;
-                };
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.cost
-                 */
-                cost?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.hyperparameters
-                 */
-                hyperparameters?: {
-                    [key: string]: unknown;
-                };
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.template
-                 */
-                template?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.template_inputs
-                 */
-                template_inputs?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.tools
-                 */
-                tools?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.tool_choice
-                 */
-                tool_choice?: unknown;
-                /**
-                 * @deprecated
-                 * @description Legacy alias — remapped to inputs.response_format
-                 */
-                response_format?: unknown;
-            } & {
-                [key: string]: unknown;
-            })[];
+            model_events: components['schemas']['ModelEvent'][];
             /** @description If true, all events share the same session */
             single_session?: boolean;
             /**
@@ -1636,33 +1363,8 @@ export interface components {
              * @deprecated
              * @description Alias for session_properties (backward compatibility)
              */
-            session?: {
-                session_name?: string;
-                /** @description Session start time as Unix milliseconds */
-                start_time?: number;
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-                metadata?: {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            };
-            /** @description Session properties for batch event creation */
-            session_properties?: {
-                session_name?: string;
-                /** @description Session start time as Unix milliseconds */
-                start_time?: number;
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-                metadata?: {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            };
+            session?: components['schemas']['SessionProperties'];
+            session_properties?: components['schemas']['SessionProperties'];
         };
         /** @description Query parameters for GET /events */
         GetEventsQuery: {
@@ -1694,76 +1396,14 @@ export interface components {
             success: boolean;
             event_id?: string;
         };
+        /** @description Response for GET /events */
         GetEventsResponse: {
             events: unknown[];
             totalEvents: number;
         };
-        /** @description Response for POST /v1/events/export */
+        /** @description Response for POST /v1/events/search and POST /v1/events/export */
         ExportEventsResponse: {
-            events: ({
-                /**
-                 * @deprecated
-                 * @description Project name (ignored by server — project is determined from API key scope)
-                 */
-                project?: string;
-                /** @description Project ID */
-                project_id?: string;
-                /** @description Source of the event (e.g., sdk-python) */
-                source?: string;
-                /** @description Name of the event */
-                event_name?: string;
-                /**
-                 * @description Type of event (model, tool, chain, or session)
-                 * @enum {string}
-                 */
-                event_type?: 'model' | 'tool' | 'chain' | 'session';
-                /** @description Unique event identifier */
-                event_id?: string;
-                /** @description Session this event belongs to */
-                session_id?: string;
-                /** @description Parent event ID in the trace hierarchy */
-                parent_id?: string;
-                /** @description Child event IDs in the trace hierarchy */
-                children_ids?: string[];
-                /** @description Configuration used for this event */
-                config?: {
-                    [key: string]: unknown;
-                };
-                /** @description Input data for the event */
-                inputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Output data from the event */
-                outputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Error message if the event failed */
-                error?: string | null;
-                /** @description Event start time as Unix milliseconds */
-                start_time?: number;
-                /** @description Event end time as Unix milliseconds */
-                end_time?: number;
-                /** @description Event duration in milliseconds */
-                duration?: number;
-                /** @description Arbitrary metadata for the event */
-                metadata?: {
-                    [key: string]: unknown;
-                };
-                /** @description Feedback data associated with the event */
-                feedback?: {
-                    [key: string]: unknown;
-                };
-                /** @description Metric values computed for the event */
-                metrics?: {
-                    [key: string]: unknown;
-                };
-                /** @description User properties associated with the event */
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            })[];
+            events: components['schemas']['LegacyEvent'][];
             count: number;
         };
         /** @description Response for POST /events/batch */
@@ -1875,9 +1515,7 @@ export interface components {
             event_name: string;
             event_type: string;
             session_id: string;
-            metadata: {
-                datapoint_id?: string;
-            };
+            metadata: components['schemas']['EventMetricDataMetadata'];
             /** @description Metric name → value, merged from numeric, float, and boolean ClickHouse columns */
             metrics: {
                 [key: string]: number | boolean;
@@ -1894,6 +1532,7 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** @description Request body for POST /runs */
         PostExperimentRunRequest: {
             run_id?: string;
             name?: string;
@@ -1925,6 +1564,7 @@ export interface components {
                 [key: string]: components['schemas']['PassingRange'];
             };
         };
+        /** @description Request body for PUT /runs/{run_id} */
         PutExperimentRunRequest: {
             name?: string;
             description?: string;
@@ -1947,6 +1587,7 @@ export interface components {
                 [key: string]: components['schemas']['PassingRange'];
             };
         };
+        /** @description Query parameters for GET /runs */
         GetExperimentRunsQuery: {
             /** @description Filter by dataset ID */
             dataset_id?: string;
@@ -1984,15 +1625,18 @@ export interface components {
              */
             sort_order?: 'asc' | 'desc';
         };
+        /** @description Path parameters for GET /runs/{run_id} */
         GetExperimentRunParams: {
             run_id: string;
         };
+        /** @description Query parameters for GET /runs/{run_id}/metrics */
         GetExperimentRunMetricsQuery: {
             /** @description Date range filter as JSON string */
             dateRange?: string;
             /** @description Filters to apply to metrics */
             filters?: string | unknown[];
         };
+        /** @description Query parameters for GET /runs/{run_id}/result */
         GetExperimentRunResultQuery: {
             /**
              * @description Aggregation function to apply (default: average)
@@ -2002,12 +1646,14 @@ export interface components {
             /** @description Filters to apply to results */
             filters?: string | unknown[];
         };
+        /** @description Path parameters for GET /runs/{new_run_id}/compare-with/{old_run_id} */
         GetExperimentRunCompareParams: {
             /** @description The new run ID to compare */
             new_run_id: string;
             /** @description The old run ID to compare against */
             old_run_id: string;
         };
+        /** @description Query parameters for GET /runs/{new_run_id}/compare-with/{old_run_id} */
         GetExperimentRunCompareQuery: {
             /**
              * @description Aggregation function to apply (default: average)
@@ -2017,6 +1663,7 @@ export interface components {
             /** @description Filters to apply to comparison */
             filters?: string | unknown[];
         };
+        /** @description Query parameters for GET /runs/compare/events */
         GetExperimentRunCompareEventsQuery: {
             /** @description First run ID to compare */
             run_id_1: string;
@@ -2041,32 +1688,38 @@ export interface components {
              */
             page?: number;
         };
+        /** @description Path parameters for DELETE /runs/{run_id} */
         DeleteExperimentRunParams: {
             run_id: string;
         };
-        GetExperimentRunsSchemaQuery: {
+        /** @description Query parameters for GET /events/schema */
+        GetEventsSchemaQuery: {
             /** @description Date range to filter schema by */
             dateRange?: string | components['schemas']['AbsoluteDateRange'];
             /** @description Filter by evaluation/run ID */
             evaluation_id?: string;
         };
+        /** @description Response for POST /runs */
         PostExperimentRunResponse: {
             evaluation: components['schemas']['ExperimentRunObject'];
             run_id: string;
         };
+        /** @description Response for PUT /runs/{run_id} */
         PutExperimentRunResponse: {
             evaluation: components['schemas']['ExperimentRunObject'];
             warning?: string;
         };
+        /** @description Response for GET /runs */
         GetExperimentRunsResponse: {
             evaluations: components['schemas']['ExperimentRunObject'][];
             pagination: components['schemas']['Pagination'];
             metrics: string[];
         };
+        /** @description Response for GET /runs/{run_id} */
         GetExperimentRunResponse: {
             evaluation: components['schemas']['ExperimentRunObject'];
         };
-        /** @description Evaluation summary for an experiment run including pass/fail status, metrics, and datapoints */
+        /** @description Evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object. */
         GetExperimentRunResultResponse: {
             status: string;
             success: boolean;
@@ -2086,23 +1739,27 @@ export interface components {
             old_run: components['schemas']['ExperimentRunObject'];
             new_run: components['schemas']['ExperimentRunObject'];
         };
+        /** @description Response for GET /runs/{run_id}/metrics */
         GetExperimentRunMetricsResponse: {
             events: components['schemas']['EventMetricData'][];
             /** @description Total number of events matching the query */
             totalEvents: number;
         };
-        GetExperimentRunsSchemaResponse: {
+        /** @description Response for GET /events/schema */
+        GetEventsSchemaResponse: {
             fields: components['schemas']['ExperimentSchemaField'][];
             datasets: string[];
             mappings: {
                 [key: string]: components['schemas']['ExperimentSchemaMappingEntry'][];
             };
         };
+        /** @description Response for GET /runs/compare/events */
         GetExperimentCompareEventsResponse: {
             events: components['schemas']['ComparableEvent'][];
             /** @description Total number of events matching the comparison query */
             totalEvents: number;
         };
+        /** @description Response for DELETE /runs/{run_id} */
         DeleteExperimentRunResponse: {
             id: string;
             deleted: boolean;
@@ -2127,25 +1784,16 @@ export interface components {
                 pass_when?: boolean | number;
                 passing_categories?: string[];
             } | null;
-            categories?: {
-                category: string;
-                score: number | null;
-            }[] | null;
-            child_metrics?: {
-                id?: string;
-                name: string;
-                weight: number;
-                scale?: number | null;
-            }[] | null;
-            filters: {
-                filterArray: components['schemas']['FiltersArray'];
-            };
+            categories?: components['schemas']['MetricItemCategoriesItem'][] | null;
+            child_metrics?: components['schemas']['MetricItemChildMetricsItem'][] | null;
+            filters: components['schemas']['MetricItemFilters'];
             id: string;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
             updated_at: string | null;
         };
+        /** @description Request body for POST /metrics */
         CreateMetricRequest: {
             name: string;
             /** @enum {string} */
@@ -2173,25 +1821,11 @@ export interface components {
                 pass_when?: boolean | number;
                 passing_categories?: string[];
             } | null;
-            categories?: {
-                category: string;
-                score: number | null;
-            }[] | null;
-            child_metrics?: {
-                id?: string;
-                name: string;
-                weight: number;
-                scale?: number | null;
-            }[] | null;
-            /**
-             * @default {
-             *       "filterArray": []
-             *     }
-             */
-            filters?: {
-                filterArray: components['schemas']['FiltersArray'];
-            };
+            categories?: components['schemas']['CreateMetricRequestCategoriesItem'][] | null;
+            child_metrics?: components['schemas']['CreateMetricRequestChildMetricsItem'][] | null;
+            filters?: components['schemas']['CreateMetricRequestFilters'];
         };
+        /** @description Request body for PUT /metrics */
         UpdateMetricRequest: {
             name?: string;
             /** @enum {string} */
@@ -2212,110 +1846,46 @@ export interface components {
                 pass_when?: boolean | number;
                 passing_categories?: string[];
             } | null;
-            categories?: {
-                category: string;
-                score: number | null;
-            }[] | null;
-            child_metrics?: {
-                id?: string;
-                name: string;
-                weight: number;
-                scale?: number | null;
-            }[] | null;
-            filters?: {
-                filterArray: components['schemas']['FiltersArray'];
-            };
+            categories?: components['schemas']['UpdateMetricRequestCategoriesItem'][] | null;
+            child_metrics?: components['schemas']['UpdateMetricRequestChildMetricsItem'][] | null;
+            filters?: components['schemas']['UpdateMetricRequestFilters'];
             id: string;
         };
+        /** @description Query parameters for GET /metrics */
         GetMetricsQuery: {
             /** @description Filter metrics by type */
             type?: string;
             /** @description Filter by metric ID */
             id?: string;
         };
+        /** @description Query parameters for DELETE /metrics */
         DeleteMetricQuery: {
             /** @description Unique identifier of the metric to delete */
             metric_id: string;
         };
+        /** @description Request body for POST /metrics/run_metric */
         RunMetricRequest: {
-            metric: {
-                name: string;
-                /** @enum {string} */
-                type: 'LLM' | 'PYTHON';
-                criteria: string;
-                /** @default  */
-                description?: string;
-                /**
-                 * @default float
-                 * @enum {string}
-                 */
-                return_type?: 'float' | 'boolean' | 'string' | 'categorical';
-                /** @default false */
-                enabled_in_prod?: boolean;
-                /** @default false */
-                needs_ground_truth?: boolean;
-                /** @default 100 */
-                sampling_percentage?: number;
-                model_provider?: string | null;
-                model_name?: string | null;
-                scale?: number | null;
-                threshold?: {
-                    min?: number;
-                    max?: number;
-                    pass_when?: boolean | number;
-                    passing_categories?: string[];
-                } | null;
-                categories?: {
-                    category: string;
-                    score: number | null;
-                }[] | null;
-                child_metrics?: {
-                    id?: string;
-                    name: string;
-                    weight: number;
-                    scale?: number | null;
-                }[] | null;
-                /**
-                 * @default {
-                 *       "filterArray": []
-                 *     }
-                 */
-                filters?: {
-                    filterArray: components['schemas']['FiltersArray'];
-                };
-            };
-            event: {
-                event_type?: string;
-                event_name?: string;
-                inputs?: {
-                    [key: string]: unknown;
-                };
-                outputs?: {
-                    [key: string]: unknown;
-                };
-                workspace_id?: string;
-                feedback?: {
-                    ground_truth?: unknown;
-                } & {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            };
+            metric: components['schemas']['RunMetricRequestMetric'];
+            event: components['schemas']['RunMetricRequestEvent'];
         };
+        /** @description Response for GET /metrics */
         GetMetricsResponse: {
             metrics: components['schemas']['MetricItem'][];
         };
+        /** @description Response for POST /metrics */
         CreateMetricResponse: {
             inserted: boolean;
             metric_id: string;
         };
+        /** @description Response for PUT /metrics */
         UpdateMetricResponse: {
             updated: boolean;
         };
+        /** @description Response for DELETE /metrics */
         DeleteMetricResponse: {
             deleted: boolean;
         };
+        /** @description Response for POST /metrics/run_metric */
         RunMetricResponse: {
             success: boolean;
             loading: boolean;
@@ -2392,6 +1962,79 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        AnnotationQueue: {
+            name: string;
+            description: string;
+            filters: components['schemas']['AnnotationQueueFilters'];
+            enabled: boolean;
+            id: string;
+            scope_id: string;
+            /** @enum {string} */
+            scope_type: 'system' | 'controlplane' | 'dataplane' | 'org' | 'workspace' | 'project';
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        BaseAnnotationQueue: {
+            name: string;
+            description: string;
+            filters: components['schemas']['BaseAnnotationQueueFilters'];
+            enabled: boolean;
+        };
+        CreateAnnotationQueueRequest: {
+            name: string;
+            /** @default  */
+            description?: string;
+            filters?: components['schemas']['CreateAnnotationQueueRequestFilters'];
+            /** @default true */
+            enabled?: boolean;
+            /** @default [] */
+            event_ids?: string[];
+        };
+        UpdateAnnotationQueueRequest: {
+            name?: string;
+            description?: string;
+            filters?: components['schemas']['UpdateAnnotationQueueRequestFilters'];
+            enabled?: boolean;
+            id: string;
+            add_event_ids?: string[];
+            remove_event_ids?: string[];
+        };
+        GetAnnotationQueuesQuery: {
+            enabled?: boolean | null;
+        };
+        CreateAnnotationQueueResponse: {
+            queue: components['schemas']['CreateAnnotationQueueResponseQueue'];
+            message: string;
+        };
+        UpdateAnnotationQueueResponse: {
+            queue: components['schemas']['UpdateAnnotationQueueResponseQueue'];
+            message: string;
+        };
+        GetAnnotationQueuesResponse: {
+            queues: components['schemas']['GetAnnotationQueuesResponseQueuesItem'][];
+        };
+        GetAnnotationQueueByIdResponse: {
+            name: string;
+            description: string;
+            filters: components['schemas']['GetAnnotationQueueByIdResponseFilters'];
+            enabled: boolean;
+            id: string;
+            scope_id: string;
+            /** @enum {string} */
+            scope_type: 'system' | 'controlplane' | 'dataplane' | 'org' | 'workspace' | 'project';
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        DeleteAnnotationQueueResponse: {
+            message: string;
+        };
+        /** @description Minimal event object used by evaluation and session endpoints; permissive (passthrough) */
         PostSessionRequest: {
             event_id: string;
             project_id: string;
@@ -2404,121 +2047,17 @@ export interface components {
             metadata?: {
                 [key: string]: unknown;
             };
-            feedback?: {
-                ground_truth?: unknown;
-            };
+            feedback?: components['schemas']['PostSessionRequestFeedback'];
         } & {
             [key: string]: unknown;
         };
         /** @description Request to start a new session */
         StartSessionRequest: {
-            session: {
-                /** @description Client-provided session ID (server generates one if omitted) */
-                session_id?: string;
-                /** @description Display name for the session */
-                session_name?: string;
-                /** @description Fallback name if session_name is not provided */
-                event_name?: string;
-                /** @description Source of the session (e.g., sdk-python) */
-                source?: string;
-                /** @description Session start time as Unix milliseconds */
-                start_time?: number;
-                /** @description Session end time as Unix milliseconds */
-                end_time?: number;
-                /** @description Session duration in milliseconds */
-                duration?: number;
-                /** @description Configuration associated with the session */
-                config?: {
-                    [key: string]: unknown;
-                };
-                /** @description Input data for the session */
-                inputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Output data from the session */
-                outputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Arbitrary metadata for the session */
-                metadata?: {
-                    [key: string]: unknown;
-                };
-                /** @description User properties associated with the session */
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-                /** @description IDs of child events in this session */
-                children_ids?: string[];
-            } & {
-                [key: string]: unknown;
-            };
+            session: components['schemas']['StartSessionRequestSession'];
         };
         /** @description Request to add traces to a session */
         AddSessionTracesRequest: {
-            logs: ({
-                /**
-                 * @deprecated
-                 * @description Project name (ignored by server — project is determined from API key scope)
-                 */
-                project?: string;
-                /** @description Project ID */
-                project_id?: string;
-                /** @description Source of the event (e.g., sdk-python) */
-                source?: string;
-                /** @description Name of the event */
-                event_name?: string;
-                /**
-                 * @description Type of event (model, tool, chain, or session)
-                 * @enum {string}
-                 */
-                event_type?: 'model' | 'tool' | 'chain' | 'session';
-                /** @description Unique event identifier */
-                event_id?: string;
-                /** @description Session this event belongs to */
-                session_id?: string;
-                /** @description Parent event ID in the trace hierarchy */
-                parent_id?: string;
-                /** @description Child event IDs in the trace hierarchy */
-                children_ids?: string[];
-                /** @description Configuration used for this event */
-                config?: {
-                    [key: string]: unknown;
-                };
-                /** @description Input data for the event */
-                inputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Output data from the event */
-                outputs?: {
-                    [key: string]: unknown;
-                };
-                /** @description Error message if the event failed */
-                error?: string | null;
-                /** @description Event start time as Unix milliseconds */
-                start_time?: number;
-                /** @description Event end time as Unix milliseconds */
-                end_time?: number;
-                /** @description Event duration in milliseconds */
-                duration?: number;
-                /** @description Arbitrary metadata for the event */
-                metadata?: {
-                    [key: string]: unknown;
-                };
-                /** @description Feedback data associated with the event */
-                feedback?: {
-                    [key: string]: unknown;
-                };
-                /** @description Metric values computed for the event */
-                metrics?: {
-                    [key: string]: unknown;
-                };
-                /** @description User properties associated with the event */
-                user_properties?: {
-                    [key: string]: unknown;
-                };
-            } & {
-                [key: string]: unknown;
-            })[];
+            logs: components['schemas']['LegacyEvent'][];
         };
         /** @description Full session event object returned after starting a new session */
         PostSessionStartResponse: {
@@ -2554,6 +2093,334 @@ export interface components {
         TODOSchema: {
             /** @description Placeholder - Zod schema not yet implemented */
             message: string;
+        };
+        CreateDatapointResponseResult: {
+            insertedIds: string[];
+        };
+        UpdateDatapointResponseResult: {
+            modifiedCount: number;
+        };
+        EventFeedback: {
+            ground_truth?: unknown;
+        };
+        /** @description Full event object for legacy event creation endpoints */
+        PostEventRequestEvent: {
+            /**
+             * @deprecated
+             * @description Project name (ignored by server — project is determined from API key scope)
+             */
+            project?: string;
+            /** @description Project ID */
+            project_id?: string;
+            /** @description Source of the event (e.g., sdk-python) */
+            source?: string;
+            /** @description Name of the event */
+            event_name?: string;
+            /** @enum {string} */
+            event_type: 'model' | 'tool' | 'chain' | 'session';
+            /** @description Unique event identifier */
+            event_id?: string;
+            /** @description Session this event belongs to */
+            session_id?: string;
+            /** @description Parent event ID in the trace hierarchy */
+            parent_id?: string;
+            /** @description Child event IDs in the trace hierarchy */
+            children_ids?: string[];
+            /** @description Configuration used for this event */
+            config?: {
+                [key: string]: unknown;
+            };
+            inputs: {
+                [key: string]: unknown;
+            };
+            /** @description Output data from the event */
+            outputs?: {
+                [key: string]: unknown;
+            };
+            /** @description Error message if the event failed */
+            error?: string | null;
+            /** @description Event start time as Unix milliseconds */
+            start_time?: number;
+            /** @description Event end time as Unix milliseconds */
+            end_time?: number;
+            /** @description Event duration in milliseconds */
+            duration?: number;
+            /** @description Arbitrary metadata for the event */
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** @description Feedback data associated with the event */
+            feedback?: {
+                [key: string]: unknown;
+            };
+            /** @description Metric values computed for the event */
+            metrics?: {
+                [key: string]: unknown;
+            };
+            /** @description User properties associated with the event */
+            user_properties?: {
+                [key: string]: unknown;
+            };
+        } & {
+            [key: string]: unknown;
+        };
+        SearchEventsRequestDateRange: {
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp for start of date range (inclusive)
+             */
+            start_time: string;
+            /**
+             * Format: date-time
+             * @description ISO 8601 timestamp for end of date range (inclusive)
+             */
+            end_time: string;
+        };
+        LegacyExportEventsRequestDateRange: {
+            /** @description ISO String for start of date range */
+            $gte: string;
+            /** @description ISO String for end of date range */
+            $lte: string;
+        };
+        EventMetricDataMetadata: {
+            datapoint_id?: string;
+        };
+        MetricItemCategoriesItem: {
+            category: string;
+            score: number | null;
+        };
+        MetricItemChildMetricsItem: {
+            id?: string;
+            name: string;
+            weight: number;
+            scale?: number | null;
+        };
+        MetricItemFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        CreateMetricRequestCategoriesItem: {
+            category: string;
+            score: number | null;
+        };
+        CreateMetricRequestChildMetricsItem: {
+            id?: string;
+            name: string;
+            weight: number;
+            scale?: number | null;
+        };
+        /**
+         * @default {
+         *       "filterArray": []
+         *     }
+         */
+        CreateMetricRequestFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        UpdateMetricRequestCategoriesItem: {
+            category: string;
+            score: number | null;
+        };
+        UpdateMetricRequestChildMetricsItem: {
+            id?: string;
+            name: string;
+            weight: number;
+            scale?: number | null;
+        };
+        UpdateMetricRequestFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        RunMetricRequestMetricCategoriesItem: {
+            category: string;
+            score: number | null;
+        };
+        RunMetricRequestMetricChildMetricsItem: {
+            id?: string;
+            name: string;
+            weight: number;
+            scale?: number | null;
+        };
+        /**
+         * @default {
+         *       "filterArray": []
+         *     }
+         */
+        RunMetricRequestMetricFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        RunMetricRequestMetric: {
+            name: string;
+            /** @enum {string} */
+            type: 'LLM' | 'PYTHON';
+            criteria: string;
+            /** @default  */
+            description?: string;
+            /**
+             * @default float
+             * @enum {string}
+             */
+            return_type?: 'float' | 'boolean' | 'string' | 'categorical';
+            /** @default false */
+            enabled_in_prod?: boolean;
+            /** @default false */
+            needs_ground_truth?: boolean;
+            /** @default 100 */
+            sampling_percentage?: number;
+            model_provider?: string | null;
+            model_name?: string | null;
+            scale?: number | null;
+            threshold?: {
+                min?: number;
+                max?: number;
+                pass_when?: boolean | number;
+                passing_categories?: string[];
+            } | null;
+            categories?: components['schemas']['RunMetricRequestMetricCategoriesItem'][] | null;
+            child_metrics?: components['schemas']['RunMetricRequestMetricChildMetricsItem'][] | null;
+            filters?: components['schemas']['RunMetricRequestMetricFilters'];
+        };
+        RunMetricRequestEventFeedback: {
+            ground_truth?: unknown;
+        } & {
+            [key: string]: unknown;
+        };
+        RunMetricRequestEvent: {
+            event_type?: string;
+            event_name?: string;
+            inputs?: {
+                [key: string]: unknown;
+            };
+            outputs?: {
+                [key: string]: unknown;
+            };
+            workspace_id?: string;
+            feedback?: components['schemas']['RunMetricRequestEventFeedback'];
+        } & {
+            [key: string]: unknown;
+        };
+        AnnotationQueueFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        BaseAnnotationQueueFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        /**
+         * @default {
+         *       "filterArray": []
+         *     }
+         */
+        CreateAnnotationQueueRequestFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        UpdateAnnotationQueueRequestFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        CreateAnnotationQueueResponseQueueFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        CreateAnnotationQueueResponseQueue: {
+            name: string;
+            description: string;
+            filters: components['schemas']['CreateAnnotationQueueResponseQueueFilters'];
+            enabled: boolean;
+            id: string;
+            scope_id: string;
+            /** @enum {string} */
+            scope_type: 'system' | 'controlplane' | 'dataplane' | 'org' | 'workspace' | 'project';
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        UpdateAnnotationQueueResponseQueueFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        UpdateAnnotationQueueResponseQueue: {
+            name: string;
+            description: string;
+            filters: components['schemas']['UpdateAnnotationQueueResponseQueueFilters'];
+            enabled: boolean;
+            id: string;
+            scope_id: string;
+            /** @enum {string} */
+            scope_type: 'system' | 'controlplane' | 'dataplane' | 'org' | 'workspace' | 'project';
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        GetAnnotationQueuesResponseQueuesItemFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        GetAnnotationQueuesResponseQueuesItem: {
+            name: string;
+            description: string;
+            filters: components['schemas']['GetAnnotationQueuesResponseQueuesItemFilters'];
+            enabled: boolean;
+            id: string;
+            scope_id: string;
+            /** @enum {string} */
+            scope_type: 'system' | 'controlplane' | 'dataplane' | 'org' | 'workspace' | 'project';
+            is_active: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        GetAnnotationQueueByIdResponseFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        PostSessionRequestFeedback: {
+            ground_truth?: unknown;
+        };
+        StartSessionRequestSession: {
+            /** @description Client-provided session ID (server generates one if omitted) */
+            session_id?: string;
+            /** @description Display name for the session */
+            session_name?: string;
+            /** @description Fallback name if session_name is not provided */
+            event_name?: string;
+            /** @description Source of the session (e.g., sdk-python) */
+            source?: string;
+            /** @description Session start time as Unix milliseconds */
+            start_time?: number;
+            /** @description Session end time as Unix milliseconds */
+            end_time?: number;
+            /** @description Session duration in milliseconds */
+            duration?: number;
+            /** @description Configuration associated with the session */
+            config?: {
+                [key: string]: unknown;
+            };
+            /** @description Input data for the session */
+            inputs?: {
+                [key: string]: unknown;
+            };
+            /** @description Output data from the session */
+            outputs?: {
+                [key: string]: unknown;
+            };
+            /** @description Arbitrary metadata for the session */
+            metadata?: {
+                [key: string]: unknown;
+            };
+            /** @description User properties associated with the session */
+            user_properties?: {
+                [key: string]: unknown;
+            };
+            /** @description IDs of child events in this session */
+            children_ids?: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        GetEventsSchemaDateRangeOneOf1: {
+            $gte?: string | number;
+            $lte?: string | number;
+        };
+        GetRunsDateRangeOneOf1: {
+            $gte?: string | number;
+            $lte?: string | number;
         };
     };
     responses: never;
@@ -2714,7 +2581,7 @@ export interface operations {
             };
         };
     };
-    exportEvents: {
+    exportEventsLegacy: {
         parameters: {
             query?: never;
             header?: never;
@@ -2723,7 +2590,31 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['ExportEventsRequest'];
+                'application/json': components['schemas']['LegacyExportEventsRequest'];
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['ExportEventsResponse'];
+                };
+            };
+        };
+    };
+    searchEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['SearchEventsRequest'];
             };
         };
         responses: {
@@ -3146,7 +3037,7 @@ export interface operations {
             };
         };
     };
-    updateDataset: {
+    updateDatasetLegacy: {
         parameters: {
             query?: never;
             header?: never;
@@ -3155,7 +3046,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                'application/json': components['schemas']['UpdateDatasetRequest'];
+                'application/json': components['schemas']['LegacyUpdateDatasetRequest'];
             };
         };
         responses: {
@@ -3217,6 +3108,33 @@ export interface operations {
             };
         };
     };
+    updateDataset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the dataset to update like `663876ec4611c47f4970f0c3` */
+                dataset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['UpdateDatasetRequest'];
+            };
+        };
+        responses: {
+            /** @description Successful update */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['UpdateDatasetResponse'];
+                };
+            };
+        };
+    };
     addDatapoints: {
         parameters: {
             query?: never;
@@ -3269,14 +3187,11 @@ export interface operations {
             };
         };
     };
-    getExperimentRunsSchema: {
+    getEventsSchema: {
         parameters: {
             query?: {
                 /** @description Filter by date range */
-                dateRange?: string | {
-                    $gte?: string | number;
-                    $lte?: string | number;
-                };
+                dateRange?: string | components['schemas']['GetEventsSchemaDateRangeOneOf1'];
                 /** @description Filter by evaluation/run ID */
                 evaluation_id?: string;
             };
@@ -3286,13 +3201,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Experiment runs schema retrieved successfully */
+            /** @description Events schema retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    'application/json': components['schemas']['GetExperimentRunsSchemaResponse'];
+                    'application/json': components['schemas']['GetEventsSchemaResponse'];
                 };
             };
         };
@@ -3313,10 +3228,7 @@ export interface operations {
                 /** @description Filter by run status */
                 status?: 'pending' | 'completed' | 'failed' | 'cancelled' | 'running';
                 /** @description Filter by date range */
-                dateRange?: string | {
-                    $gte?: string | number;
-                    $lte?: string | number;
-                };
+                dateRange?: string | components['schemas']['GetRunsDateRangeOneOf1'];
                 /** @description Field to sort by */
                 sort_by?: 'created_at' | 'updated_at' | 'name' | 'status';
                 /** @description Sort order */
@@ -3610,6 +3522,154 @@ export interface operations {
             };
             /** @description Error fetching event comparison */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getQueues: {
+        parameters: {
+            query?: {
+                /** @description Filter by enabled status */
+                enabled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queues retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['GetAnnotationQueuesResponse'];
+                };
+            };
+        };
+    };
+    createQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['CreateAnnotationQueueRequest'];
+            };
+        };
+        responses: {
+            /** @description Queue created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['CreateAnnotationQueueResponse'];
+                };
+            };
+            /** @description Bad request (invalid queue data or missing required fields) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Annotation queue ID */
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queue retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['GetAnnotationQueueByIdResponse'];
+                };
+            };
+            /** @description Queue not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    updateQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Annotation queue ID */
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['UpdateAnnotationQueueRequest'];
+            };
+        };
+        responses: {
+            /** @description Queue updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['UpdateAnnotationQueueResponse'];
+                };
+            };
+            /** @description Queue not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Annotation queue ID */
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queue deleted successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['DeleteAnnotationQueueResponse'];
+                };
+            };
+            /** @description Queue not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

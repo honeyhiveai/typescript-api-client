@@ -1,5 +1,5 @@
 import { type paths } from './types.js';
-import { type StartSessionOptions, type AddSessionTracesOptions, type CreateEventOptions, type UpdateEventOptions, type ExportEventsOptions, type CreateModelEventOptions, type CreateEventBatchOptions, type CreateModelEventBatchOptions, type GetMetricsOptions, type CreateMetricOptions, type UpdateMetricOptions, type DeleteMetricOptions, type RunMetricOptions, type GetDatapointsOptions, type CreateDatapointOptions, type BatchCreateDatapointsOptions, type GetDatapointOptions, type UpdateDatapointOptions, type DeleteDatapointOptions, type GetDatasetsOptions, type CreateDatasetOptions, type UpdateDatasetOptions, type DeleteDatasetOptions, type AddDatapointsOptions, type RemoveDatapointOptions, type GetExperimentRunsSchemaOptions, type GetRunsOptions, type CreateRunOptions, type GetRunOptions, type UpdateRunOptions, type DeleteRunOptions, type GetExperimentRunMetricsOptions, type GetExperimentResultOptions, type GetExperimentComparisonOptions, type GetExperimentCompareEventsOptions, type GetConfigurationsOptions, type CreateConfigurationOptions, type UpdateConfigurationOptions, type DeleteConfigurationOptions, type StartSessionResponse, type AddSessionTracesResponse, type CreateEventResponse, type ExportEventsResponse, type CreateModelEventResponse, type CreateEventBatchResponse, type CreateModelEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetExperimentRunsSchemaResponse, type GetRunsResponse, type CreateRunResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetExperimentRunMetricsResponse, type GetExperimentResultResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetConfigurationsResponse, type CreateConfigurationResponse, type UpdateConfigurationResponse, type DeleteConfigurationResponse } from './apiTypes.js';
+import { type StartSessionOptions, type AddSessionTracesOptions, type CreateEventOptions, type UpdateEventOptions, type SearchEventsOptions, type CreateModelEventOptions, type CreateEventBatchOptions, type CreateModelEventBatchOptions, type GetEventsSchemaOptions, type GetMetricsOptions, type CreateMetricOptions, type UpdateMetricOptions, type DeleteMetricOptions, type RunMetricOptions, type GetDatapointsOptions, type CreateDatapointOptions, type BatchCreateDatapointsOptions, type GetDatapointOptions, type UpdateDatapointOptions, type DeleteDatapointOptions, type GetDatasetsOptions, type CreateDatasetOptions, type DeleteDatasetOptions, type UpdateDatasetOptions, type AddDatapointsOptions, type RemoveDatapointOptions, type GetRunsOptions, type CreateRunOptions, type GetRunOptions, type UpdateRunOptions, type DeleteRunOptions, type GetExperimentRunMetricsOptions, type GetExperimentResultOptions, type GetExperimentComparisonOptions, type GetExperimentCompareEventsOptions, type GetQueuesOptions, type CreateQueueOptions, type GetQueueOptions, type UpdateQueueOptions, type DeleteQueueOptions, type GetConfigurationsOptions, type CreateConfigurationOptions, type UpdateConfigurationOptions, type DeleteConfigurationOptions, type StartSessionResponse, type AddSessionTracesResponse, type CreateEventResponse, type SearchEventsResponse, type CreateModelEventResponse, type CreateEventBatchResponse, type CreateModelEventBatchResponse, type GetEventsSchemaResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type DeleteDatasetResponse, type UpdateDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetExperimentRunMetricsResponse, type GetExperimentResultResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetQueuesResponse, type CreateQueueResponse, type GetQueueResponse, type UpdateQueueResponse, type DeleteQueueResponse, type GetConfigurationsResponse, type CreateConfigurationResponse, type UpdateConfigurationResponse, type DeleteConfigurationResponse } from './apiTypes.js';
 import { type ClientConfig, createApiClient } from '../util.js';
 /** @inline */
 declare class SessionsNamespace {
@@ -49,38 +49,118 @@ declare class EventsNamespace {
      * - `metrics` (object) — Custom metrics.
      * - `feedback` (object) — Feedback data (e.g. ratings, ground truth).
      * - `user_properties` (object) — User properties associated with the event.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *   "success": true
+     * }
+     * ```
      */
     create(options: CreateEventOptions): Promise<CreateEventResponse>;
     /**
      * Update an event
      *
      * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. The event_id field is required to identify the event to update.
+     *
+     * @example Request body
+     * ```json
+     * {
+     *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *   "metadata": {
+     *     "cost": 0.00008,
+     *     "completion_tokens": 23,
+     *     "prompt_tokens": 35,
+     *     "total_tokens": 58
+     *   },
+     *   "feedback": {
+     *     "rating": 5
+     *   },
+     *   "metrics": {
+     *     "num_words": 2
+     *   },
+     *   "outputs": {
+     *     "role": "assistant",
+     *     "content": "Hello world"
+     *   },
+     *   "config": {
+     *     "template": [
+     *       {
+     *         "role": "system",
+     *         "content": "Hello, {{ name }}!"
+     *       }
+     *     ]
+     *   },
+     *   "user_properties": {
+     *     "user_id": "691b1f94-d38c-4e92-b051-5e03fee9ff86"
+     *   },
+     *   "duration": 42
+     * }
+     * ```
      */
     update(options: UpdateEventOptions): Promise<void>;
     /**
      * Retrieve events based on filters
      *
-     * Export events via POST with filtering, projections, and pagination. This is the primary method for retrieving events from HoneyHive.
+     * Search events via POST with filtering and pagination. This is the primary method for retrieving events from HoneyHive.
      */
-    export(options: ExportEventsOptions): Promise<ExportEventsResponse>;
+    search(options: SearchEventsOptions): Promise<SearchEventsResponse>;
     /**
      * Create a new model event
      *
      * Create a model event. The event_type is automatically set to 'model'. Please refer to our instrumentation guide for detailed information.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *   "success": true
+     * }
+     * ```
      */
     createModel(options: CreateModelEventOptions): Promise<CreateModelEventResponse>;
     /**
      * Create a batch of events
      *
      * Create multiple events in a single request. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "event_ids": [
+     *     "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *     "7f22137a-6911-4ed3-bc36-110f1dde6b67"
+     *   ],
+     *   "session_id": "caf77ace-3417-4da4-944d-f4a0688f3c23",
+     *   "success": true
+     * }
+     * ```
      */
     createBatch(options: CreateEventBatchOptions): Promise<CreateEventBatchResponse>;
     /**
      * Create a batch of model events
      *
      * Create multiple model events in a single request. The event_type is automatically set to 'model' for all events. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "event_ids": [
+     *     "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+     *     "7f22137a-6911-4ed3-bc36-110f1dde6b67"
+     *   ],
+     *   "success": true
+     * }
+     * ```
      */
     createModelBatch(options: CreateModelEventBatchOptions): Promise<CreateModelEventBatchResponse>;
+    /**
+     * Get events schema
+     *
+     * Retrieve the schema and metadata for experiment events
+     */
+    getEventsSchema(options?: GetEventsSchemaOptions): Promise<GetEventsSchemaResponse>;
 }
 /** @inline */
 declare class MetricsNamespace {
@@ -175,17 +255,17 @@ declare class DatasetsNamespace {
      */
     create(options: CreateDatasetOptions): Promise<CreateDatasetResponse>;
     /**
-     * Update a dataset
-     *
-     * Update a dataset's name, description, or list of datapoint IDs.
-     */
-    update(options: UpdateDatasetOptions): Promise<UpdateDatasetResponse>;
-    /**
      * Delete a dataset
      *
      * Permanently delete a dataset by its unique identifier.
      */
     delete(options: DeleteDatasetOptions): Promise<DeleteDatasetResponse>;
+    /**
+     * Update a dataset
+     *
+     * Update a dataset's name, description, or list of datapoint IDs.
+     */
+    update(options: UpdateDatasetOptions): Promise<UpdateDatasetResponse>;
     /**
      * Add datapoints to a dataset
      *
@@ -203,12 +283,6 @@ declare class DatasetsNamespace {
 declare class ExperimentsNamespace {
     #private;
     constructor(client: ReturnType<typeof createApiClient<paths>>);
-    /**
-     * Get experiment runs schema
-     *
-     * Retrieve the schema and metadata for experiment runs
-     */
-    getRunsSchema(options?: GetExperimentRunsSchemaOptions): Promise<GetExperimentRunsSchemaResponse>;
     /**
      * Get a list of evaluation runs
      *
@@ -248,7 +322,7 @@ declare class ExperimentsNamespace {
     /**
      * Retrieve experiment result
      *
-     * Compute evaluation summary for an experiment run including pass/fail status, metrics, and datapoints
+     * Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
      */
     getResult(options: GetExperimentResultOptions): Promise<GetExperimentResultResponse>;
     /**
@@ -263,6 +337,41 @@ declare class ExperimentsNamespace {
      * Retrieve and compare events between two experiment runs for detailed analysis
      */
     compareRunEvents(options: GetExperimentCompareEventsOptions): Promise<GetExperimentCompareEventsResponse>;
+}
+/** @inline */
+declare class QueuesNamespace {
+    #private;
+    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    /**
+     * List annotation queues
+     *
+     * List annotation queues for the current project scope, optionally filtered by enabled status.
+     */
+    list(options?: GetQueuesOptions): Promise<GetQueuesResponse>;
+    /**
+     * Create an annotation queue
+     *
+     * Create a new annotation queue with a name, optional description, filters, and an initial set of event IDs to add.
+     */
+    create(options: CreateQueueOptions): Promise<CreateQueueResponse>;
+    /**
+     * Get an annotation queue
+     *
+     * Retrieve a single annotation queue by its unique identifier.
+     */
+    get(options: GetQueueOptions): Promise<GetQueueResponse>;
+    /**
+     * Update an annotation queue
+     *
+     * Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
+     */
+    update(options: UpdateQueueOptions): Promise<UpdateQueueResponse>;
+    /**
+     * Delete an annotation queue
+     *
+     * Soft-delete an annotation queue by its unique identifier.
+     */
+    delete(options: DeleteQueueOptions): Promise<DeleteQueueResponse>;
 }
 /** @inline */
 declare class ConfigurationsNamespace {
@@ -301,6 +410,7 @@ export declare class Client {
     readonly datapoints: DatapointsNamespace;
     readonly datasets: DatasetsNamespace;
     readonly experiments: ExperimentsNamespace;
+    readonly queues: QueuesNamespace;
     readonly configurations: ConfigurationsNamespace;
     constructor(options?: ClientConfig);
 }

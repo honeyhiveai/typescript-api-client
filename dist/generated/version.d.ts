@@ -1,2 +1,2 @@
-export declare const SDK_VERSION = "2.0.0-rc.7";
+export declare const SDK_VERSION = "1.0.0-rc.1";
 //# sourceMappingURL=version.d.ts.map

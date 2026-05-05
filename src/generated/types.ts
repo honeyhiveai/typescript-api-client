@@ -48,15 +48,37 @@ export interface paths {
     };
     get?: never;
     /**
-     * Update an event
-     * @description Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. The event_id field is required to identify the event to update.
+     * Update an event (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `PUT /v1/events/{event_id}` instead.
      */
-    put: operations['updateEvent'];
+    put: operations['updateEventLegacy'];
+    /**
+     * Create a new event (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/events` instead. The legacy route wraps the event object under an `event` key; the v1 route accepts a bare event object.
+     */
+    post: operations['createEventLegacy'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
     /**
      * Create a new event
-     * @description Create a new event (span) within a session trace. The request body wraps the event object under the `event` key.
+     * @description Create a new event (span) within a session trace. The request body is a bare event object (no `event` wrapper).
      *
-     *     **Required properties** within the event object:
+     *     **Required properties:**
      *     - `event_type` (string) — Must be one of: `chain`, `model`, `tool`, `session`.
      *     - `inputs` (object) — Input data for the event.
      *     **Auto-generated properties** (provided by the server when omitted):
@@ -80,6 +102,26 @@ export interface paths {
      *     - `user_properties` (object) — User properties associated with the event.
      */
     post: operations['createEvent'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/events/{event_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update an event
+     * @description Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. Extra fields not listed below are accepted by the server but silently ignored.
+     */
+    put: operations['updateEvent'];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -127,6 +169,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/events/batch': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create a batch of events
+     * @description Create multiple events in a single request. When `single_session` is true, all events share the same session created from `session_properties`.
+     *
+     *     **Required properties:**
+     *     - `events` (array of event objects) — Each event must include
+     *       `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
+     *
+     *     **Optional properties:**
+     *     - `single_session` (boolean) — If true, all events share a single session
+     *       created from `session_properties`. Defaults to false.
+     *
+     *     - `session_properties` (object) — Session metadata used when
+     *       `single_session` is true. May include `session_name`, `start_time`,
+     *       `metadata`.
+     *
+     *     Unknown top-level fields and per-event fields are rejected at the SDK boundary; the legacy aliases `is_single_session`, `session`, and per-event `project` are no longer accepted.
+     */
+    post: operations['createEventBatch'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/events/model': {
     parameters: {
       query?: never;
@@ -157,10 +233,11 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create a batch of events
-     * @description Create multiple events in a single request. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
+     * Create a batch of events (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/events/batch` instead. The legacy route accepts the deprecated `is_single_session` and `session` aliases and lets per-event objects carry the deprecated `project` field; the v1 route rejects all three at the SDK boundary.
      */
-    post: operations['createEventBatch'];
+    post: operations['createEventBatchLegacy'];
     delete?: never;
     options?: never;
     head?: never;
@@ -200,20 +277,66 @@ export interface paths {
      */
     get: operations['getMetrics'];
     /**
-     * Update an existing metric
-     * @description Edit a metric
+     * Update an existing metric (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `PUT /v1/metrics/{metric_id}` instead.
      */
-    put: operations['updateMetric'];
+    put: operations['updateMetricLegacy'];
     /**
      * Create a new metric
      * @description Add a new metric
      */
     post: operations['createMetric'];
     /**
+     * Delete a metric (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/metrics/{metric_id}` instead.
+     */
+    delete: operations['deleteMetricLegacy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/metrics/{metric_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update an existing metric
+     * @description Update a metric's editable fields. Only fields included in the request body are modified.
+     */
+    put: operations['updateMetric'];
+    post?: never;
+    /**
      * Delete a metric
-     * @description Remove a metric
+     * @description Remove a metric by id.
      */
     delete: operations['deleteMetric'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/metrics/run': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Run a metric evaluation
+     * @description Execute a metric on a specific event
+     */
+    post: operations['runMetric'];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -229,10 +352,11 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Run a metric evaluation
-     * @description Execute a metric on a specific event
+     * Run a metric evaluation (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/metrics/run` instead.
      */
-    post: operations['runMetric'];
+    post: operations['runMetricLegacy'];
     delete?: never;
     options?: never;
     head?: never;
@@ -335,10 +459,11 @@ export interface paths {
      */
     post: operations['createDataset'];
     /**
-     * Delete a dataset
-     * @description Permanently delete a dataset by its unique identifier.
+     * Delete a dataset (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/datasets/{dataset_id}` instead.
      */
-    delete: operations['deleteDataset'];
+    delete: operations['deleteDatasetLegacy'];
     options?: never;
     head?: never;
     patch?: never;
@@ -358,7 +483,11 @@ export interface paths {
      */
     put: operations['updateDataset'];
     post?: never;
-    delete?: never;
+    /**
+     * Delete a dataset
+     * @description Permanently delete a dataset by its unique identifier.
+     */
+    delete: operations['deleteDataset'];
     options?: never;
     head?: never;
     patch?: never;
@@ -384,7 +513,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/datasets/{dataset_id}/{datapoint_id}': {
+  '/v1/datasets/{dataset_id}/datapoints/{datapoint_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -404,6 +533,27 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/datasets/{dataset_id}/{datapoint_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove a datapoint from a dataset (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/datasets/{dataset_id}/datapoints/{datapoint_id}` instead.
+     */
+    delete: operations['removeDatapointLegacy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/events/schema': {
     parameters: {
       query?: never;
@@ -412,10 +562,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get events schema
-     * @description Retrieve the schema and metadata for experiment events
+     * Get events schema (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/runs/{run_id}/schema` (single-run) or `GET /v1/runs/schema` (project-wide) instead.
      */
-    get: operations['getEventsSchema'];
+    get: operations['getEventsSchemaLegacy'];
     put?: never;
     post?: never;
     delete?: never;
@@ -448,6 +599,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/runs/schema': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get events schema across all experiment runs in a project
+     * @description Retrieve the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
+     */
+    get: operations['getRunsSchema'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/runs/{run_id}': {
     parameters: {
       query?: never;
@@ -471,6 +642,26 @@ export interface paths {
      * @description Permanently delete an experiment run by its run ID.
      */
     delete: operations['deleteRun'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/runs/{run_id}/schema': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get events schema for a single experiment run
+     * @description Retrieve the events schema (fields, datasets, mappings) for a single experiment run.
+     */
+    get: operations['getRunSchema'];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -516,7 +707,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/runs/{new_run_id}/compare-with/{old_run_id}': {
+  '/v1/runs/{new_run_id}/compare/{old_run_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -536,7 +727,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/runs/compare/events': {
+  '/v1/runs/{new_run_id}/compare-with/{old_run_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve experiment comparison (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/runs/{new_run_id}/compare/{old_run_id}` instead.
+     */
+    get: operations['getExperimentComparisonLegacy'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/runs/{new_run_id}/compare/{old_run_id}/events': {
     parameters: {
       query?: never;
       header?: never;
@@ -548,6 +760,27 @@ export interface paths {
      * @description Retrieve and compare events between two experiment runs for detailed analysis
      */
     get: operations['getExperimentCompareEvents'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/runs/compare/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Compare events between two experiment runs (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/runs/{new_run_id}/compare/{old_run_id}/events` instead.
+     */
+    get: operations['getExperimentCompareEventsLegacy'];
     put?: never;
     post?: never;
     delete?: never;
@@ -617,12 +850,14 @@ export interface paths {
     };
     /**
      * Retrieve a list of configurations
+     * @deprecated
      * @description List configurations with optional filtering by name, environment, and tags.
      */
     get: operations['getConfigurations'];
     put?: never;
     /**
      * Create a new configuration
+     * @deprecated
      * @description Create a new LLM or pipeline configuration with provider, parameters, and environment settings.
      */
     post: operations['createConfiguration'];
@@ -642,12 +877,14 @@ export interface paths {
     get?: never;
     /**
      * Update an existing configuration
+     * @deprecated
      * @description Update an existing configuration's name, provider, parameters, environment, or tags.
      */
     put: operations['updateConfiguration'];
     post?: never;
     /**
      * Delete a configuration
+     * @deprecated
      * @description Permanently delete a configuration by its unique identifier.
      */
     delete: operations['deleteConfiguration'];
@@ -954,8 +1191,16 @@ export interface components {
       /** @description Updated list of datapoint IDs */
       datapoints?: string[];
     };
-    /** @description Query parameters for DELETE /datasets */
-    DeleteDatasetQuery: {
+    /** @description Path parameters for DELETE /datasets/{dataset_id} */
+    DeleteDatasetParams: {
+      /** @description Unique identifier of the dataset to delete */
+      dataset_id: string;
+    };
+    /**
+     * @deprecated
+     * @description Query parameters for DELETE /datasets (deprecated — use DELETE /datasets/{dataset_id})
+     */
+    LegacyDeleteDatasetQuery: {
       /** @description Unique identifier of the dataset to delete */
       dataset_id: string;
     };
@@ -970,6 +1215,16 @@ export interface components {
     };
     /** @description Path parameters for DELETE /datasets/{dataset_id}/datapoints/{datapoint_id} */
     RemoveDatapointFromDatasetParams: {
+      /** @description Unique identifier of the dataset */
+      dataset_id: string;
+      /** @description Unique identifier of the datapoint to remove */
+      datapoint_id: string;
+    };
+    /**
+     * @deprecated
+     * @description Path parameters for DELETE /datasets/{dataset_id}/{datapoint_id} (deprecated — use DELETE /datasets/{dataset_id}/datapoints/{datapoint_id})
+     */
+    LegacyRemoveDatapointFromDatasetParams: {
       /** @description Unique identifier of the dataset */
       dataset_id: string;
       /** @description Unique identifier of the datapoint to remove */
@@ -1281,8 +1536,42 @@ export interface components {
     } & {
       [key: string]: unknown;
     };
-    /** @description Request to update an existing event */
+    /** @description Request body for PUT /v1/events/{event_id} */
     UpdateEventRequest: {
+      /** @description Metadata fields to merge into the event */
+      metadata?: {
+        [key: string]: unknown;
+      };
+      /** @description Feedback fields to merge into the event */
+      feedback?: {
+        [key: string]: unknown;
+      };
+      /** @description Metric values to merge into the event */
+      metrics?: {
+        [key: string]: unknown;
+      };
+      /** @description Output data to replace on the event (accepts objects, strings, arrays, or scalars) */
+      outputs?: unknown;
+      /** @description Configuration fields to merge into the event */
+      config?: {
+        [key: string]: unknown;
+      };
+      /** @description User properties to merge into the event */
+      user_properties?: {
+        [key: string]: unknown;
+      };
+      /** @description Event duration in milliseconds */
+      duration?: number;
+      /** @description Unix timestamp in milliseconds for event end */
+      end_time?: number;
+      /** @description IDs of child events to set (must be non-empty; an empty array is ignored) */
+      children_ids?: string[];
+    };
+    /**
+     * @deprecated
+     * @description Request to update an existing event (deprecated — use PUT /v1/events/{event_id})
+     */
+    LegacyUpdateEventRequest: {
       /** @description Event ID to update */
       event_id: string;
       /** @description Metadata fields to merge into the event */
@@ -1314,20 +1603,81 @@ export interface components {
       /** @description IDs of child events to set (must be non-empty; an empty array is ignored) */
       children_ids?: string[];
     };
-    /** @description Request to create a new event */
+    /** @description Request body for POST /v1/events (bare event object) */
     PostEventRequest: {
-      event: components['schemas']['PostEventRequestEvent'];
+      /** @description Project ID */
+      project_id?: string;
+      /** @description Source of the event (e.g., sdk-python) */
+      source?: string;
+      /** @description Name of the event */
+      event_name?: string;
+      /**
+       * @description Type of event (model, tool, chain, or session)
+       * @enum {string}
+       */
+      event_type: 'model' | 'tool' | 'chain' | 'session';
+      /** @description Unique event identifier */
+      event_id?: string;
+      /** @description Session this event belongs to */
+      session_id?: string;
+      /** @description Parent event ID in the trace hierarchy */
+      parent_id?: string;
+      /** @description Child event IDs in the trace hierarchy */
+      children_ids?: string[];
+      /** @description Configuration used for this event */
+      config?: {
+        [key: string]: unknown;
+      };
+      /** @description Input data for the event */
+      inputs: {
+        [key: string]: unknown;
+      };
+      /** @description Output data from the event */
+      outputs?: {
+        [key: string]: unknown;
+      };
+      /** @description Error message if the event failed */
+      error?: string | null;
+      /** @description Event start time as Unix milliseconds */
+      start_time?: number;
+      /** @description Event end time as Unix milliseconds */
+      end_time?: number;
+      /** @description Event duration in milliseconds */
+      duration?: number;
+      /** @description Arbitrary metadata for the event */
+      metadata?: {
+        [key: string]: unknown;
+      };
+      /** @description Feedback data associated with the event */
+      feedback?: {
+        [key: string]: unknown;
+      };
+      /** @description Metric values computed for the event */
+      metrics?: {
+        [key: string]: unknown;
+      };
+      /** @description User properties associated with the event */
+      user_properties?: {
+        [key: string]: unknown;
+      };
+    };
+    /**
+     * @deprecated
+     * @description Request body for POST /events (deprecated — use POST /v1/events)
+     */
+    LegacyPostEventRequest: {
+      event: components['schemas']['LegacyPostEventRequestEvent'];
     };
     /** @description Request body for POST /v1/events/search */
     SearchEventsRequest: {
       /** @description Array of filter criteria to apply */
       filters?: components['schemas']['EventSearchFiltersArray'];
       dateRange?: components['schemas']['SearchEventsRequestDateRange'];
-      /** @description Limit number of results (default 1000, max 7500) */
+      /** @description Limit number of results (default 1000, max 1000) */
       limit?: number;
       /** @description Page number of results (default 1) */
       page?: number;
-      /** @description If true, skip result ordering for faster queries */
+      /** @description Deprecated: accepted for SDK back-compat but treated as a no-op. Pagination requires a stable ORDER BY to produce consistent pages, and with the 1000-row cap skipping the sort is not worth the inconsistency. The route always orders by start_time DESC. */
       ignore_order?: boolean;
       /** @description Filter by evaluation/experiment run ID */
       evaluation_id?: string;
@@ -1352,8 +1702,19 @@ export interface components {
     PostModelEventRequest: {
       model_event: components['schemas']['ModelEvent'];
     };
-    /** @description Request body for POST /events/batch */
+    /** @description Request body for POST /v1/events/batch */
     PostEventBatchRequest: {
+      /** @description Array of events to create */
+      events: components['schemas']['PostEventRequest'][];
+      /** @description If true, all events share the same session */
+      single_session?: boolean;
+      session_properties?: components['schemas']['SessionProperties'];
+    };
+    /**
+     * @deprecated
+     * @description Request body for POST /events/batch (deprecated — use POST /v1/events/batch)
+     */
+    LegacyPostEventBatchRequest: {
       /** @description Array of events to create */
       events: components['schemas']['LegacyEvent'][];
       /** @description If true, all events share the same session */
@@ -1670,15 +2031,48 @@ export interface components {
       /** @description Filters to apply to results */
       filters?: string | unknown[];
     };
-    /** @description Path parameters for GET /runs/{new_run_id}/compare-with/{old_run_id} */
+    /** @description Path parameters for GET /runs/{new_run_id}/compare/{old_run_id} */
     GetExperimentRunCompareParams: {
       /** @description The new run ID to compare */
       new_run_id: string;
       /** @description The old run ID to compare against */
       old_run_id: string;
     };
-    /** @description Query parameters for GET /runs/{new_run_id}/compare-with/{old_run_id} */
+    /** @description Query parameters for GET /runs/{new_run_id}/compare/{old_run_id} */
     GetExperimentRunCompareQuery: {
+      /**
+       * @description Aggregation function to apply (default: average)
+       * @default average
+       * @enum {string}
+       */
+      aggregate_function?:
+        | 'average'
+        | 'min'
+        | 'max'
+        | 'median'
+        | 'p95'
+        | 'p99'
+        | 'p90'
+        | 'sum'
+        | 'count';
+      /** @description Filters to apply to comparison */
+      filters?: string | unknown[];
+    };
+    /**
+     * @deprecated
+     * @description Path parameters for GET /runs/{new_run_id}/compare-with/{old_run_id} (deprecated — use GET /runs/{new_run_id}/compare/{old_run_id})
+     */
+    LegacyGetExperimentRunCompareParams: {
+      /** @description The new run ID to compare */
+      new_run_id: string;
+      /** @description The old run ID to compare against */
+      old_run_id: string;
+    };
+    /**
+     * @deprecated
+     * @description Query parameters for GET /runs/{new_run_id}/compare-with/{old_run_id} (deprecated — use GET /runs/{new_run_id}/compare/{old_run_id})
+     */
+    LegacyGetExperimentRunCompareQuery: {
       /**
        * @description Aggregation function to apply (default: average)
        * @default average
@@ -1687,8 +2081,41 @@ export interface components {
       /** @description Filters to apply to comparison */
       filters?: string | unknown[];
     };
-    /** @description Query parameters for GET /runs/compare/events */
+    /** @description Path parameters for GET /runs/{new_run_id}/compare/{old_run_id}/events */
+    GetExperimentRunCompareEventsParams: {
+      /** @description The new run ID to compare */
+      new_run_id: string;
+      /** @description The old run ID to compare against */
+      old_run_id: string;
+    };
+    /** @description Query parameters for GET /runs/{new_run_id}/compare/{old_run_id}/events */
     GetExperimentRunCompareEventsQuery: {
+      /** @description Filter by event name */
+      event_name?: string;
+      /** @description Filter by event type */
+      event_type?: string;
+      /** @description Additional filter criteria */
+      filter?:
+        | string
+        | {
+            [key: string]: unknown;
+          };
+      /**
+       * @description Maximum number of results (max 1000)
+       * @default 1000
+       */
+      limit?: number;
+      /**
+       * @description Page number for pagination
+       * @default 1
+       */
+      page?: number;
+    };
+    /**
+     * @deprecated
+     * @description Query parameters for GET /runs/compare/events (deprecated — use GET /runs/{new_run_id}/compare/{old_run_id}/events)
+     */
+    LegacyGetExperimentRunCompareEventsQuery: {
       /** @description First run ID to compare */
       run_id_1: string;
       /** @description Second run ID to compare */
@@ -1718,12 +2145,25 @@ export interface components {
     DeleteExperimentRunParams: {
       run_id: string;
     };
-    /** @description Query parameters for GET /events/schema */
-    GetEventsSchemaQuery: {
+    /**
+     * @deprecated
+     * @description Query parameters for GET /events/schema (deprecated — use GET /runs/{run_id}/schema or GET /runs/schema)
+     */
+    LegacyGetEventsSchemaQuery: {
       /** @description Date range to filter schema by */
       dateRange?: string | components['schemas']['AbsoluteDateRange'];
       /** @description Filter by evaluation/run ID */
       evaluation_id?: string;
+    };
+    /** @description Query parameters for GET /runs/{run_id}/schema */
+    GetRunSchemaQuery: {
+      /** @description Date range to filter schema by */
+      dateRange?: string | components['schemas']['AbsoluteDateRange'];
+    };
+    /** @description Query parameters for GET /runs/schema */
+    GetRunsSchemaQuery: {
+      /** @description Date range to filter schema by */
+      dateRange?: string | components['schemas']['AbsoluteDateRange'];
     };
     /** @description Response for POST /runs */
     PostExperimentRunResponse: {
@@ -1771,7 +2211,7 @@ export interface components {
       /** @description Total number of events matching the query */
       totalEvents: number;
     };
-    /** @description Response for GET /events/schema */
+    /** @description Response for GET /events/schema, GET /runs/{run_id}/schema, and GET /runs/schema */
     GetEventsSchemaResponse: {
       fields: components['schemas']['ExperimentSchemaField'][];
       datasets: string[];
@@ -1779,7 +2219,7 @@ export interface components {
         [key: string]: components['schemas']['ExperimentSchemaMappingEntry'][];
       };
     };
-    /** @description Response for GET /runs/compare/events */
+    /** @description Response for GET /runs/{new_run_id}/compare/{old_run_id}/events */
     GetExperimentCompareEventsResponse: {
       events: components['schemas']['ComparableEvent'][];
       /** @description Total number of events matching the comparison query */
@@ -1851,8 +2291,36 @@ export interface components {
       child_metrics?: components['schemas']['CreateMetricRequestChildMetricsItem'][] | null;
       filters?: components['schemas']['CreateMetricRequestFilters'];
     };
-    /** @description Request body for PUT /metrics */
+    /** @description Request body for PUT /metrics/{metric_id} */
     UpdateMetricRequest: {
+      name?: string;
+      /** @enum {string} */
+      type?: 'PYTHON' | 'LLM' | 'HUMAN' | 'COMPOSITE';
+      criteria?: string;
+      description?: string | null;
+      /** @enum {string} */
+      return_type?: 'float' | 'boolean' | 'string' | 'categorical';
+      enabled_in_prod?: boolean;
+      needs_ground_truth?: boolean;
+      sampling_percentage?: number;
+      model_provider?: string | null;
+      model_name?: string | null;
+      scale?: number | null;
+      threshold?: components['schemas']['UpdateMetricRequestThreshold'];
+      categories?: components['schemas']['UpdateMetricRequestCategoriesItem'][];
+      child_metrics?: components['schemas']['UpdateMetricRequestChildMetricsItem'][];
+      filters?: components['schemas']['UpdateMetricRequestFilters'];
+    };
+    /** @description Path parameters for PUT /metrics/{metric_id} */
+    UpdateMetricParams: {
+      /** @description Unique identifier of the metric to update */
+      metric_id: string;
+    };
+    /**
+     * @deprecated
+     * @description Request body for PUT /metrics (deprecated — use PUT /metrics/{metric_id})
+     */
+    LegacyUpdateMetricRequest: {
       name?: string;
       /** @enum {string} */
       type?: 'PYTHON' | 'LLM' | 'HUMAN' | 'COMPOSITE';
@@ -1872,9 +2340,9 @@ export interface components {
         pass_when?: boolean | number;
         passing_categories?: string[];
       } | null;
-      categories?: components['schemas']['UpdateMetricRequestCategoriesItem'][] | null;
-      child_metrics?: components['schemas']['UpdateMetricRequestChildMetricsItem'][] | null;
-      filters?: components['schemas']['UpdateMetricRequestFilters'];
+      categories?: components['schemas']['LegacyUpdateMetricRequestCategoriesItem'][] | null;
+      child_metrics?: components['schemas']['LegacyUpdateMetricRequestChildMetricsItem'][] | null;
+      filters?: components['schemas']['LegacyUpdateMetricRequestFilters'];
       id: string;
     };
     /** @description Query parameters for GET /metrics */
@@ -1884,15 +2352,31 @@ export interface components {
       /** @description Filter by metric ID */
       id?: string;
     };
-    /** @description Query parameters for DELETE /metrics */
-    DeleteMetricQuery: {
+    /** @description Path parameters for DELETE /metrics/{metric_id} */
+    DeleteMetricParams: {
       /** @description Unique identifier of the metric to delete */
       metric_id: string;
     };
-    /** @description Request body for POST /metrics/run_metric */
+    /**
+     * @deprecated
+     * @description Query parameters for DELETE /metrics (deprecated — use DELETE /metrics/{metric_id})
+     */
+    LegacyDeleteMetricQuery: {
+      /** @description Unique identifier of the metric to delete */
+      metric_id: string;
+    };
+    /** @description Request body for POST /metrics/run */
     RunMetricRequest: {
       metric: components['schemas']['RunMetricRequestMetric'];
       event: components['schemas']['RunMetricRequestEvent'];
+    };
+    /**
+     * @deprecated
+     * @description Request body for POST /metrics/run_metric (deprecated — use POST /metrics/run)
+     */
+    LegacyRunMetricRequest: {
+      metric: components['schemas']['LegacyRunMetricRequestMetric'];
+      event: components['schemas']['LegacyRunMetricRequestEvent'];
     };
     /** @description Response for GET /metrics */
     GetMetricsResponse: {
@@ -1907,11 +2391,11 @@ export interface components {
     UpdateMetricResponse: {
       updated: boolean;
     };
-    /** @description Response for DELETE /metrics */
+    /** @description Response for DELETE /metrics/{metric_id} */
     DeleteMetricResponse: {
       deleted: boolean;
     };
-    /** @description Response for POST /metrics/run_metric */
+    /** @description Response for POST /metrics/run */
     RunMetricResponse: {
       success: boolean;
       loading: boolean;
@@ -2130,7 +2614,7 @@ export interface components {
       ground_truth?: unknown;
     };
     /** @description Full event object for legacy event creation endpoints */
-    PostEventRequestEvent: {
+    LegacyPostEventRequestEvent: {
       /**
        * @deprecated
        * @description Project name (ignored by server — project is determined from API key scope)
@@ -2242,6 +2726,12 @@ export interface components {
     CreateMetricRequestFilters: {
       filterArray: components['schemas']['FiltersArray'];
     };
+    UpdateMetricRequestThreshold: {
+      min?: number;
+      max?: number;
+      pass_when?: boolean | number;
+      passing_categories?: string[];
+    };
     UpdateMetricRequestCategoriesItem: {
       category: string;
       score: number | null;
@@ -2253,6 +2743,19 @@ export interface components {
       scale?: number | null;
     };
     UpdateMetricRequestFilters: {
+      filterArray: components['schemas']['FiltersArray'];
+    };
+    LegacyUpdateMetricRequestCategoriesItem: {
+      category: string;
+      score: number | null;
+    };
+    LegacyUpdateMetricRequestChildMetricsItem: {
+      id?: string;
+      name: string;
+      weight: number;
+      scale?: number | null;
+    };
+    LegacyUpdateMetricRequestFilters: {
       filterArray: components['schemas']['FiltersArray'];
     };
     RunMetricRequestMetricCategoriesItem: {
@@ -2320,6 +2823,76 @@ export interface components {
       };
       workspace_id?: string;
       feedback?: components['schemas']['RunMetricRequestEventFeedback'];
+    } & {
+      [key: string]: unknown;
+    };
+    LegacyRunMetricRequestMetricCategoriesItem: {
+      category: string;
+      score: number | null;
+    };
+    LegacyRunMetricRequestMetricChildMetricsItem: {
+      id?: string;
+      name: string;
+      weight: number;
+      scale?: number | null;
+    };
+    /**
+     * @default {
+     *       "filterArray": []
+     *     }
+     */
+    LegacyRunMetricRequestMetricFilters: {
+      filterArray: components['schemas']['FiltersArray'];
+    };
+    LegacyRunMetricRequestMetric: {
+      name: string;
+      /** @enum {string} */
+      type: 'LLM' | 'PYTHON';
+      criteria: string;
+      /** @default  */
+      description?: string;
+      /**
+       * @default float
+       * @enum {string}
+       */
+      return_type?: 'float' | 'boolean' | 'string' | 'categorical';
+      /** @default false */
+      enabled_in_prod?: boolean;
+      /** @default false */
+      needs_ground_truth?: boolean;
+      /** @default 100 */
+      sampling_percentage?: number;
+      model_provider?: string | null;
+      model_name?: string | null;
+      scale?: number | null;
+      threshold?: {
+        min?: number;
+        max?: number;
+        pass_when?: boolean | number;
+        passing_categories?: string[];
+      } | null;
+      categories?: components['schemas']['LegacyRunMetricRequestMetricCategoriesItem'][] | null;
+      child_metrics?:
+        | components['schemas']['LegacyRunMetricRequestMetricChildMetricsItem'][]
+        | null;
+      filters?: components['schemas']['LegacyRunMetricRequestMetricFilters'];
+    };
+    LegacyRunMetricRequestEventFeedback: {
+      ground_truth?: unknown;
+    } & {
+      [key: string]: unknown;
+    };
+    LegacyRunMetricRequestEvent: {
+      event_type?: string;
+      event_name?: string;
+      inputs?: {
+        [key: string]: unknown;
+      };
+      outputs?: {
+        [key: string]: unknown;
+      };
+      workspace_id?: string;
+      feedback?: components['schemas']['LegacyRunMetricRequestEventFeedback'];
     } & {
       [key: string]: unknown;
     };
@@ -2440,11 +3013,19 @@ export interface components {
     } & {
       [key: string]: unknown;
     };
-    GetEventsSchemaDateRangeOneOf1: {
+    GetEventsSchemaLegacyDateRangeOneOf1: {
       $gte?: string | number;
       $lte?: string | number;
     };
     GetRunsDateRangeOneOf1: {
+      $gte?: string | number;
+      $lte?: string | number;
+    };
+    GetRunsSchemaDateRangeOneOf1: {
+      $gte?: string | number;
+      $lte?: string | number;
+    };
+    GetRunSchemaDateRangeOneOf1: {
       $gte?: string | number;
       $lte?: string | number;
     };
@@ -2508,7 +3089,7 @@ export interface operations {
       };
     };
   };
-  updateEvent: {
+  updateEventLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -2520,6 +3101,144 @@ export interface operations {
         /**
          * @example {
          *       "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+         *       "metadata": {
+         *         "cost": 0.00008,
+         *         "completion_tokens": 23,
+         *         "prompt_tokens": 35,
+         *         "total_tokens": 58
+         *       },
+         *       "feedback": {
+         *         "rating": 5
+         *       },
+         *       "metrics": {
+         *         "num_words": 2
+         *       },
+         *       "outputs": {
+         *         "role": "assistant",
+         *         "content": "Hello world"
+         *       },
+         *       "config": {
+         *         "template": [
+         *           {
+         *             "role": "system",
+         *             "content": "Hello, {{ name }}!"
+         *           }
+         *         ]
+         *       },
+         *       "user_properties": {
+         *         "user_id": "691b1f94-d38c-4e92-b051-5e03fee9ff86"
+         *       },
+         *       "duration": 42
+         *     }
+         */
+        'application/json': components['schemas']['LegacyUpdateEventRequest'];
+      };
+    };
+    responses: {
+      /** @description Event updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Bad request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  createEventLegacy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LegacyPostEventRequest'];
+      };
+    };
+    responses: {
+      /** @description Event created successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+           *       "success": true
+           *     }
+           */
+          'application/json': components['schemas']['PostEventResponse'];
+        };
+      };
+      /** @description Bad request (invalid event data or missing required fields) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  createEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PostEventRequest'];
+      };
+    };
+    responses: {
+      /** @description Event created successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+           *       "success": true
+           *     }
+           */
+          'application/json': components['schemas']['PostEventResponse'];
+        };
+      };
+      /** @description Bad request (invalid event data or missing required fields) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  updateEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the event to update */
+        event_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        /**
+         * @example {
          *       "metadata": {
          *         "cost": 0.00008,
          *         "completion_tokens": 23,
@@ -2562,43 +3281,6 @@ export interface operations {
         content?: never;
       };
       /** @description Bad request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  createEvent: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['PostEventRequest'];
-      };
-    };
-    responses: {
-      /** @description Event created successfully */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          /**
-           * @example {
-           *       "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
-           *       "success": true
-           *     }
-           */
-          'application/json': components['schemas']['PostEventResponse'];
-        };
-      };
-      /** @description Bad request (invalid event data or missing required fields) */
       400: {
         headers: {
           [name: string]: unknown;
@@ -2655,6 +3337,54 @@ export interface operations {
       };
     };
   };
+  createEventBatch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PostEventBatchRequest'];
+      };
+    };
+    responses: {
+      /** @description Events created */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "event_ids": [
+           *         "7f22137a-6911-4ed3-bc36-110f1dde6b66",
+           *         "7f22137a-6911-4ed3-bc36-110f1dde6b67"
+           *       ],
+           *       "session_id": "caf77ace-3417-4da4-944d-f4a0688f3c23",
+           *       "success": true
+           *     }
+           */
+          'application/json': components['schemas']['PostEventBatchResponse'];
+        };
+      };
+      /** @description Bad request (invalid event data or missing required fields) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Events partially created */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   createModelEvent: {
     parameters: {
       query?: never;
@@ -2685,7 +3415,7 @@ export interface operations {
       };
     };
   };
-  createEventBatch: {
+  createEventBatchLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -2694,7 +3424,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['PostEventBatchRequest'];
+        'application/json': components['schemas']['LegacyPostEventBatchRequest'];
       };
     };
     responses: {
@@ -2791,7 +3521,7 @@ export interface operations {
       };
     };
   };
-  updateMetric: {
+  updateMetricLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -2800,7 +3530,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['UpdateMetricRequest'];
+        'application/json': components['schemas']['LegacyUpdateMetricRequest'];
       };
     };
     responses: {
@@ -2839,13 +3569,63 @@ export interface operations {
       };
     };
   };
-  deleteMetric: {
+  deleteMetricLegacy: {
     parameters: {
       query: {
         metric_id: string;
       };
       header?: never;
       path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Metric deleted successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeleteMetricResponse'];
+        };
+      };
+    };
+  };
+  updateMetric: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the metric to update */
+        metric_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateMetricRequest'];
+      };
+    };
+    responses: {
+      /** @description Metric updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UpdateMetricResponse'];
+        };
+      };
+    };
+  };
+  deleteMetric: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the metric to delete */
+        metric_id: string;
+      };
       cookie?: never;
     };
     requestBody?: never;
@@ -2871,6 +3651,30 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['RunMetricRequest'];
+      };
+    };
+    responses: {
+      /** @description Metric execution result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RunMetricResponse'];
+        };
+      };
+    };
+  };
+  runMetricLegacy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LegacyRunMetricRequest'];
       };
     };
     responses: {
@@ -3111,7 +3915,7 @@ export interface operations {
       };
     };
   };
-  deleteDataset: {
+  deleteDatasetLegacy: {
     parameters: {
       query: {
         /** @description The unique identifier of the dataset to be deleted like `663876ec4611c47f4970f0c3` */
@@ -3157,6 +3961,29 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['UpdateDatasetResponse'];
+        };
+      };
+    };
+  };
+  deleteDataset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the dataset to be deleted like `663876ec4611c47f4970f0c3` */
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful delete */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeleteDatasetResponse'];
         };
       };
     };
@@ -3213,11 +4040,36 @@ export interface operations {
       };
     };
   };
-  getEventsSchema: {
+  removeDatapointLegacy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the dataset */
+        dataset_id: string;
+        /** @description The unique identifier of the datapoint to remove */
+        datapoint_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Datapoint successfully removed from dataset */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemoveDatapointResponse'];
+        };
+      };
+    };
+  };
+  getEventsSchemaLegacy: {
     parameters: {
       query?: {
         /** @description Filter by date range */
-        dateRange?: string | components['schemas']['GetEventsSchemaDateRangeOneOf1'];
+        dateRange?: string | components['schemas']['GetEventsSchemaLegacyDateRangeOneOf1'];
         /** @description Filter by evaluation/run ID */
         evaluation_id?: string;
       };
@@ -3315,6 +4167,36 @@ export interface operations {
       };
     };
   };
+  getRunsSchema: {
+    parameters: {
+      query?: {
+        /** @description Filter by date range */
+        dateRange?: string | components['schemas']['GetRunsSchemaDateRangeOneOf1'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Events schema retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetEventsSchemaResponse'];
+        };
+      };
+      /** @description Error fetching events schema */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   getRun: {
     parameters: {
       query?: never;
@@ -3398,6 +4280,39 @@ export interface operations {
         };
       };
       /** @description Error deleting evaluation */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getRunSchema: {
+    parameters: {
+      query?: {
+        /** @description Filter by date range */
+        dateRange?: string | components['schemas']['GetRunSchemaDateRangeOneOf1'];
+      };
+      header?: never;
+      path: {
+        /** @description Experiment run ID (UUIDv4) */
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Events schema retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetEventsSchemaResponse'];
+        };
+      };
+      /** @description Error fetching events schema */
       400: {
         headers: {
           [name: string]: unknown;
@@ -3531,7 +4446,87 @@ export interface operations {
       };
     };
   };
+  getExperimentComparisonLegacy: {
+    parameters: {
+      query?: {
+        /** @description Aggregation function to apply to metrics */
+        aggregate_function?: string;
+        /** @description Optional filters to apply (JSON string or array of filter objects) */
+        filters?: string | Record<string, never>[];
+      };
+      header?: never;
+      path: {
+        /** @description New experiment run ID to compare (UUIDv4) */
+        new_run_id: string;
+        /** @description Old experiment run ID to compare against (UUIDv4) */
+        old_run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Experiment comparison retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetExperimentRunCompareResponse'];
+        };
+      };
+      /** @description Error processing experiment comparison */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   getExperimentCompareEvents: {
+    parameters: {
+      query?: {
+        /** @description Filter by event name */
+        event_name?: string;
+        /** @description Filter by event type */
+        event_type?: string;
+        /** @description Additional filter criteria (JSON string or object) */
+        filter?: string | Record<string, never>;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Page number for pagination */
+        page?: number;
+      };
+      header?: never;
+      path: {
+        /** @description New experiment run ID (UUIDv4) */
+        new_run_id: string;
+        /** @description Old experiment run ID to compare against (UUIDv4) */
+        old_run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Event comparison retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetExperimentCompareEventsResponse'];
+        };
+      };
+      /** @description Error fetching event comparison */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getExperimentCompareEventsLegacy: {
     parameters: {
       query: {
         /** @description First experiment run ID (UUIDv4) */

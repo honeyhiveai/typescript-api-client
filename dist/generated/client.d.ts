@@ -1,23 +1,6 @@
 import { type paths } from './types.js';
-import { type StartSessionOptions, type AddSessionTracesOptions, type CreateEventOptions, type UpdateEventOptions, type SearchEventsOptions, type CreateModelEventOptions, type CreateEventBatchOptions, type CreateModelEventBatchOptions, type GetEventsSchemaOptions, type GetMetricsOptions, type CreateMetricOptions, type UpdateMetricOptions, type DeleteMetricOptions, type RunMetricOptions, type GetDatapointsOptions, type CreateDatapointOptions, type BatchCreateDatapointsOptions, type GetDatapointOptions, type UpdateDatapointOptions, type DeleteDatapointOptions, type GetDatasetsOptions, type CreateDatasetOptions, type DeleteDatasetOptions, type UpdateDatasetOptions, type AddDatapointsOptions, type RemoveDatapointOptions, type GetRunsOptions, type CreateRunOptions, type GetRunOptions, type UpdateRunOptions, type DeleteRunOptions, type GetExperimentRunMetricsOptions, type GetExperimentResultOptions, type GetExperimentComparisonOptions, type GetExperimentCompareEventsOptions, type GetQueuesOptions, type CreateQueueOptions, type GetQueueOptions, type UpdateQueueOptions, type DeleteQueueOptions, type GetConfigurationsOptions, type CreateConfigurationOptions, type UpdateConfigurationOptions, type DeleteConfigurationOptions, type StartSessionResponse, type AddSessionTracesResponse, type CreateEventResponse, type SearchEventsResponse, type CreateModelEventResponse, type CreateEventBatchResponse, type CreateModelEventBatchResponse, type GetEventsSchemaResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type DeleteDatasetResponse, type UpdateDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetExperimentRunMetricsResponse, type GetExperimentResultResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetQueuesResponse, type CreateQueueResponse, type GetQueueResponse, type UpdateQueueResponse, type DeleteQueueResponse, type GetConfigurationsResponse, type CreateConfigurationResponse, type UpdateConfigurationResponse, type DeleteConfigurationResponse } from './apiTypes.js';
+import { type CreateEventOptions, type UpdateEventOptions, type SearchEventsOptions, type CreateEventBatchOptions, type GetMetricsOptions, type CreateMetricOptions, type UpdateMetricOptions, type DeleteMetricOptions, type RunMetricOptions, type GetDatapointsOptions, type CreateDatapointOptions, type BatchCreateDatapointsOptions, type GetDatapointOptions, type UpdateDatapointOptions, type DeleteDatapointOptions, type GetDatasetsOptions, type CreateDatasetOptions, type UpdateDatasetOptions, type DeleteDatasetOptions, type AddDatapointsOptions, type RemoveDatapointOptions, type GetRunsOptions, type CreateRunOptions, type GetRunsSchemaOptions, type GetRunOptions, type UpdateRunOptions, type DeleteRunOptions, type GetRunSchemaOptions, type GetExperimentRunMetricsOptions, type GetExperimentComparisonOptions, type GetExperimentCompareEventsOptions, type GetQueuesOptions, type CreateQueueOptions, type GetQueueOptions, type UpdateQueueOptions, type DeleteQueueOptions, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetQueuesResponse, type CreateQueueResponse, type GetQueueResponse, type UpdateQueueResponse, type DeleteQueueResponse } from './apiTypes.js';
 import { type ClientConfig, createApiClient } from '../util.js';
-/** @inline */
-declare class SessionsNamespace {
-    #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
-    /**
-     * Start a new session
-     *
-     * Start a new session. The request body wraps the session event object under the `session` key, matching the pattern used by POST /events.
-     */
-    start(options: StartSessionOptions): Promise<StartSessionResponse>;
-    /**
-     * Add traces to a session
-     *
-     * Add trace events to an existing session. The field is named `logs` for legacy compatibility with the Go ingestion handler.
-     */
-    addTraces(options: AddSessionTracesOptions): Promise<AddSessionTracesResponse>;
-}
 /** @inline */
 declare class EventsNamespace {
     #private;
@@ -25,9 +8,9 @@ declare class EventsNamespace {
     /**
      * Create a new event
      *
-     * Create a new event (span) within a session trace. The request body wraps the event object under the `event` key.
+     * Create a new event (span) within a session trace. The request body is a bare event object (no `event` wrapper).
      *
-     * **Required properties** within the event object:
+     * **Required properties:**
      * - `event_type` (string) — Must be one of: `chain`, `model`, `tool`, `session`.
      * - `inputs` (object) — Input data for the event.
      * **Auto-generated properties** (provided by the server when omitted):
@@ -62,12 +45,11 @@ declare class EventsNamespace {
     /**
      * Update an event
      *
-     * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. The event_id field is required to identify the event to update.
+     * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. Extra fields not listed below are accepted by the server but silently ignored.
      *
      * @example Request body
      * ```json
      * {
-     *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
      *   "metadata": {
      *     "cost": 0.00008,
      *     "completion_tokens": 23,
@@ -107,23 +89,23 @@ declare class EventsNamespace {
      */
     search(options: SearchEventsOptions): Promise<SearchEventsResponse>;
     /**
-     * Create a new model event
-     *
-     * Create a model event. The event_type is automatically set to 'model'. Please refer to our instrumentation guide for detailed information.
-     *
-     * @example Response
-     * ```json
-     * {
-     *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
-     *   "success": true
-     * }
-     * ```
-     */
-    createModel(options: CreateModelEventOptions): Promise<CreateModelEventResponse>;
-    /**
      * Create a batch of events
      *
-     * Create multiple events in a single request. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
+     * Create multiple events in a single request. When `single_session` is true, all events share the same session created from `session_properties`.
+     *
+     * **Required properties:**
+     * - `events` (array of event objects) — Each event must include
+     *   `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
+     *
+     * **Optional properties:**
+     * - `single_session` (boolean) — If true, all events share a single session
+     *   created from `session_properties`. Defaults to false.
+     *
+     * - `session_properties` (object) — Session metadata used when
+     *   `single_session` is true. May include `session_name`, `start_time`,
+     *   `metadata`.
+     *
+     * Unknown top-level fields and per-event fields are rejected at the SDK boundary; the legacy aliases `is_single_session`, `session`, and per-event `project` are no longer accepted.
      *
      * @example Response
      * ```json
@@ -138,29 +120,6 @@ declare class EventsNamespace {
      * ```
      */
     createBatch(options: CreateEventBatchOptions): Promise<CreateEventBatchResponse>;
-    /**
-     * Create a batch of model events
-     *
-     * Create multiple model events in a single request. The event_type is automatically set to 'model' for all events. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
-     *
-     * @example Response
-     * ```json
-     * {
-     *   "event_ids": [
-     *     "7f22137a-6911-4ed3-bc36-110f1dde6b66",
-     *     "7f22137a-6911-4ed3-bc36-110f1dde6b67"
-     *   ],
-     *   "success": true
-     * }
-     * ```
-     */
-    createModelBatch(options: CreateModelEventBatchOptions): Promise<CreateModelEventBatchResponse>;
-    /**
-     * Get events schema
-     *
-     * Retrieve the schema and metadata for experiment events
-     */
-    getEventsSchema(options?: GetEventsSchemaOptions): Promise<GetEventsSchemaResponse>;
 }
 /** @inline */
 declare class MetricsNamespace {
@@ -181,13 +140,13 @@ declare class MetricsNamespace {
     /**
      * Update an existing metric
      *
-     * Edit a metric
+     * Update a metric's editable fields. Only fields included in the request body are modified.
      */
     update(options: UpdateMetricOptions): Promise<UpdateMetricResponse>;
     /**
      * Delete a metric
      *
-     * Remove a metric
+     * Remove a metric by id.
      */
     delete(options: DeleteMetricOptions): Promise<DeleteMetricResponse>;
     /**
@@ -255,17 +214,17 @@ declare class DatasetsNamespace {
      */
     create(options: CreateDatasetOptions): Promise<CreateDatasetResponse>;
     /**
-     * Delete a dataset
-     *
-     * Permanently delete a dataset by its unique identifier.
-     */
-    delete(options: DeleteDatasetOptions): Promise<DeleteDatasetResponse>;
-    /**
      * Update a dataset
      *
      * Update a dataset's name, description, or list of datapoint IDs.
      */
     update(options: UpdateDatasetOptions): Promise<UpdateDatasetResponse>;
+    /**
+     * Delete a dataset
+     *
+     * Permanently delete a dataset by its unique identifier.
+     */
+    delete(options: DeleteDatasetOptions): Promise<DeleteDatasetResponse>;
     /**
      * Add datapoints to a dataset
      *
@@ -296,6 +255,12 @@ declare class ExperimentsNamespace {
      */
     createRun(options: CreateRunOptions): Promise<CreateRunResponse>;
     /**
+     * Get events schema across all experiment runs in a project
+     *
+     * Retrieve the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
+     */
+    getRunsSchema(options?: GetRunsSchemaOptions): Promise<GetRunsSchemaResponse>;
+    /**
      * Get details of an evaluation run
      *
      * Retrieve the full details of a single experiment run by its run ID.
@@ -314,17 +279,17 @@ declare class ExperimentsNamespace {
      */
     deleteRun(options: DeleteRunOptions): Promise<DeleteRunResponse>;
     /**
+     * Get events schema for a single experiment run
+     *
+     * Retrieve the events schema (fields, datasets, mappings) for a single experiment run.
+     */
+    getRunSchema(options: GetRunSchemaOptions): Promise<GetRunSchemaResponse>;
+    /**
      * Get event metrics for an experiment run
      *
      * Retrieve event metrics from ClickHouse for a specific experiment run
      */
     getRunMetrics(options: GetExperimentRunMetricsOptions): Promise<GetExperimentRunMetricsResponse>;
-    /**
-     * Retrieve experiment result
-     *
-     * Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
-     */
-    getResult(options: GetExperimentResultOptions): Promise<GetExperimentResultResponse>;
     /**
      * Retrieve experiment comparison
      *
@@ -373,45 +338,14 @@ declare class QueuesNamespace {
      */
     delete(options: DeleteQueueOptions): Promise<DeleteQueueResponse>;
 }
-/** @inline */
-declare class ConfigurationsNamespace {
-    #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
-    /**
-     * Retrieve a list of configurations
-     *
-     * List configurations with optional filtering by name, environment, and tags.
-     */
-    list(options?: GetConfigurationsOptions): Promise<GetConfigurationsResponse>;
-    /**
-     * Create a new configuration
-     *
-     * Create a new LLM or pipeline configuration with provider, parameters, and environment settings.
-     */
-    create(options: CreateConfigurationOptions): Promise<CreateConfigurationResponse>;
-    /**
-     * Update an existing configuration
-     *
-     * Update an existing configuration's name, provider, parameters, environment, or tags.
-     */
-    update(options: UpdateConfigurationOptions): Promise<UpdateConfigurationResponse>;
-    /**
-     * Delete a configuration
-     *
-     * Permanently delete a configuration by its unique identifier.
-     */
-    delete(options: DeleteConfigurationOptions): Promise<DeleteConfigurationResponse>;
-}
 export declare class Client {
     #private;
-    readonly sessions: SessionsNamespace;
     readonly events: EventsNamespace;
     readonly metrics: MetricsNamespace;
     readonly datapoints: DatapointsNamespace;
     readonly datasets: DatasetsNamespace;
     readonly experiments: ExperimentsNamespace;
     readonly queues: QueuesNamespace;
-    readonly configurations: ConfigurationsNamespace;
     constructor(options?: ClientConfig);
 }
 export {};

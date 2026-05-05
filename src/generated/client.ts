@@ -2,15 +2,10 @@
 
 import { type paths } from './types.js';
 import {
-  type StartSessionOptions,
-  type AddSessionTracesOptions,
   type CreateEventOptions,
   type UpdateEventOptions,
   type SearchEventsOptions,
-  type CreateModelEventOptions,
   type CreateEventBatchOptions,
-  type CreateModelEventBatchOptions,
-  type GetEventsSchemaOptions,
   type GetMetricsOptions,
   type CreateMetricOptions,
   type UpdateMetricOptions,
@@ -24,17 +19,18 @@ import {
   type DeleteDatapointOptions,
   type GetDatasetsOptions,
   type CreateDatasetOptions,
-  type DeleteDatasetOptions,
   type UpdateDatasetOptions,
+  type DeleteDatasetOptions,
   type AddDatapointsOptions,
   type RemoveDatapointOptions,
   type GetRunsOptions,
   type CreateRunOptions,
+  type GetRunsSchemaOptions,
   type GetRunOptions,
   type UpdateRunOptions,
   type DeleteRunOptions,
+  type GetRunSchemaOptions,
   type GetExperimentRunMetricsOptions,
-  type GetExperimentResultOptions,
   type GetExperimentComparisonOptions,
   type GetExperimentCompareEventsOptions,
   type GetQueuesOptions,
@@ -42,18 +38,9 @@ import {
   type GetQueueOptions,
   type UpdateQueueOptions,
   type DeleteQueueOptions,
-  type GetConfigurationsOptions,
-  type CreateConfigurationOptions,
-  type UpdateConfigurationOptions,
-  type DeleteConfigurationOptions,
-  type StartSessionResponse,
-  type AddSessionTracesResponse,
   type CreateEventResponse,
   type SearchEventsResponse,
-  type CreateModelEventResponse,
   type CreateEventBatchResponse,
-  type CreateModelEventBatchResponse,
-  type GetEventsSchemaResponse,
   type GetMetricsResponse,
   type CreateMetricResponse,
   type UpdateMetricResponse,
@@ -67,17 +54,18 @@ import {
   type DeleteDatapointResponse,
   type GetDatasetsResponse,
   type CreateDatasetResponse,
-  type DeleteDatasetResponse,
   type UpdateDatasetResponse,
+  type DeleteDatasetResponse,
   type AddDatapointsResponse,
   type RemoveDatapointResponse,
   type GetRunsResponse,
   type CreateRunResponse,
+  type GetRunsSchemaResponse,
   type GetRunResponse,
   type UpdateRunResponse,
   type DeleteRunResponse,
+  type GetRunSchemaResponse,
   type GetExperimentRunMetricsResponse,
-  type GetExperimentResultResponse,
   type GetExperimentComparisonResponse,
   type GetExperimentCompareEventsResponse,
   type GetQueuesResponse,
@@ -85,44 +73,8 @@ import {
   type GetQueueResponse,
   type UpdateQueueResponse,
   type DeleteQueueResponse,
-  type GetConfigurationsResponse,
-  type CreateConfigurationResponse,
-  type UpdateConfigurationResponse,
-  type DeleteConfigurationResponse,
 } from './apiTypes.js';
 import { type ClientConfig, createApiClient, unwrap } from '../util.js';
-
-/** @inline */
-class SessionsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
-
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
-  }
-
-  /**
-   * Start a new session
-   *
-   * Start a new session. The request body wraps the session event object under the `session` key, matching the pattern used by POST /events.
-   */
-  public start(options: StartSessionOptions): Promise<StartSessionResponse> {
-    return unwrap(this.#client.POST('/session/start', { body: options.body }));
-  }
-
-  /**
-   * Add traces to a session
-   *
-   * Add trace events to an existing session. The field is named `logs` for legacy compatibility with the Go ingestion handler.
-   */
-  public addTraces(options: AddSessionTracesOptions): Promise<AddSessionTracesResponse> {
-    return unwrap(
-      this.#client.POST('/session/{session_id}/traces', {
-        params: { path: options.path },
-        body: options.body,
-      }),
-    );
-  }
-}
 
 /** @inline */
 class EventsNamespace {
@@ -135,9 +87,9 @@ class EventsNamespace {
   /**
    * Create a new event
    *
-   * Create a new event (span) within a session trace. The request body wraps the event object under the `event` key.
+   * Create a new event (span) within a session trace. The request body is a bare event object (no `event` wrapper).
    *
-   * **Required properties** within the event object:
+   * **Required properties:**
    * - `event_type` (string) — Must be one of: `chain`, `model`, `tool`, `session`.
    * - `inputs` (object) — Input data for the event.
    * **Auto-generated properties** (provided by the server when omitted):
@@ -169,18 +121,17 @@ class EventsNamespace {
    * ```
    */
   public create(options: CreateEventOptions): Promise<CreateEventResponse> {
-    return unwrap(this.#client.POST('/events', { body: options.body }));
+    return unwrap(this.#client.POST('/v1/events', { body: options.body }));
   }
 
   /**
    * Update an event
    *
-   * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. The event_id field is required to identify the event to update.
+   * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. Extra fields not listed below are accepted by the server but silently ignored.
    *
    * @example Request body
    * ```json
    * {
-   *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
    *   "metadata": {
    *     "cost": 0.00008,
    *     "completion_tokens": 23,
@@ -213,7 +164,12 @@ class EventsNamespace {
    * ```
    */
   public update(options: UpdateEventOptions): Promise<void> {
-    return unwrap(this.#client.PUT('/events', { body: options.body }));
+    return unwrap(
+      this.#client.PUT('/v1/events/{event_id}', {
+        params: { path: options.path },
+        body: options.body,
+      }),
+    );
   }
 
   /**
@@ -226,26 +182,23 @@ class EventsNamespace {
   }
 
   /**
-   * Create a new model event
-   *
-   * Create a model event. The event_type is automatically set to 'model'. Please refer to our instrumentation guide for detailed information.
-   *
-   * @example Response
-   * ```json
-   * {
-   *   "event_id": "7f22137a-6911-4ed3-bc36-110f1dde6b66",
-   *   "success": true
-   * }
-   * ```
-   */
-  public createModel(options: CreateModelEventOptions): Promise<CreateModelEventResponse> {
-    return unwrap(this.#client.POST('/events/model', { body: options.body }));
-  }
-
-  /**
    * Create a batch of events
    *
-   * Create multiple events in a single request. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
+   * Create multiple events in a single request. When `single_session` is true, all events share the same session created from `session_properties`.
+   *
+   * **Required properties:**
+   * - `events` (array of event objects) — Each event must include
+   *   `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
+   *
+   * **Optional properties:**
+   * - `single_session` (boolean) — If true, all events share a single session
+   *   created from `session_properties`. Defaults to false.
+   *
+   * - `session_properties` (object) — Session metadata used when
+   *   `single_session` is true. May include `session_name`, `start_time`,
+   *   `metadata`.
+   *
+   * Unknown top-level fields and per-event fields are rejected at the SDK boundary; the legacy aliases `is_single_session`, `session`, and per-event `project` are no longer accepted.
    *
    * @example Response
    * ```json
@@ -260,38 +213,7 @@ class EventsNamespace {
    * ```
    */
   public createBatch(options: CreateEventBatchOptions): Promise<CreateEventBatchResponse> {
-    return unwrap(this.#client.POST('/events/batch', { body: options.body }));
-  }
-
-  /**
-   * Create a batch of model events
-   *
-   * Create multiple model events in a single request. The event_type is automatically set to 'model' for all events. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
-   *
-   * @example Response
-   * ```json
-   * {
-   *   "event_ids": [
-   *     "7f22137a-6911-4ed3-bc36-110f1dde6b66",
-   *     "7f22137a-6911-4ed3-bc36-110f1dde6b67"
-   *   ],
-   *   "success": true
-   * }
-   * ```
-   */
-  public createModelBatch(
-    options: CreateModelEventBatchOptions,
-  ): Promise<CreateModelEventBatchResponse> {
-    return unwrap(this.#client.POST('/events/model/batch', { body: options.body }));
-  }
-
-  /**
-   * Get events schema
-   *
-   * Retrieve the schema and metadata for experiment events
-   */
-  public getEventsSchema(options?: GetEventsSchemaOptions): Promise<GetEventsSchemaResponse> {
-    return unwrap(this.#client.GET('/v1/events/schema', { params: { query: options?.query } }));
+    return unwrap(this.#client.POST('/v1/events/batch', { body: options.body }));
   }
 }
 
@@ -324,19 +246,26 @@ class MetricsNamespace {
   /**
    * Update an existing metric
    *
-   * Edit a metric
+   * Update a metric's editable fields. Only fields included in the request body are modified.
    */
   public update(options: UpdateMetricOptions): Promise<UpdateMetricResponse> {
-    return unwrap(this.#client.PUT('/v1/metrics', { body: options.body }));
+    return unwrap(
+      this.#client.PUT('/v1/metrics/{metric_id}', {
+        params: { path: options.path },
+        body: options.body,
+      }),
+    );
   }
 
   /**
    * Delete a metric
    *
-   * Remove a metric
+   * Remove a metric by id.
    */
   public delete(options: DeleteMetricOptions): Promise<DeleteMetricResponse> {
-    return unwrap(this.#client.DELETE('/v1/metrics', { params: { query: options.query } }));
+    return unwrap(
+      this.#client.DELETE('/v1/metrics/{metric_id}', { params: { path: options.path } }),
+    );
   }
 
   /**
@@ -345,7 +274,7 @@ class MetricsNamespace {
    * Execute a metric on a specific event
    */
   public run(options: RunMetricOptions): Promise<RunMetricResponse> {
-    return unwrap(this.#client.POST('/v1/metrics/run_metric', { body: options.body }));
+    return unwrap(this.#client.POST('/v1/metrics/run', { body: options.body }));
   }
 }
 
@@ -450,15 +379,6 @@ class DatasetsNamespace {
   }
 
   /**
-   * Delete a dataset
-   *
-   * Permanently delete a dataset by its unique identifier.
-   */
-  public delete(options: DeleteDatasetOptions): Promise<DeleteDatasetResponse> {
-    return unwrap(this.#client.DELETE('/v1/datasets', { params: { query: options.query } }));
-  }
-
-  /**
    * Update a dataset
    *
    * Update a dataset's name, description, or list of datapoint IDs.
@@ -469,6 +389,17 @@ class DatasetsNamespace {
         params: { path: options.path },
         body: options.body,
       }),
+    );
+  }
+
+  /**
+   * Delete a dataset
+   *
+   * Permanently delete a dataset by its unique identifier.
+   */
+  public delete(options: DeleteDatasetOptions): Promise<DeleteDatasetResponse> {
+    return unwrap(
+      this.#client.DELETE('/v1/datasets/{dataset_id}', { params: { path: options.path } }),
     );
   }
 
@@ -493,7 +424,7 @@ class DatasetsNamespace {
    */
   public removeDatapoint(options: RemoveDatapointOptions): Promise<RemoveDatapointResponse> {
     return unwrap(
-      this.#client.DELETE('/v1/datasets/{dataset_id}/{datapoint_id}', {
+      this.#client.DELETE('/v1/datasets/{dataset_id}/datapoints/{datapoint_id}', {
         params: { path: options.path },
       }),
     );
@@ -527,6 +458,15 @@ class ExperimentsNamespace {
   }
 
   /**
+   * Get events schema across all experiment runs in a project
+   *
+   * Retrieve the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
+   */
+  public getRunsSchema(options?: GetRunsSchemaOptions): Promise<GetRunsSchemaResponse> {
+    return unwrap(this.#client.GET('/v1/runs/schema', { params: { query: options?.query } }));
+  }
+
+  /**
    * Get details of an evaluation run
    *
    * Retrieve the full details of a single experiment run by its run ID.
@@ -556,6 +496,19 @@ class ExperimentsNamespace {
   }
 
   /**
+   * Get events schema for a single experiment run
+   *
+   * Retrieve the events schema (fields, datasets, mappings) for a single experiment run.
+   */
+  public getRunSchema(options: GetRunSchemaOptions): Promise<GetRunSchemaResponse> {
+    return unwrap(
+      this.#client.GET('/v1/runs/{run_id}/schema', {
+        params: { path: options.path, query: options.query },
+      }),
+    );
+  }
+
+  /**
    * Get event metrics for an experiment run
    *
    * Retrieve event metrics from ClickHouse for a specific experiment run
@@ -571,19 +524,6 @@ class ExperimentsNamespace {
   }
 
   /**
-   * Retrieve experiment result
-   *
-   * Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
-   */
-  public getResult(options: GetExperimentResultOptions): Promise<GetExperimentResultResponse> {
-    return unwrap(
-      this.#client.GET('/v1/runs/{run_id}/result', {
-        params: { path: options.path, query: options.query },
-      }),
-    );
-  }
-
-  /**
    * Retrieve experiment comparison
    *
    * Compare metrics and results between two experiment runs
@@ -592,7 +532,7 @@ class ExperimentsNamespace {
     options: GetExperimentComparisonOptions,
   ): Promise<GetExperimentComparisonResponse> {
     return unwrap(
-      this.#client.GET('/v1/runs/{new_run_id}/compare-with/{old_run_id}', {
+      this.#client.GET('/v1/runs/{new_run_id}/compare/{old_run_id}', {
         params: { path: options.path, query: options.query },
       }),
     );
@@ -607,7 +547,9 @@ class ExperimentsNamespace {
     options: GetExperimentCompareEventsOptions,
   ): Promise<GetExperimentCompareEventsResponse> {
     return unwrap(
-      this.#client.GET('/v1/runs/compare/events', { params: { query: options.query } }),
+      this.#client.GET('/v1/runs/{new_run_id}/compare/{old_run_id}/events', {
+        params: { path: options.path, query: options.query },
+      }),
     );
   }
 }
@@ -671,78 +613,22 @@ class QueuesNamespace {
   }
 }
 
-/** @inline */
-class ConfigurationsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
-
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
-  }
-
-  /**
-   * Retrieve a list of configurations
-   *
-   * List configurations with optional filtering by name, environment, and tags.
-   */
-  public list(options?: GetConfigurationsOptions): Promise<GetConfigurationsResponse> {
-    return unwrap(this.#client.GET('/v1/configurations', { params: { query: options?.query } }));
-  }
-
-  /**
-   * Create a new configuration
-   *
-   * Create a new LLM or pipeline configuration with provider, parameters, and environment settings.
-   */
-  public create(options: CreateConfigurationOptions): Promise<CreateConfigurationResponse> {
-    return unwrap(this.#client.POST('/v1/configurations', { body: options.body }));
-  }
-
-  /**
-   * Update an existing configuration
-   *
-   * Update an existing configuration's name, provider, parameters, environment, or tags.
-   */
-  public update(options: UpdateConfigurationOptions): Promise<UpdateConfigurationResponse> {
-    return unwrap(
-      this.#client.PUT('/v1/configurations/{configId}', {
-        params: { path: options.path },
-        body: options.body,
-      }),
-    );
-  }
-
-  /**
-   * Delete a configuration
-   *
-   * Permanently delete a configuration by its unique identifier.
-   */
-  public delete(options: DeleteConfigurationOptions): Promise<DeleteConfigurationResponse> {
-    return unwrap(
-      this.#client.DELETE('/v1/configurations/{configId}', { params: { path: options.path } }),
-    );
-  }
-}
-
 export class Client {
   #client: ReturnType<typeof createApiClient<paths>>;
-  readonly sessions: SessionsNamespace;
   readonly events: EventsNamespace;
   readonly metrics: MetricsNamespace;
   readonly datapoints: DatapointsNamespace;
   readonly datasets: DatasetsNamespace;
   readonly experiments: ExperimentsNamespace;
   readonly queues: QueuesNamespace;
-  readonly configurations: ConfigurationsNamespace;
 
   constructor(options: ClientConfig = {}) {
     this.#client = createApiClient<paths>(options);
-    this.sessions = new SessionsNamespace(this.#client);
     this.events = new EventsNamespace(this.#client);
     this.metrics = new MetricsNamespace(this.#client);
     this.datapoints = new DatapointsNamespace(this.#client);
     this.datasets = new DatasetsNamespace(this.#client);
     this.experiments = new ExperimentsNamespace(this.#client);
     this.queues = new QueuesNamespace(this.#client);
-    this.configurations = new ConfigurationsNamespace(this.#client);
   }
 }

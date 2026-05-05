@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "name": "@honeyhive/api-client",
   "type": "module",
   "main": "dist/index.js",
@@ -19,7 +19,7 @@
   },
   "homepage": "https://honeyhiveai.github.io/typescript-api-client/",
   "dependencies": {
-    "axios": "1.15.0",
+    "axios": "1.15.2",
     "openapi-fetch": "^0.17.0"
   },
   "publishConfig": {

@@ -1,6 +1,52 @@
 // AUTO-GENERATED — do not edit manually. Run `pnpm generate:client` to regenerate.
 import { createApiClient, unwrap } from '../util.js';
 /** @inline */
+class SessionsNamespace {
+    #client;
+    constructor(client) {
+        this.#client = client;
+    }
+    /**
+     * Start a new session
+     *
+     * Start a new session. The request body is a bare session object (no `session` wrapper). The server creates a session event and returns it.
+     *
+     * **No required properties** — every field has a server-side fallback.
+     *
+     * **Auto-generated properties** (provided by the server when omitted):
+     * - `session_id` (string, UUID) — Server generates a UUIDv4 if omitted
+     *   or if the supplied value is not a valid UUID.
+     *
+     * **Optional properties with defaults:**
+     * - `event_name` (string) — Falls back to `session_name` when not
+     *   provided; defaults to `"unknown"` if both are absent.
+     *
+     * - `source` (string) — Defaults to `"unknown"`.
+     * **Optional properties:**
+     * - `session_name` (string) — Display name for the session.
+     * - `start_time` (number) — Session start time as Unix milliseconds.
+     *   The session normalizer uses `getInt64()` which only accepts numeric
+     *   types; if a string is passed, the server silently falls back to the
+     *   current time.
+     *
+     * - `end_time` (number) — Session end time as Unix milliseconds (same
+     *   numeric-only caveat as `start_time`).
+     *
+     * - `duration` (number) — Session duration in milliseconds.
+     * - `config` (object) — Configuration associated with the session.
+     * - `inputs` (object) — Input data for the session.
+     * - `outputs` (object) — Output data from the session.
+     * - `metadata` (object) — Arbitrary metadata.
+     * - `user_properties` (object) — User properties.
+     * - `children_ids` (array of strings) — IDs of child events.
+     *
+     * Idempotent on `session_id`: posting twice with the same `session_id` merges metadata/user_properties into the existing session and returns the existing event.
+     */
+    create(options) {
+        return unwrap(this.#client.POST('/v1/sessions', { body: options.body }));
+    }
+}
+/** @inline */
 class EventsNamespace {
     #client;
     constructor(client) {
@@ -451,6 +497,7 @@ class QueuesNamespace {
 }
 export class Client {
     #client;
+    sessions;
     events;
     metrics;
     datapoints;
@@ -459,6 +506,7 @@ export class Client {
     queues;
     constructor(options = {}) {
         this.#client = createApiClient(options);
+        this.sessions = new SessionsNamespace(this.#client);
         this.events = new EventsNamespace(this.#client);
         this.metrics = new MetricsNamespace(this.#client);
         this.datapoints = new DatapointsNamespace(this.#client);

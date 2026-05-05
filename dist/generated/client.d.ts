@@ -1,6 +1,48 @@
 import { type paths } from './types.js';
-import { type CreateEventOptions, type UpdateEventOptions, type SearchEventsOptions, type CreateEventBatchOptions, type GetMetricsOptions, type CreateMetricOptions, type UpdateMetricOptions, type DeleteMetricOptions, type RunMetricOptions, type GetDatapointsOptions, type CreateDatapointOptions, type BatchCreateDatapointsOptions, type GetDatapointOptions, type UpdateDatapointOptions, type DeleteDatapointOptions, type GetDatasetsOptions, type CreateDatasetOptions, type UpdateDatasetOptions, type DeleteDatasetOptions, type AddDatapointsOptions, type RemoveDatapointOptions, type GetRunsOptions, type CreateRunOptions, type GetRunsSchemaOptions, type GetRunOptions, type UpdateRunOptions, type DeleteRunOptions, type GetRunSchemaOptions, type GetExperimentRunMetricsOptions, type GetExperimentComparisonOptions, type GetExperimentCompareEventsOptions, type GetQueuesOptions, type CreateQueueOptions, type GetQueueOptions, type UpdateQueueOptions, type DeleteQueueOptions, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetQueuesResponse, type CreateQueueResponse, type GetQueueResponse, type UpdateQueueResponse, type DeleteQueueResponse } from './apiTypes.js';
+import { type CreateSessionOptions, type CreateEventOptions, type UpdateEventOptions, type SearchEventsOptions, type CreateEventBatchOptions, type GetMetricsOptions, type CreateMetricOptions, type UpdateMetricOptions, type DeleteMetricOptions, type RunMetricOptions, type GetDatapointsOptions, type CreateDatapointOptions, type BatchCreateDatapointsOptions, type GetDatapointOptions, type UpdateDatapointOptions, type DeleteDatapointOptions, type GetDatasetsOptions, type CreateDatasetOptions, type UpdateDatasetOptions, type DeleteDatasetOptions, type AddDatapointsOptions, type RemoveDatapointOptions, type GetRunsOptions, type CreateRunOptions, type GetRunsSchemaOptions, type GetRunOptions, type UpdateRunOptions, type DeleteRunOptions, type GetRunSchemaOptions, type GetExperimentRunMetricsOptions, type GetExperimentComparisonOptions, type GetExperimentCompareEventsOptions, type GetQueuesOptions, type CreateQueueOptions, type GetQueueOptions, type UpdateQueueOptions, type DeleteQueueOptions, type CreateSessionResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetQueuesResponse, type CreateQueueResponse, type GetQueueResponse, type UpdateQueueResponse, type DeleteQueueResponse } from './apiTypes.js';
 import { type ClientConfig, createApiClient } from '../util.js';
+/** @inline */
+declare class SessionsNamespace {
+    #private;
+    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    /**
+     * Start a new session
+     *
+     * Start a new session. The request body is a bare session object (no `session` wrapper). The server creates a session event and returns it.
+     *
+     * **No required properties** — every field has a server-side fallback.
+     *
+     * **Auto-generated properties** (provided by the server when omitted):
+     * - `session_id` (string, UUID) — Server generates a UUIDv4 if omitted
+     *   or if the supplied value is not a valid UUID.
+     *
+     * **Optional properties with defaults:**
+     * - `event_name` (string) — Falls back to `session_name` when not
+     *   provided; defaults to `"unknown"` if both are absent.
+     *
+     * - `source` (string) — Defaults to `"unknown"`.
+     * **Optional properties:**
+     * - `session_name` (string) — Display name for the session.
+     * - `start_time` (number) — Session start time as Unix milliseconds.
+     *   The session normalizer uses `getInt64()` which only accepts numeric
+     *   types; if a string is passed, the server silently falls back to the
+     *   current time.
+     *
+     * - `end_time` (number) — Session end time as Unix milliseconds (same
+     *   numeric-only caveat as `start_time`).
+     *
+     * - `duration` (number) — Session duration in milliseconds.
+     * - `config` (object) — Configuration associated with the session.
+     * - `inputs` (object) — Input data for the session.
+     * - `outputs` (object) — Output data from the session.
+     * - `metadata` (object) — Arbitrary metadata.
+     * - `user_properties` (object) — User properties.
+     * - `children_ids` (array of strings) — IDs of child events.
+     *
+     * Idempotent on `session_id`: posting twice with the same `session_id` merges metadata/user_properties into the existing session and returns the existing event.
+     */
+    create(options: CreateSessionOptions): Promise<CreateSessionResponse>;
+}
 /** @inline */
 declare class EventsNamespace {
     #private;
@@ -340,6 +382,7 @@ declare class QueuesNamespace {
 }
 export declare class Client {
     #private;
+    readonly sessions: SessionsNamespace;
     readonly events: EventsNamespace;
     readonly metrics: MetricsNamespace;
     readonly datapoints: DatapointsNamespace;

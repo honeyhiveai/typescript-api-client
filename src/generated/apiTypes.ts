@@ -1,6 +1,7 @@
 // AUTO-GENERATED — do not edit manually. Run `pnpm generate:client` to regenerate.
 
 import {
+  type StartSessionRequest as CreateSessionRequest,
   type PostEventRequest as CreateEventRequest,
   type UpdateEventRequest,
   type SearchEventsRequest,
@@ -51,6 +52,10 @@ import {
 } from './schemas.js';
 
 // ---- Options types ----
+
+export type CreateSessionOptions = {
+  body: CreateSessionRequest;
+};
 
 export type CreateEventOptions = {
   body: CreateEventRequest;
@@ -245,6 +250,7 @@ export { type GetQueuesQuery };
 
 // ---- Request types ----
 
+export { type CreateSessionRequest };
 export { type CreateEventRequest };
 export { type UpdateEventRequest };
 export { type SearchEventsRequest };
@@ -265,6 +271,7 @@ export { type UpdateQueueRequest };
 
 // ---- Response types ----
 
+export { type PostSessionStartResponse as CreateSessionResponse } from './schemas.js';
 export { type PostEventResponse as CreateEventResponse } from './schemas.js';
 export { type ExportEventsResponse as SearchEventsResponse } from './schemas.js';
 export { type PostEventBatchResponse as CreateEventBatchResponse } from './schemas.js';

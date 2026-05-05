@@ -1592,7 +1592,7 @@ export type CreateMetricRequest = {
     enabled_in_prod?: boolean;
     /** @default false */
     needs_ground_truth?: boolean;
-    /** @default 100 */
+    /** @default 10 */
     sampling_percentage?: number;
     model_provider?: string | null;
     model_name?: string | null;
@@ -1921,11 +1921,53 @@ export type PostSessionRequest = {
     [key: string]: unknown;
 };
 /**
- * @description Request to start a new session
+ * @deprecated
+ * @description Request body for POST /session/start (deprecated — use POST /v1/sessions)
  * @inline
  */
+export type LegacyStartSessionRequest = {
+    session: LegacyStartSessionRequestSession;
+};
+/**
+ * @description Request body for POST /v1/sessions (bare session object)
+ */
 export type StartSessionRequest = {
-    session: StartSessionRequestSession;
+    /** @description Client-provided session ID (server generates one if omitted) */
+    session_id?: string;
+    /** @description Display name for the session */
+    session_name?: string;
+    /** @description Fallback name if session_name is not provided */
+    event_name?: string;
+    /** @description Source of the session (e.g., sdk-python) */
+    source?: string;
+    /** @description Session start time as Unix milliseconds */
+    start_time?: number;
+    /** @description Session end time as Unix milliseconds */
+    end_time?: number;
+    /** @description Session duration in milliseconds */
+    duration?: number;
+    /** @description Configuration associated with the session */
+    config?: {
+        [key: string]: unknown;
+    };
+    /** @description Input data for the session */
+    inputs?: {
+        [key: string]: unknown;
+    };
+    /** @description Output data from the session */
+    outputs?: {
+        [key: string]: unknown;
+    };
+    /** @description Arbitrary metadata for the session */
+    metadata?: {
+        [key: string]: unknown;
+    };
+    /** @description User properties associated with the session */
+    user_properties?: {
+        [key: string]: unknown;
+    };
+    /** @description IDs of child events in this session */
+    children_ids?: string[];
 };
 /**
  * @description Request to add traces to a session
@@ -1936,7 +1978,6 @@ export type AddSessionTracesRequest = {
 };
 /**
  * @description Full session event object returned after starting a new session
- * @inline
  */
 export type PostSessionStartResponse = {
     event_id: string;
@@ -2234,7 +2275,7 @@ export type RunMetricRequestMetric = {
     enabled_in_prod?: boolean;
     /** @default false */
     needs_ground_truth?: boolean;
-    /** @default 100 */
+    /** @default 10 */
     sampling_percentage?: number;
     model_provider?: string | null;
     model_name?: string | null;
@@ -2318,7 +2359,7 @@ export type LegacyRunMetricRequestMetric = {
     enabled_in_prod?: boolean;
     /** @default false */
     needs_ground_truth?: boolean;
-    /** @default 100 */
+    /** @default 10 */
     sampling_percentage?: number;
     model_provider?: string | null;
     model_name?: string | null;
@@ -2472,7 +2513,7 @@ export type PostSessionRequestFeedback = {
 /**
  * @inline
  */
-export type StartSessionRequestSession = {
+export type LegacyStartSessionRequestSession = {
     /** @description Client-provided session ID (server generates one if omitted) */
     session_id?: string;
     /** @description Display name for the session */

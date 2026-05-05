@@ -1,4 +1,7 @@
-import { type PostEventRequest as CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type PostEventBatchRequest as CreateEventBatchRequest, type CreateMetricRequest, type UpdateMetricRequest, type RunMetricRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type UpdateDatapointRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type AddDatapointsToDatasetRequest as AddDatapointsRequest, type PostExperimentRunRequest as CreateRunRequest, type PutExperimentRunRequest as UpdateRunRequest, type CreateAnnotationQueueRequest as CreateQueueRequest, type UpdateAnnotationQueueRequest as UpdateQueueRequest, type UpdateEventPath, type UpdateMetricPath, type DeleteMetricPath, type GetDatapointPath, type UpdateDatapointPath, type DeleteDatapointPath, type UpdateDatasetPath, type DeleteDatasetPath, type AddDatapointsPath, type RemoveDatapointPath, type GetRunPath, type UpdateRunPath, type DeleteRunPath, type GetRunSchemaPath, type GetExperimentRunMetricsPath, type GetExperimentComparisonPath, type GetExperimentCompareEventsPath, type GetQueuePath, type UpdateQueuePath, type DeleteQueuePath, type GetMetricsQuery, type GetDatapointsQuery, type GetDatasetsQuery, type GetRunsQuery, type GetRunsSchemaQuery, type GetRunSchemaQuery, type GetExperimentRunMetricsQuery, type GetExperimentComparisonQuery, type GetExperimentCompareEventsQuery, type GetQueuesQuery } from './schemas.js';
+import { type StartSessionRequest as CreateSessionRequest, type PostEventRequest as CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type PostEventBatchRequest as CreateEventBatchRequest, type CreateMetricRequest, type UpdateMetricRequest, type RunMetricRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type UpdateDatapointRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type AddDatapointsToDatasetRequest as AddDatapointsRequest, type PostExperimentRunRequest as CreateRunRequest, type PutExperimentRunRequest as UpdateRunRequest, type CreateAnnotationQueueRequest as CreateQueueRequest, type UpdateAnnotationQueueRequest as UpdateQueueRequest, type UpdateEventPath, type UpdateMetricPath, type DeleteMetricPath, type GetDatapointPath, type UpdateDatapointPath, type DeleteDatapointPath, type UpdateDatasetPath, type DeleteDatasetPath, type AddDatapointsPath, type RemoveDatapointPath, type GetRunPath, type UpdateRunPath, type DeleteRunPath, type GetRunSchemaPath, type GetExperimentRunMetricsPath, type GetExperimentComparisonPath, type GetExperimentCompareEventsPath, type GetQueuePath, type UpdateQueuePath, type DeleteQueuePath, type GetMetricsQuery, type GetDatapointsQuery, type GetDatasetsQuery, type GetRunsQuery, type GetRunsSchemaQuery, type GetRunSchemaQuery, type GetExperimentRunMetricsQuery, type GetExperimentComparisonQuery, type GetExperimentCompareEventsQuery, type GetQueuesQuery } from './schemas.js';
+export type CreateSessionOptions = {
+    body: CreateSessionRequest;
+};
 export type CreateEventOptions = {
     body: CreateEventRequest;
 };
@@ -148,6 +151,7 @@ export { type GetExperimentRunMetricsQuery };
 export { type GetExperimentComparisonQuery };
 export { type GetExperimentCompareEventsQuery };
 export { type GetQueuesQuery };
+export { type CreateSessionRequest };
 export { type CreateEventRequest };
 export { type UpdateEventRequest };
 export { type SearchEventsRequest };
@@ -165,6 +169,7 @@ export { type CreateRunRequest };
 export { type UpdateRunRequest };
 export { type CreateQueueRequest };
 export { type UpdateQueueRequest };
+export { type PostSessionStartResponse as CreateSessionResponse } from './schemas.js';
 export { type PostEventResponse as CreateEventResponse } from './schemas.js';
 export { type ExportEventsResponse as SearchEventsResponse } from './schemas.js';
 export { type PostEventBatchResponse as CreateEventBatchResponse } from './schemas.js';

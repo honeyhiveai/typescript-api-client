@@ -8,6 +8,7 @@ export {
 } from './util.js';
 // AUTO-GENERATED — do not edit below this line. Run `pnpm generate:client` to regenerate.
 export type {
+  CreateSessionOptions,
   CreateEventOptions,
   UpdateEventOptions,
   SearchEventsOptions,
@@ -74,6 +75,7 @@ export type {
   GetExperimentComparisonQuery,
   GetExperimentCompareEventsQuery,
   GetQueuesQuery,
+  CreateSessionRequest,
   CreateEventRequest,
   UpdateEventRequest,
   SearchEventsRequest,
@@ -91,6 +93,7 @@ export type {
   UpdateRunRequest,
   CreateQueueRequest,
   UpdateQueueRequest,
+  CreateSessionResponse,
   CreateEventResponse,
   SearchEventsResponse,
   CreateEventBatchResponse,

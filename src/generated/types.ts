@@ -9,10 +9,11 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Start a new session
-     * @description Start a new session. The request body wraps the session event object under the `session` key, matching the pattern used by POST /events.
+     * Start a new session (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/sessions` instead. The legacy route wraps the session object under a `session` key; the v1 route accepts a bare session object.
      */
-    post: operations['startSession'];
+    post: operations['startSessionLegacy'];
     delete?: never;
     options?: never;
     head?: never;
@@ -33,6 +34,57 @@ export interface paths {
      * @description Add trace events to an existing session. The field is named `logs` for legacy compatibility with the Go ingestion handler.
      */
     post: operations['addSessionTraces'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/sessions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start a new session
+     * @description Start a new session. The request body is a bare session object (no `session` wrapper). The server creates a session event and returns it.
+     *
+     *     **No required properties** — every field has a server-side fallback.
+     *
+     *     **Auto-generated properties** (provided by the server when omitted):
+     *     - `session_id` (string, UUID) — Server generates a UUIDv4 if omitted
+     *       or if the supplied value is not a valid UUID.
+     *
+     *     **Optional properties with defaults:**
+     *     - `event_name` (string) — Falls back to `session_name` when not
+     *       provided; defaults to `"unknown"` if both are absent.
+     *
+     *     - `source` (string) — Defaults to `"unknown"`.
+     *     **Optional properties:**
+     *     - `session_name` (string) — Display name for the session.
+     *     - `start_time` (number) — Session start time as Unix milliseconds.
+     *       The session normalizer uses `getInt64()` which only accepts numeric
+     *       types; if a string is passed, the server silently falls back to the
+     *       current time.
+     *
+     *     - `end_time` (number) — Session end time as Unix milliseconds (same
+     *       numeric-only caveat as `start_time`).
+     *
+     *     - `duration` (number) — Session duration in milliseconds.
+     *     - `config` (object) — Configuration associated with the session.
+     *     - `inputs` (object) — Input data for the session.
+     *     - `outputs` (object) — Output data from the session.
+     *     - `metadata` (object) — Arbitrary metadata.
+     *     - `user_properties` (object) — User properties.
+     *     - `children_ids` (array of strings) — IDs of child events.
+     *
+     *     Idempotent on `session_id`: posting twice with the same `session_id` merges metadata/user_properties into the existing session and returns the existing event.
+     */
+    post: operations['createSession'];
     delete?: never;
     options?: never;
     head?: never;
@@ -2276,7 +2328,7 @@ export interface components {
       enabled_in_prod?: boolean;
       /** @default false */
       needs_ground_truth?: boolean;
-      /** @default 100 */
+      /** @default 10 */
       sampling_percentage?: number;
       model_provider?: string | null;
       model_name?: string | null;
@@ -2561,9 +2613,51 @@ export interface components {
     } & {
       [key: string]: unknown;
     };
-    /** @description Request to start a new session */
+    /**
+     * @deprecated
+     * @description Request body for POST /session/start (deprecated — use POST /v1/sessions)
+     */
+    LegacyStartSessionRequest: {
+      session: components['schemas']['LegacyStartSessionRequestSession'];
+    };
+    /** @description Request body for POST /v1/sessions (bare session object) */
     StartSessionRequest: {
-      session: components['schemas']['StartSessionRequestSession'];
+      /** @description Client-provided session ID (server generates one if omitted) */
+      session_id?: string;
+      /** @description Display name for the session */
+      session_name?: string;
+      /** @description Fallback name if session_name is not provided */
+      event_name?: string;
+      /** @description Source of the session (e.g., sdk-python) */
+      source?: string;
+      /** @description Session start time as Unix milliseconds */
+      start_time?: number;
+      /** @description Session end time as Unix milliseconds */
+      end_time?: number;
+      /** @description Session duration in milliseconds */
+      duration?: number;
+      /** @description Configuration associated with the session */
+      config?: {
+        [key: string]: unknown;
+      };
+      /** @description Input data for the session */
+      inputs?: {
+        [key: string]: unknown;
+      };
+      /** @description Output data from the session */
+      outputs?: {
+        [key: string]: unknown;
+      };
+      /** @description Arbitrary metadata for the session */
+      metadata?: {
+        [key: string]: unknown;
+      };
+      /** @description User properties associated with the session */
+      user_properties?: {
+        [key: string]: unknown;
+      };
+      /** @description IDs of child events in this session */
+      children_ids?: string[];
     };
     /** @description Request to add traces to a session */
     AddSessionTracesRequest: {
@@ -2792,7 +2886,7 @@ export interface components {
       enabled_in_prod?: boolean;
       /** @default false */
       needs_ground_truth?: boolean;
-      /** @default 100 */
+      /** @default 10 */
       sampling_percentage?: number;
       model_provider?: string | null;
       model_name?: string | null;
@@ -2860,7 +2954,7 @@ export interface components {
       enabled_in_prod?: boolean;
       /** @default false */
       needs_ground_truth?: boolean;
-      /** @default 100 */
+      /** @default 10 */
       sampling_percentage?: number;
       model_provider?: string | null;
       model_name?: string | null;
@@ -2973,7 +3067,7 @@ export interface components {
     PostSessionRequestFeedback: {
       ground_truth?: unknown;
     };
-    StartSessionRequestSession: {
+    LegacyStartSessionRequestSession: {
       /** @description Client-provided session ID (server generates one if omitted) */
       session_id?: string;
       /** @description Display name for the session */
@@ -3038,7 +3132,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  startSession: {
+  startSessionLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -3047,7 +3141,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['StartSessionRequest'];
+        'application/json': components['schemas']['LegacyStartSessionRequest'];
       };
     };
     responses: {
@@ -3086,6 +3180,37 @@ export interface operations {
         content: {
           'application/json': components['schemas']['SessionTracesResponse'];
         };
+      };
+    };
+  };
+  createSession: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StartSessionRequest'];
+      };
+    };
+    responses: {
+      /** @description Session successfully started */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PostSessionStartResponse'];
+        };
+      };
+      /** @description Bad request (invalid session data) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

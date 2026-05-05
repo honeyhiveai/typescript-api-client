@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+## [1.0.0-rc.3] - 2026-05-05
+
+### Breaking Changes
+- Default `sampling_percentage` on `CreateMetricRequest`, `RunMetricRequestMetric`, and `LegacyRunMetricRequestMetric` lowered from `100` to `10`. New metrics created without an explicit `sampling_percentage` will now sample 10% of events instead of 100%. Pass `sampling_percentage: 100` explicitly to preserve the previous behavior.
+
+### Added
+- `client.sessions.create()` for `POST /v1/sessions`, with new `CreateSessionOptions`, `CreateSessionRequest`, and `CreateSessionResponse` type exports. Supports idempotent session creation by `session_id`.
+
 ## [1.0.0-rc.2] - 2026-05-05
 
 ### Breaking Changes

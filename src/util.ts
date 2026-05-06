@@ -3,6 +3,8 @@ import createClient, { type ClientOptions, type Middleware } from 'openapi-fetch
 
 import { SDK_VERSION } from './generated/version.js';
 
+const DEFAULT_SERVER_URL = 'https://api.dp1.us.honeyhive.ai';
+
 /**
  * Gets an environment variable value, or returns the default value if the
  * environment variable is not set.
@@ -18,6 +20,29 @@ function getEnv(key: string, defaultValue?: string): string | undefined {
 }
 
 /**
+ * Recognized API key prefixes, longest-first so that prefix detection picks
+ * the most specific match (e.g. `hh_org_` before `hh_`). Mirrors the server's
+ * canonical mask in `@hive-kube/server-api-key-service` — the SDK keeps its
+ * own copy to avoid depending on a server package.
+ */
+const API_KEY_PREFIXES = ['hh_org_', 'hh_ws_', 'hh_cp_', 'hh_dp_', 'hh_'] as const;
+
+/**
+ * Returns a display-safe rendering of an API key for verbose logging.
+ *
+ * For recognized HoneyHive keys, renders `<prefix>****<last 4 chars>` (e.g.
+ * `hh_org_****o5p6`). For anything else, returns 8 fixed-width asterisks so
+ * the output never reveals length or content of an unrecognized secret.
+ */
+function maskApiKey(apiKey: string): string {
+  const prefix = API_KEY_PREFIXES.find((p) => apiKey.startsWith(p));
+  if (!prefix) {
+    return '********';
+  }
+  return `${prefix}****${apiKey.slice(-4)}`;
+}
+
+/**
  * Configuration options for the HoneyHive API client. They extend the options
  * from openapi-fetch, but replace 'baseUrl' with 'serverUrl' for consistency
  * with our other SDKs.
@@ -26,6 +51,16 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
   apiKey?: string;
   serverUrl?: string;
   middleware?: Middleware[];
+
+  /**
+   * When true, logs the resolved API URL, a masked API key, and the SDK
+   * package + version via `console.error` on client construction (stderr in
+   * Node, devtools in the browser). Useful for confirming which environment,
+   * credential, and SDK build the client is configured with. Defaults to
+   * true when the `HH_VERBOSE` environment variable is set to `'true'`
+   * (case-insensitive).
+   */
+  verbose?: boolean;
 
   /**
    * @internal HoneyHive use only. Overrides the default SDK provenance headers
@@ -62,8 +97,24 @@ function querySerializer(queryParams: Record<string, unknown>): string {
 export function createApiClient<Paths extends {}>(
   options: ClientConfig,
 ): ReturnType<typeof createClient<Paths>> {
-  const { apiKey, serverUrl, middleware, _internal_provenance, ...clientOptions } = options;
+  const { apiKey, serverUrl, middleware, verbose, _internal_provenance, ...clientOptions } =
+    options;
   const resolvedApiKey = apiKey ?? getEnv('HH_API_KEY');
+  const resolvedServerUrl = serverUrl ?? getEnv('HH_API_URL', DEFAULT_SERVER_URL);
+  const resolvedVerbose = verbose ?? getEnv('HH_VERBOSE')?.toLowerCase() === 'true';
+  const provenance = _internal_provenance ?? {
+    package: '@honeyhive/api-client',
+    version: SDK_VERSION,
+  };
+
+  // Log before the missing-key check so verbose users can see what *did*
+  // resolve when construction is about to fail.
+  if (resolvedVerbose) {
+    console.error(`API URL: ${resolvedServerUrl ?? '(none)'}`);
+    console.error(`API Key: ${resolvedApiKey ? maskApiKey(resolvedApiKey) : '(none)'}`);
+    console.error(`Package: ${provenance.package} v${provenance.version}`);
+  }
+
   // When middleware is provided, it is assumed to handle authentication itself.
   if (!resolvedApiKey && !middleware?.length) {
     throw new Error(
@@ -71,10 +122,6 @@ export function createApiClient<Paths extends {}>(
     );
   }
 
-  const provenance = _internal_provenance ?? {
-    package: '@honeyhive/api-client',
-    version: SDK_VERSION,
-  };
   const headers: Record<string, string> = {
     'hh-client-package': provenance.package,
     'hh-client-version': provenance.version,
@@ -87,7 +134,7 @@ export function createApiClient<Paths extends {}>(
   const client = createClient<Paths>({
     ...clientOptions,
     querySerializer,
-    baseUrl: serverUrl ?? getEnv('HH_API_URL', 'https://api.honeyhive.ai'),
+    baseUrl: resolvedServerUrl,
     headers: {
       ...headers,
       ...clientOptions.headers,

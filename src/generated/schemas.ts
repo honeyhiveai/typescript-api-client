@@ -1109,7 +1109,7 @@ export type AbsoluteDateRange = {
  */
 export type PostEventResponse = {
   success: boolean;
-  event_id?: string;
+  event_id: string;
 };
 
 /**

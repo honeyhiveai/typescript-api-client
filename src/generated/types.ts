@@ -1831,7 +1831,7 @@ export interface components {
     /** @description Response after creating an event */
     PostEventResponse: {
       success: boolean;
-      event_id?: string;
+      event_id: string;
     };
     /** @description Response for GET /events */
     GetEventsResponse: {

@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+## [1.0.0-rc.4] - 2026-05-06
+
+### Breaking Changes
+- Default API server URL changed from `https://api.honeyhive.ai` to `https://api.dp1.us.honeyhive.ai` to target the federated data plane. Clients that relied on the default URL will now hit the federated endpoint; pass `serverUrl` or set `HH_API_URL` to override.
+
+### Added
+- `verbose` option on `ClientConfig` (and `HH_VERBOSE=true` env var) that logs the resolved API URL, masked API key, and SDK package/version to stderr on client construction. Useful for confirming environment and credential configuration.
+
+### Fixed
+- `PostEventResponse.event_id` is now typed as required (`string`) instead of optional. The backend always populates this field on a successful `client.events.create()`, so consumers no longer need defensive `if (event.event_id)` guards.
+
 ## [1.0.0-rc.3] - 2026-05-05
 
 ### Breaking Changes

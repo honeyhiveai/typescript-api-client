@@ -1,6 +1,7 @@
 import axios from 'axios';
 import createClient from 'openapi-fetch';
 import { SDK_VERSION } from './generated/version.js';
+const DEFAULT_SERVER_URL = 'https://api.dp1.us.honeyhive.ai';
 /**
  * Gets an environment variable value, or returns the default value if the
  * environment variable is not set.
@@ -13,6 +14,27 @@ function getEnv(key, defaultValue) {
         return process.env[key] ?? defaultValue;
     }
     return defaultValue;
+}
+/**
+ * Recognized API key prefixes, longest-first so that prefix detection picks
+ * the most specific match (e.g. `hh_org_` before `hh_`). Mirrors the server's
+ * canonical mask in `@hive-kube/server-api-key-service` — the SDK keeps its
+ * own copy to avoid depending on a server package.
+ */
+const API_KEY_PREFIXES = ['hh_org_', 'hh_ws_', 'hh_cp_', 'hh_dp_', 'hh_'];
+/**
+ * Returns a display-safe rendering of an API key for verbose logging.
+ *
+ * For recognized HoneyHive keys, renders `<prefix>****<last 4 chars>` (e.g.
+ * `hh_org_****o5p6`). For anything else, returns 8 fixed-width asterisks so
+ * the output never reveals length or content of an unrecognized secret.
+ */
+function maskApiKey(apiKey) {
+    const prefix = API_KEY_PREFIXES.find((p) => apiKey.startsWith(p));
+    if (!prefix) {
+        return '********';
+    }
+    return `${prefix}****${apiKey.slice(-4)}`;
 }
 /**
  * Custom query serializer that delegates to axios for exact parity with the
@@ -29,16 +51,25 @@ function querySerializer(queryParams) {
 }
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- needs to match openapi-fetch's own createClient<Paths extends {}> signature
 export function createApiClient(options) {
-    const { apiKey, serverUrl, middleware, _internal_provenance, ...clientOptions } = options;
+    const { apiKey, serverUrl, middleware, verbose, _internal_provenance, ...clientOptions } = options;
     const resolvedApiKey = apiKey ?? getEnv('HH_API_KEY');
-    // When middleware is provided, it is assumed to handle authentication itself.
-    if (!resolvedApiKey && !middleware?.length) {
-        throw new Error('Missing API key: provide apiKey in options or set the HH_API_KEY environment variable');
-    }
+    const resolvedServerUrl = serverUrl ?? getEnv('HH_API_URL', DEFAULT_SERVER_URL);
+    const resolvedVerbose = verbose ?? getEnv('HH_VERBOSE')?.toLowerCase() === 'true';
     const provenance = _internal_provenance ?? {
         package: '@honeyhive/api-client',
         version: SDK_VERSION,
     };
+    // Log before the missing-key check so verbose users can see what *did*
+    // resolve when construction is about to fail.
+    if (resolvedVerbose) {
+        console.error(`API URL: ${resolvedServerUrl ?? '(none)'}`);
+        console.error(`API Key: ${resolvedApiKey ? maskApiKey(resolvedApiKey) : '(none)'}`);
+        console.error(`Package: ${provenance.package} v${provenance.version}`);
+    }
+    // When middleware is provided, it is assumed to handle authentication itself.
+    if (!resolvedApiKey && !middleware?.length) {
+        throw new Error('Missing API key: provide apiKey in options or set the HH_API_KEY environment variable');
+    }
     const headers = {
         'hh-client-package': provenance.package,
         'hh-client-version': provenance.version,
@@ -50,7 +81,7 @@ export function createApiClient(options) {
     const client = createClient({
         ...clientOptions,
         querySerializer,
-        baseUrl: serverUrl ?? getEnv('HH_API_URL', 'https://api.honeyhive.ai'),
+        baseUrl: resolvedServerUrl,
         headers: {
             ...headers,
             ...clientOptions.headers,

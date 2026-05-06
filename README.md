@@ -12,6 +12,68 @@ For more information about HoneyHive, visit the [HoneyHive documentation](https:
 npm install @honeyhive/api-client
 ```
 
+## Example: Creating and logging a trace
+
+```typescript
+import { Client } from '@honeyhive/api-client';
+import OpenAI from 'openai';
+
+// The API key is read from the HH_API_KEY environment variable.
+// The Server URL is read from the HH_API_URL environment variable and defaults
+// to https://api.dp1.us.honeyhive.ai
+const client = new Client();
+
+// The API key is read from the OPENAI_API_KEY environment variable.
+const openai = new OpenAI();
+
+// 1. Start a session (trace)
+const session = await client.sessions.create({
+  body: {
+    session_name: 'openai-example',
+    source: 'dev',
+  },
+});
+
+// 2. Create a model event for the OpenAI call
+const startTime = Date.now();
+const event = await client.events.create({
+  body: {
+    session_id: session.session_id,
+    event_type: 'model',
+    event_name: 'chat-completion',
+    config: { model: 'gpt-4o-mini' },
+    inputs: {
+      messages: [{ role: 'user', content: 'What is the meaning of life?' }],
+    },
+  },
+});
+
+// 3. Make the OpenAI call
+const completion = await openai.chat.completions.create({
+  model: 'gpt-4o-mini',
+  messages: [{ role: 'user', content: 'What is the meaning of life?' }],
+});
+const { content } = completion.choices[0].message;
+console.log(content);
+
+// 4. Update the event (span) with the response, if we got content back from OpenAPI
+if (content) {
+  await client.events.update({
+    path: {
+      event_id: event.event_id,
+    },
+    body: {
+      outputs: { content },
+      duration: Date.now() - startTime,
+      metadata: {
+        model: completion.model,
+        usage: completion.usage,
+      },
+    },
+  });
+}
+```
+
 ## Example: Creating and Populating a Dataset
 
 The following example creates a dataset, appends a datapoint to it, lists the datasets in the project, and deletes the dataset when finished.
@@ -20,6 +82,8 @@ The following example creates a dataset, appends a datapoint to it, lists the da
 import { Client } from '@honeyhive/api-client';
 
 // The API key is read from the HH_API_KEY environment variable.
+// The Server URL is read from the HH_API_URL environment variable and defaults
+// to https://api.dp1.us.honeyhive.ai
 const client = new Client();
 
 // 1. Create a dataset
@@ -95,3 +159,20 @@ const client = new Client({
 ```
 
 See the [openapi-fetch middleware documentation](https://openapi-ts.dev/openapi-fetch/middleware-auth) for more details on the `Middleware` interface and additional use cases.
+
+## Verbose logging
+
+Set `verbose: true` (or the `HH_VERBOSE` environment variable to `true`) to log the resolved API URL, a masked API key, and the SDK package + version when the client is constructed. Useful for confirming which environment and credential the client is configured with — particularly when debugging "is this hitting prod or staging?" or "did `HH_API_KEY` actually get picked up?".
+
+```typescript
+const client = new Client({ verbose: true });
+// API URL: https://api.dp1.us.honeyhive.ai
+// API Key: hh_****5Qrg
+// Package: @honeyhive/api-client v1.0.0
+```
+
+```sh
+HH_VERBOSE=true node my-script.js
+```
+
+Output is written via `console.error` (stderr in Node, devtools in the browser) and only fires once per client construction. An explicit `verbose: false` overrides `HH_VERBOSE`. The masked API key keeps the recognized prefix (`hh_`, `hh_org_`, `hh_ws_`, `hh_cp_`, `hh_dp_`) and the last 4 characters; anything else renders as 8 fixed-width asterisks.

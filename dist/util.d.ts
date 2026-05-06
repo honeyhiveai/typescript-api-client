@@ -9,6 +9,15 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
     serverUrl?: string;
     middleware?: Middleware[];
     /**
+     * When true, logs the resolved API URL, a masked API key, and the SDK
+     * package + version via `console.error` on client construction (stderr in
+     * Node, devtools in the browser). Useful for confirming which environment,
+     * credential, and SDK build the client is configured with. Defaults to
+     * true when the `HH_VERBOSE` environment variable is set to `'true'`
+     * (case-insensitive).
+     */
+    verbose?: boolean;
+    /**
      * @internal HoneyHive use only. Overrides the default SDK provenance headers
      * with custom values (e.g. for the CLI or frontend).
      */

@@ -89,29 +89,32 @@ class SessionsNamespace {
   /**
    * Start a new session
    *
-   * Start a new session. The request body is a bare session object (no `session` wrapper). The server creates a session event and returns it.
+   * Start a new session. The request body is a bare session object (no
+   * `session` wrapper). The server creates a session event and returns
+   * it.
    *
    * **No required properties** — every field has a server-side fallback.
    *
    * **Auto-generated properties** (provided by the server when omitted):
+   *
    * - `session_id` (string, UUID) — Server generates a UUIDv4 if omitted
    *   or if the supplied value is not a valid UUID.
    *
    * **Optional properties with defaults:**
+   *
    * - `event_name` (string) — Falls back to `session_name` when not
    *   provided; defaults to `"unknown"` if both are absent.
-   *
    * - `source` (string) — Defaults to `"unknown"`.
+   *
    * **Optional properties:**
+   *
    * - `session_name` (string) — Display name for the session.
    * - `start_time` (number) — Session start time as Unix milliseconds.
    *   The session normalizer uses `getInt64()` which only accepts numeric
    *   types; if a string is passed, the server silently falls back to the
    *   current time.
-   *
    * - `end_time` (number) — Session end time as Unix milliseconds (same
    *   numeric-only caveat as `start_time`).
-   *
    * - `duration` (number) — Session duration in milliseconds.
    * - `config` (object) — Configuration associated with the session.
    * - `inputs` (object) — Input data for the session.
@@ -120,7 +123,9 @@ class SessionsNamespace {
    * - `user_properties` (object) — User properties.
    * - `children_ids` (array of strings) — IDs of child events.
    *
-   * Idempotent on `session_id`: posting twice with the same `session_id` merges metadata/user_properties into the existing session and returns the existing event.
+   * Idempotent on `session_id`: posting twice with the same `session_id`
+   * merges metadata/user_properties into the existing session and returns
+   * the existing event.
    */
   public create(options: CreateSessionOptions): Promise<CreateSessionResponse> {
     return unwrap(this.#client.POST('/v1/sessions', { body: options.body }));
@@ -138,19 +143,28 @@ class EventsNamespace {
   /**
    * Create a new event
    *
-   * Create a new event (span) within a session trace. The request body is a bare event object (no `event` wrapper).
+   * Create a new event (span) within a session trace. The request body is a
+   * bare event object (no `event` wrapper).
+   *
    *
    * **Required properties:**
+   *
    * - `event_type` (string) — Must be one of: `chain`, `model`, `tool`, `session`.
    * - `inputs` (object) — Input data for the event.
+   *
    * **Auto-generated properties** (provided by the server when omitted):
+   *
    * - `event_id` (string, UUID) — Unique identifier for the event.
    * - `session_id` (string, UUID) — Session/trace identifier.
    * - `parent_id` (string, UUID) — Parent event ID. Defaults to `session_id`.
+   *
    * **Optional properties with defaults:**
+   *
    * - `event_name` (string) — Name of the event. Defaults to `"unknown"`.
    * - `source` (string) — Source of the event (e.g. `sdk-python`). Defaults to `"unknown"`.
+   *
    * **Optional properties:**
+   *
    * - `config` (object) — Configuration data (e.g. model parameters, prompt templates).
    * - `outputs` (object) — Output data from the event.
    * - `error` (string or null) — Error message if the event failed.
@@ -178,7 +192,9 @@ class EventsNamespace {
   /**
    * Update an event
    *
-   * Update fields on an existing event. Only the provided fields are modified; omitted fields are left unchanged. Extra fields not listed below are accepted by the server but silently ignored.
+   * Update fields on an existing event. Only the provided fields are
+   * modified; omitted fields are left unchanged. Extra fields not listed
+   * below are accepted by the server but silently ignored.
    *
    * @example Request body
    * ```json
@@ -235,21 +251,26 @@ class EventsNamespace {
   /**
    * Create a batch of events
    *
-   * Create multiple events in a single request. When `single_session` is true, all events share the same session created from `session_properties`.
+   * Create multiple events in a single request. When `single_session` is
+   * true, all events share the same session created from `session_properties`.
+   *
    *
    * **Required properties:**
+   *
    * - `events` (array of event objects) — Each event must include
    *   `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
    *
    * **Optional properties:**
+   *
    * - `single_session` (boolean) — If true, all events share a single session
    *   created from `session_properties`. Defaults to false.
-   *
    * - `session_properties` (object) — Session metadata used when
    *   `single_session` is true. May include `session_name`, `start_time`,
    *   `metadata`.
    *
-   * Unknown top-level fields and per-event fields are rejected at the SDK boundary; the legacy aliases `is_single_session`, `session`, and per-event `project` are no longer accepted.
+   * Unknown top-level fields and per-event fields are rejected at the SDK
+   * boundary; the legacy aliases `is_single_session`, `session`, and
+   * per-event `project` are no longer accepted.
    *
    * @example Response
    * ```json

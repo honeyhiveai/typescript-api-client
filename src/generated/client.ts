@@ -2,43 +2,43 @@
 
 import { type paths } from './types.js';
 import {
-  type CreateSessionOptions,
-  type CreateEventOptions,
-  type UpdateEventOptions,
-  type SearchEventsOptions,
-  type CreateEventBatchOptions,
-  type GetMetricsOptions,
-  type CreateMetricOptions,
-  type UpdateMetricOptions,
-  type DeleteMetricOptions,
-  type RunMetricOptions,
-  type GetDatapointsOptions,
-  type CreateDatapointOptions,
-  type BatchCreateDatapointsOptions,
-  type GetDatapointOptions,
-  type UpdateDatapointOptions,
-  type DeleteDatapointOptions,
-  type GetDatasetsOptions,
-  type CreateDatasetOptions,
-  type UpdateDatasetOptions,
-  type DeleteDatasetOptions,
-  type AddDatapointsOptions,
-  type RemoveDatapointOptions,
-  type GetRunsOptions,
-  type CreateRunOptions,
-  type GetRunsSchemaOptions,
-  type GetRunOptions,
-  type UpdateRunOptions,
-  type DeleteRunOptions,
-  type GetRunSchemaOptions,
-  type GetExperimentRunMetricsOptions,
-  type GetExperimentComparisonOptions,
-  type GetExperimentCompareEventsOptions,
-  type GetQueuesOptions,
-  type CreateQueueOptions,
-  type GetQueueOptions,
-  type UpdateQueueOptions,
-  type DeleteQueueOptions,
+  type CreateSessionRequest,
+  type CreateEventRequest,
+  type UpdateEventRequest,
+  type SearchEventsRequest,
+  type CreateEventBatchRequest,
+  type GetMetricsRequest,
+  type CreateMetricRequest,
+  type UpdateMetricRequest,
+  type DeleteMetricRequest,
+  type RunMetricRequest,
+  type GetDatapointsRequest,
+  type CreateDatapointRequest,
+  type BatchCreateDatapointsRequest,
+  type GetDatapointRequest,
+  type UpdateDatapointRequest,
+  type DeleteDatapointRequest,
+  type GetDatasetsRequest,
+  type CreateDatasetRequest,
+  type UpdateDatasetRequest,
+  type DeleteDatasetRequest,
+  type AddDatapointsRequest,
+  type RemoveDatapointRequest,
+  type GetRunsRequest,
+  type CreateRunRequest,
+  type GetRunsSchemaRequest,
+  type GetRunRequest,
+  type UpdateRunRequest,
+  type DeleteRunRequest,
+  type GetRunSchemaRequest,
+  type GetExperimentRunMetricsRequest,
+  type GetExperimentComparisonRequest,
+  type GetExperimentCompareEventsRequest,
+  type GetQueuesRequest,
+  type CreateQueueRequest,
+  type GetQueueRequest,
+  type UpdateQueueRequest,
+  type DeleteQueueRequest,
   type CreateSessionResponse,
   type CreateEventResponse,
   type SearchEventsResponse,
@@ -127,8 +127,8 @@ class SessionsNamespace {
    * merges metadata/user_properties into the existing session and returns
    * the existing event.
    */
-  public create(options: CreateSessionOptions): Promise<CreateSessionResponse> {
-    return unwrap(this.#client.POST('/v1/sessions', { body: options.body }));
+  public create(request: CreateSessionRequest): Promise<CreateSessionResponse> {
+    return unwrap(this.#client.POST('/v1/sessions', { body: request }));
   }
 }
 
@@ -185,8 +185,8 @@ class EventsNamespace {
    * }
    * ```
    */
-  public create(options: CreateEventOptions): Promise<CreateEventResponse> {
-    return unwrap(this.#client.POST('/v1/events', { body: options.body }));
+  public create(request: CreateEventRequest): Promise<CreateEventResponse> {
+    return unwrap(this.#client.POST('/v1/events', { body: request }));
   }
 
   /**
@@ -230,12 +230,10 @@ class EventsNamespace {
    * }
    * ```
    */
-  public update(options: UpdateEventOptions): Promise<void> {
+  public update(request: UpdateEventRequest): Promise<void> {
+    const { event_id, ...body } = request;
     return unwrap(
-      this.#client.PUT('/v1/events/{event_id}', {
-        params: { path: options.path },
-        body: options.body,
-      }),
+      this.#client.PUT('/v1/events/{event_id}', { params: { path: { event_id } }, body }),
     );
   }
 
@@ -244,8 +242,8 @@ class EventsNamespace {
    *
    * Search events via POST with filtering and pagination. This is the primary method for retrieving events from HoneyHive.
    */
-  public search(options: SearchEventsOptions): Promise<SearchEventsResponse> {
-    return unwrap(this.#client.POST('/v1/events/search', { body: options.body }));
+  public search(request: SearchEventsRequest): Promise<SearchEventsResponse> {
+    return unwrap(this.#client.POST('/v1/events/search', { body: request }));
   }
 
   /**
@@ -284,8 +282,8 @@ class EventsNamespace {
    * }
    * ```
    */
-  public createBatch(options: CreateEventBatchOptions): Promise<CreateEventBatchResponse> {
-    return unwrap(this.#client.POST('/v1/events/batch', { body: options.body }));
+  public createBatch(request: CreateEventBatchRequest): Promise<CreateEventBatchResponse> {
+    return unwrap(this.#client.POST('/v1/events/batch', { body: request }));
   }
 }
 
@@ -302,8 +300,9 @@ class MetricsNamespace {
    *
    * Retrieve a list of all metrics
    */
-  public list(options?: GetMetricsOptions): Promise<GetMetricsResponse> {
-    return unwrap(this.#client.GET('/v1/metrics', { params: { query: options?.query } }));
+  public list(request?: GetMetricsRequest): Promise<GetMetricsResponse> {
+    const { type, id } = request ?? {};
+    return unwrap(this.#client.GET('/v1/metrics', { params: { query: { type, id } } }));
   }
 
   /**
@@ -311,8 +310,8 @@ class MetricsNamespace {
    *
    * Add a new metric
    */
-  public create(options: CreateMetricOptions): Promise<CreateMetricResponse> {
-    return unwrap(this.#client.POST('/v1/metrics', { body: options.body }));
+  public create(request: CreateMetricRequest): Promise<CreateMetricResponse> {
+    return unwrap(this.#client.POST('/v1/metrics', { body: request }));
   }
 
   /**
@@ -320,12 +319,10 @@ class MetricsNamespace {
    *
    * Update a metric's editable fields. Only fields included in the request body are modified.
    */
-  public update(options: UpdateMetricOptions): Promise<UpdateMetricResponse> {
+  public update(request: UpdateMetricRequest): Promise<UpdateMetricResponse> {
+    const { metric_id, ...body } = request;
     return unwrap(
-      this.#client.PUT('/v1/metrics/{metric_id}', {
-        params: { path: options.path },
-        body: options.body,
-      }),
+      this.#client.PUT('/v1/metrics/{metric_id}', { params: { path: { metric_id } }, body }),
     );
   }
 
@@ -334,9 +331,10 @@ class MetricsNamespace {
    *
    * Remove a metric by id.
    */
-  public delete(options: DeleteMetricOptions): Promise<DeleteMetricResponse> {
+  public delete(request: DeleteMetricRequest): Promise<DeleteMetricResponse> {
+    const { metric_id } = request;
     return unwrap(
-      this.#client.DELETE('/v1/metrics/{metric_id}', { params: { path: options.path } }),
+      this.#client.DELETE('/v1/metrics/{metric_id}', { params: { path: { metric_id } } }),
     );
   }
 
@@ -345,8 +343,8 @@ class MetricsNamespace {
    *
    * Execute a metric on a specific event
    */
-  public run(options: RunMetricOptions): Promise<RunMetricResponse> {
-    return unwrap(this.#client.POST('/v1/metrics/run', { body: options.body }));
+  public run(request: RunMetricRequest): Promise<RunMetricResponse> {
+    return unwrap(this.#client.POST('/v1/metrics/run', { body: request }));
   }
 }
 
@@ -363,8 +361,11 @@ class DatapointsNamespace {
    *
    * Retrieve datapoints, optionally filtered by a list of datapoint IDs or dataset name.
    */
-  public list(options?: GetDatapointsOptions): Promise<GetDatapointsResponse> {
-    return unwrap(this.#client.GET('/v1/datapoints', { params: { query: options?.query } }));
+  public list(request?: GetDatapointsRequest): Promise<GetDatapointsResponse> {
+    const { datapoint_ids, dataset_name } = request ?? {};
+    return unwrap(
+      this.#client.GET('/v1/datapoints', { params: { query: { datapoint_ids, dataset_name } } }),
+    );
   }
 
   /**
@@ -372,8 +373,8 @@ class DatapointsNamespace {
    *
    * Create a single datapoint with inputs, history, ground truth, and metadata.
    */
-  public create(options: CreateDatapointOptions): Promise<CreateDatapointResponse> {
-    return unwrap(this.#client.POST('/v1/datapoints', { body: options.body }));
+  public create(request: CreateDatapointRequest): Promise<CreateDatapointResponse> {
+    return unwrap(this.#client.POST('/v1/datapoints', { body: request }));
   }
 
   /**
@@ -382,9 +383,9 @@ class DatapointsNamespace {
    * Create multiple datapoints from events using field mappings and optional filters.
    */
   public createBatch(
-    options: BatchCreateDatapointsOptions,
+    request: BatchCreateDatapointsRequest,
   ): Promise<BatchCreateDatapointsResponse> {
-    return unwrap(this.#client.POST('/v1/datapoints/batch', { body: options.body }));
+    return unwrap(this.#client.POST('/v1/datapoints/batch', { body: request }));
   }
 
   /**
@@ -392,9 +393,10 @@ class DatapointsNamespace {
    *
    * Get a single datapoint by its unique identifier.
    */
-  public get(options: GetDatapointOptions): Promise<GetDatapointResponse> {
+  public get(request: GetDatapointRequest): Promise<GetDatapointResponse> {
+    const { datapoint_id } = request;
     return unwrap(
-      this.#client.GET('/v1/datapoints/{datapoint_id}', { params: { path: options.path } }),
+      this.#client.GET('/v1/datapoints/{datapoint_id}', { params: { path: { datapoint_id } } }),
     );
   }
 
@@ -403,11 +405,12 @@ class DatapointsNamespace {
    *
    * Update fields on an existing datapoint. Only the provided fields are modified.
    */
-  public update(options: UpdateDatapointOptions): Promise<UpdateDatapointResponse> {
+  public update(request: UpdateDatapointRequest): Promise<UpdateDatapointResponse> {
+    const { datapoint_id, ...body } = request;
     return unwrap(
       this.#client.PUT('/v1/datapoints/{datapoint_id}', {
-        params: { path: options.path },
-        body: options.body,
+        params: { path: { datapoint_id } },
+        body,
       }),
     );
   }
@@ -417,9 +420,10 @@ class DatapointsNamespace {
    *
    * Permanently delete a datapoint by its unique identifier.
    */
-  public delete(options: DeleteDatapointOptions): Promise<DeleteDatapointResponse> {
+  public delete(request: DeleteDatapointRequest): Promise<DeleteDatapointResponse> {
+    const { datapoint_id } = request;
     return unwrap(
-      this.#client.DELETE('/v1/datapoints/{datapoint_id}', { params: { path: options.path } }),
+      this.#client.DELETE('/v1/datapoints/{datapoint_id}', { params: { path: { datapoint_id } } }),
     );
   }
 }
@@ -437,8 +441,9 @@ class DatasetsNamespace {
    *
    * Retrieve datasets, optionally filtered by dataset ID or name.
    */
-  public list(options?: GetDatasetsOptions): Promise<GetDatasetsResponse> {
-    return unwrap(this.#client.GET('/v1/datasets', { params: { query: options?.query } }));
+  public list(request?: GetDatasetsRequest): Promise<GetDatasetsResponse> {
+    const { dataset_id, name } = request ?? {};
+    return unwrap(this.#client.GET('/v1/datasets', { params: { query: { dataset_id, name } } }));
   }
 
   /**
@@ -446,8 +451,8 @@ class DatasetsNamespace {
    *
    * Create a new dataset with an optional name, description, and initial set of datapoint IDs.
    */
-  public create(options: CreateDatasetOptions): Promise<CreateDatasetResponse> {
-    return unwrap(this.#client.POST('/v1/datasets', { body: options.body }));
+  public create(request: CreateDatasetRequest): Promise<CreateDatasetResponse> {
+    return unwrap(this.#client.POST('/v1/datasets', { body: request }));
   }
 
   /**
@@ -455,12 +460,10 @@ class DatasetsNamespace {
    *
    * Update a dataset's name, description, or list of datapoint IDs.
    */
-  public update(options: UpdateDatasetOptions): Promise<UpdateDatasetResponse> {
+  public update(request: UpdateDatasetRequest): Promise<UpdateDatasetResponse> {
+    const { dataset_id, ...body } = request;
     return unwrap(
-      this.#client.PUT('/v1/datasets/{dataset_id}', {
-        params: { path: options.path },
-        body: options.body,
-      }),
+      this.#client.PUT('/v1/datasets/{dataset_id}', { params: { path: { dataset_id } }, body }),
     );
   }
 
@@ -469,9 +472,10 @@ class DatasetsNamespace {
    *
    * Permanently delete a dataset by its unique identifier.
    */
-  public delete(options: DeleteDatasetOptions): Promise<DeleteDatasetResponse> {
+  public delete(request: DeleteDatasetRequest): Promise<DeleteDatasetResponse> {
+    const { dataset_id } = request;
     return unwrap(
-      this.#client.DELETE('/v1/datasets/{dataset_id}', { params: { path: options.path } }),
+      this.#client.DELETE('/v1/datasets/{dataset_id}', { params: { path: { dataset_id } } }),
     );
   }
 
@@ -480,11 +484,12 @@ class DatasetsNamespace {
    *
    * Add new datapoints to an existing dataset. Provide raw data objects and a field mapping that specifies which fields map to inputs, ground truth, and history.
    */
-  public addDatapoints(options: AddDatapointsOptions): Promise<AddDatapointsResponse> {
+  public addDatapoints(request: AddDatapointsRequest): Promise<AddDatapointsResponse> {
+    const { dataset_id, ...body } = request;
     return unwrap(
       this.#client.POST('/v1/datasets/{dataset_id}/datapoints', {
-        params: { path: options.path },
-        body: options.body,
+        params: { path: { dataset_id } },
+        body,
       }),
     );
   }
@@ -494,10 +499,11 @@ class DatasetsNamespace {
    *
    * Remove a specific datapoint from a dataset. The datapoint itself is not deleted, only dereferenced from the dataset.
    */
-  public removeDatapoint(options: RemoveDatapointOptions): Promise<RemoveDatapointResponse> {
+  public removeDatapoint(request: RemoveDatapointRequest): Promise<RemoveDatapointResponse> {
+    const { dataset_id, datapoint_id } = request;
     return unwrap(
       this.#client.DELETE('/v1/datasets/{dataset_id}/datapoints/{datapoint_id}', {
-        params: { path: options.path },
+        params: { path: { dataset_id, datapoint_id } },
       }),
     );
   }
@@ -516,8 +522,16 @@ class ExperimentsNamespace {
    *
    * List experiment runs with optional filtering by dataset, status, name, date range, and specific run IDs. Results are paginated and sortable.
    */
-  public listRuns(options?: GetRunsOptions): Promise<GetRunsResponse> {
-    return unwrap(this.#client.GET('/v1/runs', { params: { query: options?.query } }));
+  public listRuns(request?: GetRunsRequest): Promise<GetRunsResponse> {
+    const { dataset_id, page, limit, run_ids, name, status, dateRange, sort_by, sort_order } =
+      request ?? {};
+    return unwrap(
+      this.#client.GET('/v1/runs', {
+        params: {
+          query: { dataset_id, page, limit, run_ids, name, status, dateRange, sort_by, sort_order },
+        },
+      }),
+    );
   }
 
   /**
@@ -525,8 +539,8 @@ class ExperimentsNamespace {
    *
    * Create a new experiment run to track an evaluation against a dataset.
    */
-  public createRun(options: CreateRunOptions): Promise<CreateRunResponse> {
-    return unwrap(this.#client.POST('/v1/runs', { body: options.body }));
+  public createRun(request: CreateRunRequest): Promise<CreateRunResponse> {
+    return unwrap(this.#client.POST('/v1/runs', { body: request }));
   }
 
   /**
@@ -534,8 +548,9 @@ class ExperimentsNamespace {
    *
    * Retrieve the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
    */
-  public getRunsSchema(options?: GetRunsSchemaOptions): Promise<GetRunsSchemaResponse> {
-    return unwrap(this.#client.GET('/v1/runs/schema', { params: { query: options?.query } }));
+  public getRunsSchema(request?: GetRunsSchemaRequest): Promise<GetRunsSchemaResponse> {
+    const { dateRange } = request ?? {};
+    return unwrap(this.#client.GET('/v1/runs/schema', { params: { query: { dateRange } } }));
   }
 
   /**
@@ -543,8 +558,9 @@ class ExperimentsNamespace {
    *
    * Retrieve the full details of a single experiment run by its run ID.
    */
-  public getRun(options: GetRunOptions): Promise<GetRunResponse> {
-    return unwrap(this.#client.GET('/v1/runs/{run_id}', { params: { path: options.path } }));
+  public getRun(request: GetRunRequest): Promise<GetRunResponse> {
+    const { run_id } = request;
+    return unwrap(this.#client.GET('/v1/runs/{run_id}', { params: { path: { run_id } } }));
   }
 
   /**
@@ -552,10 +568,9 @@ class ExperimentsNamespace {
    *
    * Update fields on an existing experiment run such as name, status, metadata, or results.
    */
-  public updateRun(options: UpdateRunOptions): Promise<UpdateRunResponse> {
-    return unwrap(
-      this.#client.PUT('/v1/runs/{run_id}', { params: { path: options.path }, body: options.body }),
-    );
+  public updateRun(request: UpdateRunRequest): Promise<UpdateRunResponse> {
+    const { run_id, ...body } = request;
+    return unwrap(this.#client.PUT('/v1/runs/{run_id}', { params: { path: { run_id } }, body }));
   }
 
   /**
@@ -563,8 +578,9 @@ class ExperimentsNamespace {
    *
    * Permanently delete an experiment run by its run ID.
    */
-  public deleteRun(options: DeleteRunOptions): Promise<DeleteRunResponse> {
-    return unwrap(this.#client.DELETE('/v1/runs/{run_id}', { params: { path: options.path } }));
+  public deleteRun(request: DeleteRunRequest): Promise<DeleteRunResponse> {
+    const { run_id } = request;
+    return unwrap(this.#client.DELETE('/v1/runs/{run_id}', { params: { path: { run_id } } }));
   }
 
   /**
@@ -572,10 +588,11 @@ class ExperimentsNamespace {
    *
    * Retrieve the events schema (fields, datasets, mappings) for a single experiment run.
    */
-  public getRunSchema(options: GetRunSchemaOptions): Promise<GetRunSchemaResponse> {
+  public getRunSchema(request: GetRunSchemaRequest): Promise<GetRunSchemaResponse> {
+    const { run_id, dateRange } = request;
     return unwrap(
       this.#client.GET('/v1/runs/{run_id}/schema', {
-        params: { path: options.path, query: options.query },
+        params: { path: { run_id }, query: { dateRange } },
       }),
     );
   }
@@ -586,11 +603,12 @@ class ExperimentsNamespace {
    * Retrieve event metrics from ClickHouse for a specific experiment run
    */
   public getRunMetrics(
-    options: GetExperimentRunMetricsOptions,
+    request: GetExperimentRunMetricsRequest,
   ): Promise<GetExperimentRunMetricsResponse> {
+    const { run_id, dateRange, filters } = request;
     return unwrap(
       this.#client.GET('/v1/runs/{run_id}/metrics', {
-        params: { path: options.path, query: options.query },
+        params: { path: { run_id }, query: { dateRange, filters } },
       }),
     );
   }
@@ -601,11 +619,12 @@ class ExperimentsNamespace {
    * Compare metrics and results between two experiment runs
    */
   public compareRuns(
-    options: GetExperimentComparisonOptions,
+    request: GetExperimentComparisonRequest,
   ): Promise<GetExperimentComparisonResponse> {
+    const { new_run_id, old_run_id, aggregate_function, filters } = request;
     return unwrap(
       this.#client.GET('/v1/runs/{new_run_id}/compare/{old_run_id}', {
-        params: { path: options.path, query: options.query },
+        params: { path: { new_run_id, old_run_id }, query: { aggregate_function, filters } },
       }),
     );
   }
@@ -616,11 +635,15 @@ class ExperimentsNamespace {
    * Retrieve and compare events between two experiment runs for detailed analysis
    */
   public compareRunEvents(
-    options: GetExperimentCompareEventsOptions,
+    request: GetExperimentCompareEventsRequest,
   ): Promise<GetExperimentCompareEventsResponse> {
+    const { new_run_id, old_run_id, event_name, event_type, filter, limit, page } = request;
     return unwrap(
       this.#client.GET('/v1/runs/{new_run_id}/compare/{old_run_id}/events', {
-        params: { path: options.path, query: options.query },
+        params: {
+          path: { new_run_id, old_run_id },
+          query: { event_name, event_type, filter, limit, page },
+        },
       }),
     );
   }
@@ -639,8 +662,9 @@ class QueuesNamespace {
    *
    * List annotation queues for the current project scope, optionally filtered by enabled status.
    */
-  public list(options?: GetQueuesOptions): Promise<GetQueuesResponse> {
-    return unwrap(this.#client.GET('/v1/queues', { params: { query: options?.query } }));
+  public list(request?: GetQueuesRequest): Promise<GetQueuesResponse> {
+    const { enabled } = request ?? {};
+    return unwrap(this.#client.GET('/v1/queues', { params: { query: { enabled } } }));
   }
 
   /**
@@ -648,8 +672,8 @@ class QueuesNamespace {
    *
    * Create a new annotation queue with a name, optional description, filters, and an initial set of event IDs to add.
    */
-  public create(options: CreateQueueOptions): Promise<CreateQueueResponse> {
-    return unwrap(this.#client.POST('/v1/queues', { body: options.body }));
+  public create(request: CreateQueueRequest): Promise<CreateQueueResponse> {
+    return unwrap(this.#client.POST('/v1/queues', { body: request }));
   }
 
   /**
@@ -657,8 +681,9 @@ class QueuesNamespace {
    *
    * Retrieve a single annotation queue by its unique identifier.
    */
-  public get(options: GetQueueOptions): Promise<GetQueueResponse> {
-    return unwrap(this.#client.GET('/v1/queues/{queue_id}', { params: { path: options.path } }));
+  public get(request: GetQueueRequest): Promise<GetQueueResponse> {
+    const { queue_id } = request;
+    return unwrap(this.#client.GET('/v1/queues/{queue_id}', { params: { path: { queue_id } } }));
   }
 
   /**
@@ -666,12 +691,10 @@ class QueuesNamespace {
    *
    * Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
    */
-  public update(options: UpdateQueueOptions): Promise<UpdateQueueResponse> {
+  public update(request: UpdateQueueRequest): Promise<UpdateQueueResponse> {
+    const { queue_id, ...body } = request;
     return unwrap(
-      this.#client.PUT('/v1/queues/{queue_id}', {
-        params: { path: options.path },
-        body: options.body,
-      }),
+      this.#client.PUT('/v1/queues/{queue_id}', { params: { path: { queue_id } }, body }),
     );
   }
 
@@ -680,8 +703,9 @@ class QueuesNamespace {
    *
    * Soft-delete an annotation queue by its unique identifier.
    */
-  public delete(options: DeleteQueueOptions): Promise<DeleteQueueResponse> {
-    return unwrap(this.#client.DELETE('/v1/queues/{queue_id}', { params: { path: options.path } }));
+  public delete(request: DeleteQueueRequest): Promise<DeleteQueueResponse> {
+    const { queue_id } = request;
+    return unwrap(this.#client.DELETE('/v1/queues/{queue_id}', { params: { path: { queue_id } } }));
   }
 }
 

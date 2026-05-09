@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+## [1.0.0-rc.6] - 2026-05-09
+
+### Breaking Changes
+- All client methods now accept a single flat request object instead of a nested `{ body, path, query }` shape. For example, `client.events.update({ path: { event_id }, body: { ... } })` becomes `client.events.update({ event_id, ...fields })`, and `client.events.create({ body: { ... } })` becomes `client.events.create({ ... })`. Update all call sites accordingly.
+- The `*Options`, `*Path`, and `*Query` type exports (e.g. `CreateEventOptions`, `UpdateEventPath`, `GetMetricsQuery`, `DeleteMetricPath`, etc.) have been removed. Use the unified `*Request` types (e.g. `CreateEventRequest`, `UpdateEventRequest`, `GetMetricsRequest`, `DeleteMetricRequest`) which now contain all path, query, and body fields at the top level.
+- New `*Request` types added for endpoints that previously only had `*Options`/`*Path`/`*Query`: `GetMetricsRequest`, `DeleteMetricRequest`, `GetDatapointsRequest`, `GetDatapointRequest`, `DeleteDatapointRequest`, `GetDatasetsRequest`, `DeleteDatasetRequest`, `RemoveDatapointRequest`, `GetRunsRequest`, `GetRunsSchemaRequest`, `GetRunRequest`, `DeleteRunRequest`, `GetRunSchemaRequest`, `GetExperimentRunMetricsRequest`, `GetExperimentComparisonRequest`, `GetExperimentCompareEventsRequest`, `GetQueuesRequest`, `GetQueueRequest`, and `DeleteQueueRequest`.
+
+### Improvements
+- Generated client output is ~10% smaller due to dead-type elimination, and method signatures in the generated docs now surface request fields directly without an extra indirection step.
+
 ## [1.0.0-rc.5] - 2026-05-07
 
 Internal improvements only.

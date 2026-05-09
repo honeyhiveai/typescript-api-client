@@ -1,3 +1,0 @@
-// AUTO-GENERATED — do not edit manually. Run `pnpm generate:client` to regenerate.
-export {};
-//# sourceMappingURL=schemas.js.map

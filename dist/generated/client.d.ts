@@ -1,5 +1,5 @@
 import { type paths } from './types.js';
-import { type CreateSessionOptions, type CreateEventOptions, type UpdateEventOptions, type SearchEventsOptions, type CreateEventBatchOptions, type GetMetricsOptions, type CreateMetricOptions, type UpdateMetricOptions, type DeleteMetricOptions, type RunMetricOptions, type GetDatapointsOptions, type CreateDatapointOptions, type BatchCreateDatapointsOptions, type GetDatapointOptions, type UpdateDatapointOptions, type DeleteDatapointOptions, type GetDatasetsOptions, type CreateDatasetOptions, type UpdateDatasetOptions, type DeleteDatasetOptions, type AddDatapointsOptions, type RemoveDatapointOptions, type GetRunsOptions, type CreateRunOptions, type GetRunsSchemaOptions, type GetRunOptions, type UpdateRunOptions, type DeleteRunOptions, type GetRunSchemaOptions, type GetExperimentRunMetricsOptions, type GetExperimentComparisonOptions, type GetExperimentCompareEventsOptions, type GetQueuesOptions, type CreateQueueOptions, type GetQueueOptions, type UpdateQueueOptions, type DeleteQueueOptions, type CreateSessionResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetQueuesResponse, type CreateQueueResponse, type GetQueueResponse, type UpdateQueueResponse, type DeleteQueueResponse } from './apiTypes.js';
+import { type CreateSessionRequest, type CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type GetQueuesRequest, type CreateQueueRequest, type GetQueueRequest, type UpdateQueueRequest, type DeleteQueueRequest, type CreateSessionResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetQueuesResponse, type CreateQueueResponse, type GetQueueResponse, type UpdateQueueResponse, type DeleteQueueResponse } from './apiTypes.js';
 import { type ClientConfig, createApiClient } from '../util.js';
 /** @inline */
 declare class SessionsNamespace {
@@ -46,7 +46,7 @@ declare class SessionsNamespace {
      * merges metadata/user_properties into the existing session and returns
      * the existing event.
      */
-    create(options: CreateSessionOptions): Promise<CreateSessionResponse>;
+    create(request: CreateSessionRequest): Promise<CreateSessionResponse>;
 }
 /** @inline */
 declare class EventsNamespace {
@@ -97,7 +97,7 @@ declare class EventsNamespace {
      * }
      * ```
      */
-    create(options: CreateEventOptions): Promise<CreateEventResponse>;
+    create(request: CreateEventRequest): Promise<CreateEventResponse>;
     /**
      * Update an event
      *
@@ -139,13 +139,13 @@ declare class EventsNamespace {
      * }
      * ```
      */
-    update(options: UpdateEventOptions): Promise<void>;
+    update(request: UpdateEventRequest): Promise<void>;
     /**
      * Retrieve events based on filters
      *
      * Search events via POST with filtering and pagination. This is the primary method for retrieving events from HoneyHive.
      */
-    search(options: SearchEventsOptions): Promise<SearchEventsResponse>;
+    search(request: SearchEventsRequest): Promise<SearchEventsResponse>;
     /**
      * Create a batch of events
      *
@@ -182,7 +182,7 @@ declare class EventsNamespace {
      * }
      * ```
      */
-    createBatch(options: CreateEventBatchOptions): Promise<CreateEventBatchResponse>;
+    createBatch(request: CreateEventBatchRequest): Promise<CreateEventBatchResponse>;
 }
 /** @inline */
 declare class MetricsNamespace {
@@ -193,31 +193,31 @@ declare class MetricsNamespace {
      *
      * Retrieve a list of all metrics
      */
-    list(options?: GetMetricsOptions): Promise<GetMetricsResponse>;
+    list(request?: GetMetricsRequest): Promise<GetMetricsResponse>;
     /**
      * Create a new metric
      *
      * Add a new metric
      */
-    create(options: CreateMetricOptions): Promise<CreateMetricResponse>;
+    create(request: CreateMetricRequest): Promise<CreateMetricResponse>;
     /**
      * Update an existing metric
      *
      * Update a metric's editable fields. Only fields included in the request body are modified.
      */
-    update(options: UpdateMetricOptions): Promise<UpdateMetricResponse>;
+    update(request: UpdateMetricRequest): Promise<UpdateMetricResponse>;
     /**
      * Delete a metric
      *
      * Remove a metric by id.
      */
-    delete(options: DeleteMetricOptions): Promise<DeleteMetricResponse>;
+    delete(request: DeleteMetricRequest): Promise<DeleteMetricResponse>;
     /**
      * Run a metric evaluation
      *
      * Execute a metric on a specific event
      */
-    run(options: RunMetricOptions): Promise<RunMetricResponse>;
+    run(request: RunMetricRequest): Promise<RunMetricResponse>;
 }
 /** @inline */
 declare class DatapointsNamespace {
@@ -228,37 +228,37 @@ declare class DatapointsNamespace {
      *
      * Retrieve datapoints, optionally filtered by a list of datapoint IDs or dataset name.
      */
-    list(options?: GetDatapointsOptions): Promise<GetDatapointsResponse>;
+    list(request?: GetDatapointsRequest): Promise<GetDatapointsResponse>;
     /**
      * Create a new datapoint
      *
      * Create a single datapoint with inputs, history, ground truth, and metadata.
      */
-    create(options: CreateDatapointOptions): Promise<CreateDatapointResponse>;
+    create(request: CreateDatapointRequest): Promise<CreateDatapointResponse>;
     /**
      * Create multiple datapoints in batch
      *
      * Create multiple datapoints from events using field mappings and optional filters.
      */
-    createBatch(options: BatchCreateDatapointsOptions): Promise<BatchCreateDatapointsResponse>;
+    createBatch(request: BatchCreateDatapointsRequest): Promise<BatchCreateDatapointsResponse>;
     /**
      * Retrieve a specific datapoint
      *
      * Get a single datapoint by its unique identifier.
      */
-    get(options: GetDatapointOptions): Promise<GetDatapointResponse>;
+    get(request: GetDatapointRequest): Promise<GetDatapointResponse>;
     /**
      * Update a specific datapoint
      *
      * Update fields on an existing datapoint. Only the provided fields are modified.
      */
-    update(options: UpdateDatapointOptions): Promise<UpdateDatapointResponse>;
+    update(request: UpdateDatapointRequest): Promise<UpdateDatapointResponse>;
     /**
      * Delete a specific datapoint
      *
      * Permanently delete a datapoint by its unique identifier.
      */
-    delete(options: DeleteDatapointOptions): Promise<DeleteDatapointResponse>;
+    delete(request: DeleteDatapointRequest): Promise<DeleteDatapointResponse>;
 }
 /** @inline */
 declare class DatasetsNamespace {
@@ -269,37 +269,37 @@ declare class DatasetsNamespace {
      *
      * Retrieve datasets, optionally filtered by dataset ID or name.
      */
-    list(options?: GetDatasetsOptions): Promise<GetDatasetsResponse>;
+    list(request?: GetDatasetsRequest): Promise<GetDatasetsResponse>;
     /**
      * Create a dataset
      *
      * Create a new dataset with an optional name, description, and initial set of datapoint IDs.
      */
-    create(options: CreateDatasetOptions): Promise<CreateDatasetResponse>;
+    create(request: CreateDatasetRequest): Promise<CreateDatasetResponse>;
     /**
      * Update a dataset
      *
      * Update a dataset's name, description, or list of datapoint IDs.
      */
-    update(options: UpdateDatasetOptions): Promise<UpdateDatasetResponse>;
+    update(request: UpdateDatasetRequest): Promise<UpdateDatasetResponse>;
     /**
      * Delete a dataset
      *
      * Permanently delete a dataset by its unique identifier.
      */
-    delete(options: DeleteDatasetOptions): Promise<DeleteDatasetResponse>;
+    delete(request: DeleteDatasetRequest): Promise<DeleteDatasetResponse>;
     /**
      * Add datapoints to a dataset
      *
      * Add new datapoints to an existing dataset. Provide raw data objects and a field mapping that specifies which fields map to inputs, ground truth, and history.
      */
-    addDatapoints(options: AddDatapointsOptions): Promise<AddDatapointsResponse>;
+    addDatapoints(request: AddDatapointsRequest): Promise<AddDatapointsResponse>;
     /**
      * Remove a datapoint from a dataset
      *
      * Remove a specific datapoint from a dataset. The datapoint itself is not deleted, only dereferenced from the dataset.
      */
-    removeDatapoint(options: RemoveDatapointOptions): Promise<RemoveDatapointResponse>;
+    removeDatapoint(request: RemoveDatapointRequest): Promise<RemoveDatapointResponse>;
 }
 /** @inline */
 declare class ExperimentsNamespace {
@@ -310,61 +310,61 @@ declare class ExperimentsNamespace {
      *
      * List experiment runs with optional filtering by dataset, status, name, date range, and specific run IDs. Results are paginated and sortable.
      */
-    listRuns(options?: GetRunsOptions): Promise<GetRunsResponse>;
+    listRuns(request?: GetRunsRequest): Promise<GetRunsResponse>;
     /**
      * Create a new evaluation run
      *
      * Create a new experiment run to track an evaluation against a dataset.
      */
-    createRun(options: CreateRunOptions): Promise<CreateRunResponse>;
+    createRun(request: CreateRunRequest): Promise<CreateRunResponse>;
     /**
      * Get events schema across all experiment runs in a project
      *
      * Retrieve the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
      */
-    getRunsSchema(options?: GetRunsSchemaOptions): Promise<GetRunsSchemaResponse>;
+    getRunsSchema(request?: GetRunsSchemaRequest): Promise<GetRunsSchemaResponse>;
     /**
      * Get details of an evaluation run
      *
      * Retrieve the full details of a single experiment run by its run ID.
      */
-    getRun(options: GetRunOptions): Promise<GetRunResponse>;
+    getRun(request: GetRunRequest): Promise<GetRunResponse>;
     /**
      * Update an evaluation run
      *
      * Update fields on an existing experiment run such as name, status, metadata, or results.
      */
-    updateRun(options: UpdateRunOptions): Promise<UpdateRunResponse>;
+    updateRun(request: UpdateRunRequest): Promise<UpdateRunResponse>;
     /**
      * Delete an evaluation run
      *
      * Permanently delete an experiment run by its run ID.
      */
-    deleteRun(options: DeleteRunOptions): Promise<DeleteRunResponse>;
+    deleteRun(request: DeleteRunRequest): Promise<DeleteRunResponse>;
     /**
      * Get events schema for a single experiment run
      *
      * Retrieve the events schema (fields, datasets, mappings) for a single experiment run.
      */
-    getRunSchema(options: GetRunSchemaOptions): Promise<GetRunSchemaResponse>;
+    getRunSchema(request: GetRunSchemaRequest): Promise<GetRunSchemaResponse>;
     /**
      * Get event metrics for an experiment run
      *
      * Retrieve event metrics from ClickHouse for a specific experiment run
      */
-    getRunMetrics(options: GetExperimentRunMetricsOptions): Promise<GetExperimentRunMetricsResponse>;
+    getRunMetrics(request: GetExperimentRunMetricsRequest): Promise<GetExperimentRunMetricsResponse>;
     /**
      * Retrieve experiment comparison
      *
      * Compare metrics and results between two experiment runs
      */
-    compareRuns(options: GetExperimentComparisonOptions): Promise<GetExperimentComparisonResponse>;
+    compareRuns(request: GetExperimentComparisonRequest): Promise<GetExperimentComparisonResponse>;
     /**
      * Compare events between two experiment runs
      *
      * Retrieve and compare events between two experiment runs for detailed analysis
      */
-    compareRunEvents(options: GetExperimentCompareEventsOptions): Promise<GetExperimentCompareEventsResponse>;
+    compareRunEvents(request: GetExperimentCompareEventsRequest): Promise<GetExperimentCompareEventsResponse>;
 }
 /** @inline */
 declare class QueuesNamespace {
@@ -375,31 +375,31 @@ declare class QueuesNamespace {
      *
      * List annotation queues for the current project scope, optionally filtered by enabled status.
      */
-    list(options?: GetQueuesOptions): Promise<GetQueuesResponse>;
+    list(request?: GetQueuesRequest): Promise<GetQueuesResponse>;
     /**
      * Create an annotation queue
      *
      * Create a new annotation queue with a name, optional description, filters, and an initial set of event IDs to add.
      */
-    create(options: CreateQueueOptions): Promise<CreateQueueResponse>;
+    create(request: CreateQueueRequest): Promise<CreateQueueResponse>;
     /**
      * Get an annotation queue
      *
      * Retrieve a single annotation queue by its unique identifier.
      */
-    get(options: GetQueueOptions): Promise<GetQueueResponse>;
+    get(request: GetQueueRequest): Promise<GetQueueResponse>;
     /**
      * Update an annotation queue
      *
      * Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
      */
-    update(options: UpdateQueueOptions): Promise<UpdateQueueResponse>;
+    update(request: UpdateQueueRequest): Promise<UpdateQueueResponse>;
     /**
      * Delete an annotation queue
      *
      * Soft-delete an annotation queue by its unique identifier.
      */
-    delete(options: DeleteQueueOptions): Promise<DeleteQueueResponse>;
+    delete(request: DeleteQueueRequest): Promise<DeleteQueueResponse>;
 }
 export declare class Client {
     #private;

@@ -34,11 +34,6 @@ import {
   type GetExperimentRunMetricsRequest,
   type GetExperimentComparisonRequest,
   type GetExperimentCompareEventsRequest,
-  type GetQueuesRequest,
-  type CreateQueueRequest,
-  type GetQueueRequest,
-  type UpdateQueueRequest,
-  type DeleteQueueRequest,
   type CreateSessionResponse,
   type CreateEventResponse,
   type SearchEventsResponse,
@@ -70,11 +65,6 @@ import {
   type GetExperimentRunMetricsResponse,
   type GetExperimentComparisonResponse,
   type GetExperimentCompareEventsResponse,
-  type GetQueuesResponse,
-  type CreateQueueResponse,
-  type GetQueueResponse,
-  type UpdateQueueResponse,
-  type DeleteQueueResponse,
 } from './apiTypes.js';
 import { type ClientConfig, createApiClient, unwrap } from '../util.js';
 
@@ -649,66 +639,6 @@ class ExperimentsNamespace {
   }
 }
 
-/** @inline */
-class QueuesNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
-
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
-  }
-
-  /**
-   * List annotation queues
-   *
-   * List annotation queues for the current project scope, optionally filtered by enabled status.
-   */
-  public list(request?: GetQueuesRequest): Promise<GetQueuesResponse> {
-    const { enabled } = request ?? {};
-    return unwrap(this.#client.GET('/v1/queues', { params: { query: { enabled } } }));
-  }
-
-  /**
-   * Create an annotation queue
-   *
-   * Create a new annotation queue with a name, optional description, filters, and an initial set of event IDs to add.
-   */
-  public create(request: CreateQueueRequest): Promise<CreateQueueResponse> {
-    return unwrap(this.#client.POST('/v1/queues', { body: request }));
-  }
-
-  /**
-   * Get an annotation queue
-   *
-   * Retrieve a single annotation queue by its unique identifier.
-   */
-  public get(request: GetQueueRequest): Promise<GetQueueResponse> {
-    const { queue_id } = request;
-    return unwrap(this.#client.GET('/v1/queues/{queue_id}', { params: { path: { queue_id } } }));
-  }
-
-  /**
-   * Update an annotation queue
-   *
-   * Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
-   */
-  public update(request: UpdateQueueRequest): Promise<UpdateQueueResponse> {
-    const { queue_id, ...body } = request;
-    return unwrap(
-      this.#client.PUT('/v1/queues/{queue_id}', { params: { path: { queue_id } }, body }),
-    );
-  }
-
-  /**
-   * Delete an annotation queue
-   *
-   * Soft-delete an annotation queue by its unique identifier.
-   */
-  public delete(request: DeleteQueueRequest): Promise<DeleteQueueResponse> {
-    const { queue_id } = request;
-    return unwrap(this.#client.DELETE('/v1/queues/{queue_id}', { params: { path: { queue_id } } }));
-  }
-}
-
 export class Client {
   #client: ReturnType<typeof createApiClient<paths>>;
   readonly sessions: SessionsNamespace;
@@ -717,7 +647,6 @@ export class Client {
   readonly datapoints: DatapointsNamespace;
   readonly datasets: DatasetsNamespace;
   readonly experiments: ExperimentsNamespace;
-  readonly queues: QueuesNamespace;
 
   constructor(options: ClientConfig = {}) {
     this.#client = createApiClient<paths>(options);
@@ -727,6 +656,5 @@ export class Client {
     this.datapoints = new DatapointsNamespace(this.#client);
     this.datasets = new DatasetsNamespace(this.#client);
     this.experiments = new ExperimentsNamespace(this.#client);
-    this.queues = new QueuesNamespace(this.#client);
   }
 }

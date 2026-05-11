@@ -486,57 +486,6 @@ class ExperimentsNamespace {
         }));
     }
 }
-/** @inline */
-class QueuesNamespace {
-    #client;
-    constructor(client) {
-        this.#client = client;
-    }
-    /**
-     * List annotation queues
-     *
-     * List annotation queues for the current project scope, optionally filtered by enabled status.
-     */
-    list(request) {
-        const { enabled } = request ?? {};
-        return unwrap(this.#client.GET('/v1/queues', { params: { query: { enabled } } }));
-    }
-    /**
-     * Create an annotation queue
-     *
-     * Create a new annotation queue with a name, optional description, filters, and an initial set of event IDs to add.
-     */
-    create(request) {
-        return unwrap(this.#client.POST('/v1/queues', { body: request }));
-    }
-    /**
-     * Get an annotation queue
-     *
-     * Retrieve a single annotation queue by its unique identifier.
-     */
-    get(request) {
-        const { queue_id } = request;
-        return unwrap(this.#client.GET('/v1/queues/{queue_id}', { params: { path: { queue_id } } }));
-    }
-    /**
-     * Update an annotation queue
-     *
-     * Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
-     */
-    update(request) {
-        const { queue_id, ...body } = request;
-        return unwrap(this.#client.PUT('/v1/queues/{queue_id}', { params: { path: { queue_id } }, body }));
-    }
-    /**
-     * Delete an annotation queue
-     *
-     * Soft-delete an annotation queue by its unique identifier.
-     */
-    delete(request) {
-        const { queue_id } = request;
-        return unwrap(this.#client.DELETE('/v1/queues/{queue_id}', { params: { path: { queue_id } } }));
-    }
-}
 export class Client {
     #client;
     sessions;
@@ -545,7 +494,6 @@ export class Client {
     datapoints;
     datasets;
     experiments;
-    queues;
     constructor(options = {}) {
         this.#client = createApiClient(options);
         this.sessions = new SessionsNamespace(this.#client);
@@ -554,7 +502,6 @@ export class Client {
         this.datapoints = new DatapointsNamespace(this.#client);
         this.datasets = new DatasetsNamespace(this.#client);
         this.experiments = new ExperimentsNamespace(this.#client);
-        this.queues = new QueuesNamespace(this.#client);
     }
 }
 //# sourceMappingURL=client.js.map

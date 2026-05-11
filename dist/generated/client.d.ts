@@ -1,5 +1,5 @@
 import { type paths } from './types.js';
-import { type CreateSessionRequest, type CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type GetQueuesRequest, type CreateQueueRequest, type GetQueueRequest, type UpdateQueueRequest, type DeleteQueueRequest, type CreateSessionResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse, type GetQueuesResponse, type CreateQueueResponse, type GetQueueResponse, type UpdateQueueResponse, type DeleteQueueResponse } from './apiTypes.js';
+import { type CreateSessionRequest, type CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
 import { type ClientConfig, createApiClient } from '../util.js';
 /** @inline */
 declare class SessionsNamespace {
@@ -366,41 +366,6 @@ declare class ExperimentsNamespace {
      */
     compareRunEvents(request: GetExperimentCompareEventsRequest): Promise<GetExperimentCompareEventsResponse>;
 }
-/** @inline */
-declare class QueuesNamespace {
-    #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
-    /**
-     * List annotation queues
-     *
-     * List annotation queues for the current project scope, optionally filtered by enabled status.
-     */
-    list(request?: GetQueuesRequest): Promise<GetQueuesResponse>;
-    /**
-     * Create an annotation queue
-     *
-     * Create a new annotation queue with a name, optional description, filters, and an initial set of event IDs to add.
-     */
-    create(request: CreateQueueRequest): Promise<CreateQueueResponse>;
-    /**
-     * Get an annotation queue
-     *
-     * Retrieve a single annotation queue by its unique identifier.
-     */
-    get(request: GetQueueRequest): Promise<GetQueueResponse>;
-    /**
-     * Update an annotation queue
-     *
-     * Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
-     */
-    update(request: UpdateQueueRequest): Promise<UpdateQueueResponse>;
-    /**
-     * Delete an annotation queue
-     *
-     * Soft-delete an annotation queue by its unique identifier.
-     */
-    delete(request: DeleteQueueRequest): Promise<DeleteQueueResponse>;
-}
 export declare class Client {
     #private;
     readonly sessions: SessionsNamespace;
@@ -409,7 +374,6 @@ export declare class Client {
     readonly datapoints: DatapointsNamespace;
     readonly datasets: DatasetsNamespace;
     readonly experiments: ExperimentsNamespace;
-    readonly queues: QueuesNamespace;
     constructor(options?: ClientConfig);
 }
 export {};

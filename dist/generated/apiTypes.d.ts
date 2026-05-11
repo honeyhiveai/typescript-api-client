@@ -451,39 +451,6 @@ export interface GetExperimentCompareEventsRequest {
     /** @description Page number for pagination */
     page?: number;
 }
-export interface GetQueuesRequest {
-    /** @description Filter by enabled status */
-    enabled?: boolean;
-}
-export interface CreateQueueRequest {
-    name: string;
-    /** @default  */
-    description?: string;
-    filters?: CreateAnnotationQueueRequestFilters;
-    /** @default true */
-    enabled?: boolean;
-    /** @default [] */
-    event_ids?: string[];
-}
-export interface GetQueueRequest {
-    /** @description Annotation queue ID */
-    queue_id: string;
-}
-export interface UpdateQueueRequest {
-    /** @description Annotation queue ID */
-    queue_id: string;
-    name?: string;
-    description?: string;
-    filters?: UpdateAnnotationQueueRequestFilters;
-    enabled?: boolean;
-    id: string;
-    add_event_ids?: string[];
-    remove_event_ids?: string[];
-}
-export interface DeleteQueueRequest {
-    /** @description Annotation queue ID */
-    queue_id: string;
-}
 /**
  * @description Full session event object returned after starting a new session
  */
@@ -726,35 +693,6 @@ export type GetExperimentCompareEventsResponse = {
     events: ComparableEvent[];
     /** @description Total number of events matching the comparison query */
     totalEvents: number;
-};
-export type GetQueuesResponse = {
-    queues: GetAnnotationQueuesResponseQueuesItem[];
-};
-export type CreateQueueResponse = {
-    queue: CreateAnnotationQueueResponseQueue;
-    message: string;
-};
-export type GetQueueResponse = {
-    name: string;
-    description: string;
-    filters: GetAnnotationQueueByIdResponseFilters;
-    enabled: boolean;
-    id: string;
-    scope_id: string;
-    /** @enum {string} */
-    scope_type: 'system' | 'controlplane' | 'dataplane' | 'org' | 'workspace' | 'project';
-    is_active: boolean;
-    /** Format: date-time */
-    created_at: string;
-    /** Format: date-time */
-    updated_at: string | null;
-};
-export type UpdateQueueResponse = {
-    queue: UpdateAnnotationQueueResponseQueue;
-    message: string;
-};
-export type DeleteQueueResponse = {
-    message: string;
 };
 /**
  * @inline
@@ -2170,8 +2108,77 @@ export type BaseAnnotationQueue = {
 /**
  * @inline
  */
+export type CreateAnnotationQueueRequest = {
+    name: string;
+    /** @default  */
+    description?: string;
+    filters?: CreateAnnotationQueueRequestFilters;
+    /** @default true */
+    enabled?: boolean;
+    /** @default [] */
+    event_ids?: string[];
+};
+/**
+ * @inline
+ */
+export type UpdateAnnotationQueueRequest = {
+    name?: string;
+    description?: string;
+    filters?: UpdateAnnotationQueueRequestFilters;
+    enabled?: boolean;
+    id: string;
+    add_event_ids?: string[];
+    remove_event_ids?: string[];
+};
+/**
+ * @inline
+ */
 export type GetAnnotationQueuesQuery = {
     enabled?: boolean | null;
+};
+/**
+ * @inline
+ */
+export type CreateAnnotationQueueResponse = {
+    queue: CreateAnnotationQueueResponseQueue;
+    message: string;
+};
+/**
+ * @inline
+ */
+export type UpdateAnnotationQueueResponse = {
+    queue: UpdateAnnotationQueueResponseQueue;
+    message: string;
+};
+/**
+ * @inline
+ */
+export type GetAnnotationQueuesResponse = {
+    queues: GetAnnotationQueuesResponseQueuesItem[];
+};
+/**
+ * @inline
+ */
+export type GetAnnotationQueueByIdResponse = {
+    name: string;
+    description: string;
+    filters: GetAnnotationQueueByIdResponseFilters;
+    enabled: boolean;
+    id: string;
+    scope_id: string;
+    /** @enum {string} */
+    scope_type: 'system' | 'controlplane' | 'dataplane' | 'org' | 'workspace' | 'project';
+    is_active: boolean;
+    /** Format: date-time */
+    created_at: string;
+    /** Format: date-time */
+    updated_at: string | null;
+};
+/**
+ * @inline
+ */
+export type DeleteAnnotationQueueResponse = {
+    message: string;
 };
 /**
  * @description Minimal event object used by evaluation and session endpoints; permissive (passthrough)

@@ -28,23 +28,19 @@ const openai = new OpenAI();
 
 // 1. Start a session (trace)
 const session = await client.sessions.create({
-  body: {
-    session_name: 'openai-example',
-    source: 'dev',
-  },
+  session_name: 'openai-example',
+  source: 'dev',
 });
 
 // 2. Create a model event for the OpenAI call
 const startTime = Date.now();
 const event = await client.events.create({
-  body: {
-    session_id: session.session_id,
-    event_type: 'model',
-    event_name: 'chat-completion',
-    config: { model: 'gpt-4o-mini' },
-    inputs: {
-      messages: [{ role: 'user', content: 'What is the meaning of life?' }],
-    },
+  session_id: session.session_id,
+  event_type: 'model',
+  event_name: 'chat-completion',
+  config: { model: 'gpt-4o-mini' },
+  inputs: {
+    messages: [{ role: 'user', content: 'What is the meaning of life?' }],
   },
 });
 
@@ -56,19 +52,15 @@ const completion = await openai.chat.completions.create({
 const { content } = completion.choices[0].message;
 console.log(content);
 
-// 4. Update the event (span) with the response, if we got content back from OpenAPI
+// 4. Update the event (span) with the response, if we got content back from OpenAI
 if (content) {
   await client.events.update({
-    path: {
-      event_id: event.event_id,
-    },
-    body: {
-      outputs: { content },
-      duration: Date.now() - startTime,
-      metadata: {
-        model: completion.model,
-        usage: completion.usage,
-      },
+    event_id: event.event_id,
+    outputs: { content },
+    duration: Date.now() - startTime,
+    metadata: {
+      model: completion.model,
+      usage: completion.usage,
     },
   });
 }
@@ -88,20 +80,16 @@ const client = new Client();
 
 // 1. Create a dataset
 const created = await client.datasets.create({
-  body: {
-    name: 'qa-eval-set',
-    description: 'Question/answer pairs for evaluation',
-  },
+  name: 'qa-eval-set',
+  description: 'Question/answer pairs for evaluation',
 });
 const datasetId = created.result.insertedId;
 
 // 2. Append a datapoint linked to the new dataset
 await client.datapoints.create({
-  body: {
-    inputs: { question: 'What is the capital of France?' },
-    ground_truth: { answer: 'Paris' },
-    linked_datasets: [datasetId],
-  },
+  inputs: { question: 'What is the capital of France?' },
+  ground_truth: { answer: 'Paris' },
+  linked_datasets: [datasetId],
 });
 
 // 3. List datasets in the current project
@@ -109,7 +97,9 @@ const { datasets } = await client.datasets.list();
 console.log(datasets.map((d) => d.name));
 
 // 4. Delete the dataset
-await client.datasets.delete({ path: { dataset_id: datasetId } });
+await client.datasets.delete({
+  dataset_id: datasetId,
+});
 ```
 
 ## Authorization

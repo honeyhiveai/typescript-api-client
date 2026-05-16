@@ -1,5 +1,5 @@
 import { type paths } from './types.js';
-import { type CreateSessionRequest, type CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
+import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
 import { type ClientConfig, createApiClient } from '../util.js';
 /** @inline */
 declare class SessionsNamespace {
@@ -47,6 +47,35 @@ declare class SessionsNamespace {
      * the existing event.
      */
     create(request: CreateSessionRequest): Promise<CreateSessionResponse>;
+    /**
+     * Add a batch of events to a session
+     *
+     * AIP-233 nested batch create. Adds a batch of events to an existing
+     * session. Each event in the batch is stored with `session_id` set from
+     * the URL path, overriding any `session_id` in the event body.
+     *
+     * **Required properties:**
+     *
+     * - `events` (array of event objects) — Each event must include
+     *   `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
+     *
+     * Unknown top-level fields and unknown per-event fields are rejected at
+     * the SDK boundary; the deprecated per-event `project` field is no
+     * longer accepted.
+     *
+     * Events are processed sequentially (not via the worker-pool batch path
+     * used by `POST /v1/events/batch`) — semantics match the legacy
+     * `POST /session/{session_id}/traces` route per the Normalize Routes
+     * RFC.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "success": true
+     * }
+     * ```
+     */
+    createEventBatch(request: CreateSessionEventBatchRequest): Promise<CreateSessionEventBatchResponse>;
 }
 /** @inline */
 declare class EventsNamespace {
@@ -183,6 +212,41 @@ declare class EventsNamespace {
      * ```
      */
     createBatch(request: CreateEventBatchRequest): Promise<CreateEventBatchResponse>;
+}
+/** @inline */
+declare class ChartsNamespace {
+    #private;
+    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    /**
+     * List charts
+     *
+     * Retrieve all charts in the current scope.
+     */
+    list(): Promise<GetChartsResponse>;
+    /**
+     * Create a new chart
+     *
+     * Add a new chart
+     */
+    create(request: CreateChartRequest): Promise<CreateChartResponse>;
+    /**
+     * Get a chart
+     *
+     * Retrieve a single chart by id.
+     */
+    get(request: GetChartRequest): Promise<GetChartResponse>;
+    /**
+     * Update a chart
+     *
+     * Update a chart's editable fields. Only fields included in the request body are modified.
+     */
+    update(request: UpdateChartRequest): Promise<UpdateChartResponse>;
+    /**
+     * Delete a chart
+     *
+     * Remove a chart by id.
+     */
+    delete(request: DeleteChartRequest): Promise<DeleteChartResponse>;
 }
 /** @inline */
 declare class MetricsNamespace {
@@ -354,6 +418,12 @@ declare class ExperimentsNamespace {
      */
     getRunMetrics(request: GetExperimentRunMetricsRequest): Promise<GetExperimentRunMetricsResponse>;
     /**
+     * Retrieve experiment summary
+     *
+     * Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
+     */
+    getSummary(request: GetExperimentSummaryRequest): Promise<GetExperimentSummaryResponse>;
+    /**
      * Retrieve experiment comparison
      *
      * Compare metrics and results between two experiment runs
@@ -370,6 +440,7 @@ export declare class Client {
     #private;
     readonly sessions: SessionsNamespace;
     readonly events: EventsNamespace;
+    readonly charts: ChartsNamespace;
     readonly metrics: MetricsNamespace;
     readonly datapoints: DatapointsNamespace;
     readonly datasets: DatasetsNamespace;

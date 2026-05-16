@@ -3,10 +3,15 @@
 import { type paths } from './types.js';
 import {
   type CreateSessionRequest,
+  type CreateSessionEventBatchRequest,
   type CreateEventRequest,
   type UpdateEventRequest,
   type SearchEventsRequest,
   type CreateEventBatchRequest,
+  type CreateChartRequest,
+  type GetChartRequest,
+  type UpdateChartRequest,
+  type DeleteChartRequest,
   type GetMetricsRequest,
   type CreateMetricRequest,
   type UpdateMetricRequest,
@@ -32,12 +37,19 @@ import {
   type DeleteRunRequest,
   type GetRunSchemaRequest,
   type GetExperimentRunMetricsRequest,
+  type GetExperimentSummaryRequest,
   type GetExperimentComparisonRequest,
   type GetExperimentCompareEventsRequest,
   type CreateSessionResponse,
+  type CreateSessionEventBatchResponse,
   type CreateEventResponse,
   type SearchEventsResponse,
   type CreateEventBatchResponse,
+  type GetChartsResponse,
+  type CreateChartResponse,
+  type GetChartResponse,
+  type UpdateChartResponse,
+  type DeleteChartResponse,
   type GetMetricsResponse,
   type CreateMetricResponse,
   type UpdateMetricResponse,
@@ -63,6 +75,7 @@ import {
   type DeleteRunResponse,
   type GetRunSchemaResponse,
   type GetExperimentRunMetricsResponse,
+  type GetExperimentSummaryResponse,
   type GetExperimentComparisonResponse,
   type GetExperimentCompareEventsResponse,
 } from './apiTypes.js';
@@ -119,6 +132,46 @@ class SessionsNamespace {
    */
   public create(request: CreateSessionRequest): Promise<CreateSessionResponse> {
     return unwrap(this.#client.POST('/v1/sessions', { body: request }));
+  }
+
+  /**
+   * Add a batch of events to a session
+   *
+   * AIP-233 nested batch create. Adds a batch of events to an existing
+   * session. Each event in the batch is stored with `session_id` set from
+   * the URL path, overriding any `session_id` in the event body.
+   *
+   * **Required properties:**
+   *
+   * - `events` (array of event objects) — Each event must include
+   *   `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
+   *
+   * Unknown top-level fields and unknown per-event fields are rejected at
+   * the SDK boundary; the deprecated per-event `project` field is no
+   * longer accepted.
+   *
+   * Events are processed sequentially (not via the worker-pool batch path
+   * used by `POST /v1/events/batch`) — semantics match the legacy
+   * `POST /session/{session_id}/traces` route per the Normalize Routes
+   * RFC.
+   *
+   * @example Response
+   * ```json
+   * {
+   *   "success": true
+   * }
+   * ```
+   */
+  public createEventBatch(
+    request: CreateSessionEventBatchRequest,
+  ): Promise<CreateSessionEventBatchResponse> {
+    const { session_id, ...body } = request;
+    return unwrap(
+      this.#client.POST('/v1/sessions/{session_id}/events/batch', {
+        params: { path: { session_id } },
+        body,
+      }),
+    );
   }
 }
 
@@ -274,6 +327,65 @@ class EventsNamespace {
    */
   public createBatch(request: CreateEventBatchRequest): Promise<CreateEventBatchResponse> {
     return unwrap(this.#client.POST('/v1/events/batch', { body: request }));
+  }
+}
+
+/** @inline */
+class ChartsNamespace {
+  #client: ReturnType<typeof createApiClient<paths>>;
+
+  constructor(client: ReturnType<typeof createApiClient<paths>>) {
+    this.#client = client;
+  }
+
+  /**
+   * List charts
+   *
+   * Retrieve all charts in the current scope.
+   */
+  public list(): Promise<GetChartsResponse> {
+    return unwrap(this.#client.GET('/v1/charts'));
+  }
+
+  /**
+   * Create a new chart
+   *
+   * Add a new chart
+   */
+  public create(request: CreateChartRequest): Promise<CreateChartResponse> {
+    return unwrap(this.#client.POST('/v1/charts', { body: request }));
+  }
+
+  /**
+   * Get a chart
+   *
+   * Retrieve a single chart by id.
+   */
+  public get(request: GetChartRequest): Promise<GetChartResponse> {
+    const { chart_id } = request;
+    return unwrap(this.#client.GET('/v1/charts/{chart_id}', { params: { path: { chart_id } } }));
+  }
+
+  /**
+   * Update a chart
+   *
+   * Update a chart's editable fields. Only fields included in the request body are modified.
+   */
+  public update(request: UpdateChartRequest): Promise<UpdateChartResponse> {
+    const { chart_id, ...body } = request;
+    return unwrap(
+      this.#client.PUT('/v1/charts/{chart_id}', { params: { path: { chart_id } }, body }),
+    );
+  }
+
+  /**
+   * Delete a chart
+   *
+   * Remove a chart by id.
+   */
+  public delete(request: DeleteChartRequest): Promise<DeleteChartResponse> {
+    const { chart_id } = request;
+    return unwrap(this.#client.DELETE('/v1/charts/{chart_id}', { params: { path: { chart_id } } }));
   }
 }
 
@@ -604,6 +716,20 @@ class ExperimentsNamespace {
   }
 
   /**
+   * Retrieve experiment summary
+   *
+   * Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
+   */
+  public getSummary(request: GetExperimentSummaryRequest): Promise<GetExperimentSummaryResponse> {
+    const { run_id, aggregate_function, filters } = request;
+    return unwrap(
+      this.#client.GET('/v1/runs/{run_id}/summary', {
+        params: { path: { run_id }, query: { aggregate_function, filters } },
+      }),
+    );
+  }
+
+  /**
    * Retrieve experiment comparison
    *
    * Compare metrics and results between two experiment runs
@@ -643,6 +769,7 @@ export class Client {
   #client: ReturnType<typeof createApiClient<paths>>;
   readonly sessions: SessionsNamespace;
   readonly events: EventsNamespace;
+  readonly charts: ChartsNamespace;
   readonly metrics: MetricsNamespace;
   readonly datapoints: DatapointsNamespace;
   readonly datasets: DatasetsNamespace;
@@ -652,6 +779,7 @@ export class Client {
     this.#client = createApiClient<paths>(options);
     this.sessions = new SessionsNamespace(this.#client);
     this.events = new EventsNamespace(this.#client);
+    this.charts = new ChartsNamespace(this.#client);
     this.metrics = new MetricsNamespace(this.#client);
     this.datapoints = new DatapointsNamespace(this.#client);
     this.datasets = new DatasetsNamespace(this.#client);

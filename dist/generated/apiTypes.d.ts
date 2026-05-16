@@ -36,6 +36,12 @@ export interface CreateSessionRequest {
     /** @description IDs of child events in this session */
     children_ids?: string[];
 }
+export interface CreateSessionEventBatchRequest {
+    /** @description Session ID to add events to */
+    session_id: string;
+    /** @description Events to add to the session */
+    events: PostEventRequestBody[];
+}
 export interface CreateEventRequest {
     /** @description Project ID */
     project_id?: string;
@@ -144,6 +150,43 @@ export interface CreateEventBatchRequest {
     /** @description If true, all events share the same session */
     single_session?: boolean;
     session_properties?: SessionProperties;
+}
+export interface CreateChartRequest {
+    name: string;
+    description?: string;
+    metric: string;
+    func?: string;
+    groupBy?: string | null;
+    /**
+     * @default day
+     * @enum {string}
+     */
+    bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+    dateRange?: RelativeDateRange | AbsoluteDateRange;
+    query?: QueryFilter[];
+    owner_id?: string;
+}
+export interface GetChartRequest {
+    /** @description The unique identifier of the chart to retrieve */
+    chart_id: string;
+}
+export interface UpdateChartRequest {
+    /** @description The unique identifier of the chart to update */
+    chart_id: string;
+    name?: string;
+    description?: string;
+    metric?: string;
+    func?: string;
+    groupBy?: string | null;
+    /** @enum {string} */
+    bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+    dateRange?: RelativeDateRange | AbsoluteDateRange;
+    query?: QueryFilter[];
+    owner_id?: string;
+}
+export interface DeleteChartRequest {
+    /** @description The unique identifier of the chart to delete */
+    chart_id: string;
 }
 export interface GetMetricsRequest {
     /** @description Filter by metric type */
@@ -425,6 +468,14 @@ export interface GetExperimentRunMetricsRequest {
     /** @description Optional filters to apply (JSON string or array of filter objects) */
     filters?: string | Record<string, never>[];
 }
+export interface GetExperimentSummaryRequest {
+    /** @description Experiment run ID (UUIDv4) */
+    run_id: string;
+    /** @description Aggregation function to apply to metrics */
+    aggregate_function?: 'average' | 'min' | 'max' | 'median' | 'p95' | 'p99' | 'p90' | 'sum' | 'count';
+    /** @description Optional filters to apply (JSON string or array of filter objects) */
+    filters?: string | Record<string, never>[];
+}
 export interface GetExperimentComparisonRequest {
     /** @description New experiment run ID to compare (UUIDv4) */
     new_run_id: string;
@@ -480,6 +531,12 @@ export type CreateSessionResponse = {
     [key: string]: unknown;
 };
 /**
+ * @description Response from adding traces to a session
+ */
+export type CreateSessionEventBatchResponse = {
+    success: boolean;
+};
+/**
  * @description Response after creating an event
  */
 export type CreateEventResponse = {
@@ -500,6 +557,26 @@ export type CreateEventBatchResponse = {
     event_ids: string[];
     session_id?: string;
     success: boolean;
+};
+export type GetChartsResponse = {
+    success: boolean;
+    data: GetChartsResponseDataItem[];
+};
+export type CreateChartResponse = {
+    success: boolean;
+    data: CreateChartResponseData;
+};
+export type GetChartResponse = {
+    success: boolean;
+    data: GetChartResponseData;
+};
+export type UpdateChartResponse = {
+    success: boolean;
+    data: UpdateChartResponseData;
+};
+export type DeleteChartResponse = {
+    success: boolean;
+    message: string;
 };
 /**
  * @description Response for GET /metrics
@@ -677,6 +754,20 @@ export type GetExperimentRunMetricsResponse = {
     totalEvents: number;
 };
 /**
+ * @description Evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
+ */
+export type GetExperimentSummaryResponse = {
+    status: string;
+    success: boolean;
+    error?: string;
+    passed: string[];
+    failed: string[];
+    metrics: MetricsAggregation;
+    datapoints: DatapointResult[];
+    event_details: EventDetail[];
+    run_object: ExperimentRunObject;
+};
+/**
  * @description Comparison between two experiment runs including metrics, common datapoints, and event details
  */
 export type GetExperimentComparisonResponse = {
@@ -693,6 +784,28 @@ export type GetExperimentCompareEventsResponse = {
     events: ComparableEvent[];
     /** @description Total number of events matching the comparison query */
     totalEvents: number;
+};
+/**
+ * @inline
+ */
+export type RelativeDateRange = {
+    relative: string;
+};
+/**
+ * @inline
+ */
+export type AbsoluteDateRange = {
+    $gte: string | number;
+    $lte: string | number;
+};
+/**
+ * @inline
+ */
+export type QueryFilter = {
+    field: string;
+    value: string | null;
+    type: string;
+    operator: string;
 };
 /**
  * @inline
@@ -1453,7 +1566,8 @@ export type PostModelEventBatchRequest = {
  * @inline
  */
 export type GetEventsQuery = {
-    dateRange?: DateRange;
+    /** @description Date range filter */
+    dateRange?: RelativeDateRange | AbsoluteDateRange;
     /** @description Event filters to apply */
     filters?: FiltersArray;
     /** @description Fields to include in the response */
@@ -1466,24 +1580,6 @@ export type GetEventsQuery = {
     page?: number;
     /** @description Filter by evaluation/experiment run ID */
     evaluation_id?: string;
-};
-/**
- * @description Date range filter
- * @inline
- */
-export type DateRange = RelativeDateRange | AbsoluteDateRange;
-/**
- * @inline
- */
-export type RelativeDateRange = {
-    relative: string;
-};
-/**
- * @inline
- */
-export type AbsoluteDateRange = {
-    $gte: string | number;
-    $lte: string | number;
 };
 /**
  * @description Response for GET /events
@@ -1714,10 +1810,25 @@ export type GetExperimentRunMetricsQuery = {
     filters?: string | unknown[];
 };
 /**
- * @description Query parameters for GET /runs/{run_id}/result
+ * @description Query parameters for GET /runs/{run_id}/summary
  * @inline
  */
-export type GetExperimentRunResultQuery = {
+export type GetExperimentRunSummaryQuery = {
+    /**
+     * @description Aggregation function to apply (default: average)
+     * @default average
+     * @enum {string}
+     */
+    aggregate_function?: 'average' | 'min' | 'max' | 'median' | 'p95' | 'p99' | 'p90' | 'sum' | 'count';
+    /** @description Filters to apply to results */
+    filters?: string | unknown[];
+};
+/**
+ * @deprecated
+ * @description Query parameters for GET /runs/{run_id}/result (deprecated — use GET /runs/{run_id}/summary)
+ * @inline
+ */
+export type LegacyGetExperimentRunResultQuery = {
     /**
      * @description Aggregation function to apply (default: average)
      * @default average
@@ -1871,21 +1982,6 @@ export type GetRunSchemaQuery = {
 export type GetRunsSchemaQuery = {
     /** @description Date range to filter schema by */
     dateRange?: string | AbsoluteDateRange;
-};
-/**
- * @description Evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
- * @inline
- */
-export type GetExperimentRunResultResponse = {
-    status: string;
-    success: boolean;
-    error?: string;
-    passed: string[];
-    failed: string[];
-    metrics: MetricsAggregation;
-    datapoints: DatapointResult[];
-    event_details: EventDetail[];
-    run_object: ExperimentRunObject;
 };
 /**
  * @inline
@@ -2209,18 +2305,18 @@ export type LegacyStartSessionRequest = {
     session: LegacyStartSessionRequestSession;
 };
 /**
- * @description Request to add traces to a session
+ * @deprecated
+ * @description Request body for POST /session/{session_id}/traces (deprecated — use POST /v1/sessions/{session_id}/events/batch). Exactly one of `logs` (deprecated) or `events` must be present.
  * @inline
  */
 export type AddSessionTracesRequest = {
-    logs: LegacyEvent[];
-};
-/**
- * @description Response from adding traces to a session
- * @inline
- */
-export type SessionTracesResponse = {
-    success: boolean;
+    /**
+     * @deprecated
+     * @description Deprecated: use `events` instead. Traces to add as raw event objects.
+     */
+    logs?: LegacyEvent[];
+    /** @description Traces to add as raw event objects. Replaces `logs`. */
+    events?: LegacyEvent[];
 };
 /**
  * @description TODO: This is a placeholder schema. Proper Zod schemas need to be created in @hive-kube/iso-core-ts for: Sessions, Events, Projects, and Experiment comparison/result endpoints.
@@ -2229,6 +2325,98 @@ export type SessionTracesResponse = {
 export type TODOSchema = {
     /** @description Placeholder - Zod schema not yet implemented */
     message: string;
+};
+/**
+ * @inline
+ */
+export type CreateChartResponseData = {
+    id: string;
+    name: string;
+    description: string | null;
+    metric: string;
+    func: string | null;
+    groupBy: string | null;
+    bucketing: string;
+    dateRange: {
+        [key: string]: unknown;
+    } | null;
+    query: QueryFilter[] | null;
+    owner_id: string | null;
+    owner_profile?: {
+        [key: string]: unknown;
+    } | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string | null;
+};
+/**
+ * @inline
+ */
+export type GetChartResponseData = {
+    id: string;
+    name: string;
+    description: string | null;
+    metric: string;
+    func: string | null;
+    groupBy: string | null;
+    bucketing: string;
+    dateRange: {
+        [key: string]: unknown;
+    } | null;
+    query: QueryFilter[] | null;
+    owner_id: string | null;
+    owner_profile?: {
+        [key: string]: unknown;
+    } | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string | null;
+};
+/**
+ * @inline
+ */
+export type GetChartsResponseDataItem = {
+    id: string;
+    name: string;
+    description: string | null;
+    metric: string;
+    func: string | null;
+    groupBy: string | null;
+    bucketing: string;
+    dateRange: {
+        [key: string]: unknown;
+    } | null;
+    query: QueryFilter[] | null;
+    owner_id: string | null;
+    owner_profile?: {
+        [key: string]: unknown;
+    } | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string | null;
+};
+/**
+ * @inline
+ */
+export type UpdateChartResponseData = {
+    id: string;
+    name: string;
+    description: string | null;
+    metric: string;
+    func: string | null;
+    groupBy: string | null;
+    bucketing: string;
+    dateRange: {
+        [key: string]: unknown;
+    } | null;
+    query: QueryFilter[] | null;
+    owner_id: string | null;
+    owner_profile?: {
+        [key: string]: unknown;
+    } | null;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string | null;
 };
 /**
  * @inline

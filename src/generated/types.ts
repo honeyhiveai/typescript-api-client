@@ -30,10 +30,11 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Add traces to a session
-     * @description Add trace events to an existing session. The field is named `logs` for legacy compatibility with the Go ingestion handler.
+     * Add traces to a session (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/sessions/{session_id}/events/batch` instead. This route accepts trace events under either `logs` (deprecated) or `events`. Exactly one of the two MUST be present in a request: neither → 400, both → 400.
      */
-    post: operations['addSessionTraces'];
+    post: operations['addSessionTracesLegacy'];
     delete?: never;
     options?: never;
     head?: never;
@@ -90,6 +91,42 @@ export interface paths {
      *     the existing event.
      */
     post: operations['createSession'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/sessions/{session_id}/events/batch': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add a batch of events to a session
+     * @description AIP-233 nested batch create. Adds a batch of events to an existing
+     *     session. Each event in the batch is stored with `session_id` set from
+     *     the URL path, overriding any `session_id` in the event body.
+     *
+     *     **Required properties:**
+     *
+     *     - `events` (array of event objects) — Each event must include
+     *       `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
+     *
+     *     Unknown top-level fields and unknown per-event fields are rejected at
+     *     the SDK boundary; the deprecated per-event `project` field is no
+     *     longer accepted.
+     *
+     *     Events are processed sequentially (not via the worker-pool batch path
+     *     used by `POST /v1/events/batch`) — semantics match the legacy
+     *     `POST /session/{session_id}/traces` route per the Normalize Routes
+     *     RFC.
+     */
+    post: operations['createSessionEventBatch'];
     delete?: never;
     options?: never;
     head?: never;
@@ -286,10 +323,11 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create a new model event
-     * @description Create a model event. The event_type is automatically set to 'model'. Please refer to our instrumentation guide for detailed information.
+     * Create a new model event (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/events` with `event_type="model"` instead. The `ModelEvent` schema carries 14 field-level deprecations covering the model-specific fields the generic event route now expresses (`model`, `messages`, `response`, `provider`, `usage`, `cost`, `hyperparameters`, `template`, `template_inputs`, `tools`, `tool_choice`, `response_format`, `duration`, `error`), plus `project` inherited from `LegacyEvent`. The legacy route continues to serve traffic and remaps these fields into `inputs.*` / `outputs.*` before storage.
      */
-    post: operations['createModelEvent'];
+    post: operations['createModelEventLegacy'];
     delete?: never;
     options?: never;
     head?: never;
@@ -327,11 +365,64 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create a batch of model events
-     * @description Create multiple model events in a single request. The event_type is automatically set to 'model' for all events. When single_session is true, all events share the same session. Please refer to our instrumentation guide for detailed information.
+     * Create a batch of model events (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/events/batch` with `event_type="model"` on each event instead. Migration notes: the top-level array `model_events` becomes `events`; each element must explicitly set `event_type: "model"` (the legacy route sets this server-side); the deprecated top-level aliases `is_single_session` and `session` are not accepted by the v1 route (`PostEventBatchRequest` is `.strict()`) — use `single_session` and `session_properties` instead. The legacy route continues to serve traffic and remaps the model-specific fields on each event (`model`, `messages`, `response`, `provider`, `usage`, `cost`, `hyperparameters`, `template`, `template_inputs`, `tools`, `tool_choice`, `response_format`, `duration`, `error`) into `inputs.*` / `outputs.*` before storage.
      */
-    post: operations['createModelEventBatch'];
+    post: operations['createModelEventBatchLegacy'];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/charts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List charts
+     * @description Retrieve all charts in the current scope.
+     */
+    get: operations['getCharts'];
+    put?: never;
+    /**
+     * Create a new chart
+     * @description Add a new chart
+     */
+    post: operations['createChart'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/charts/{chart_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a chart
+     * @description Retrieve a single chart by id.
+     */
+    get: operations['getChart'];
+    /**
+     * Update a chart
+     * @description Update a chart's editable fields. Only fields included in the request body are modified.
+     */
+    put: operations['updateChart'];
+    post?: never;
+    /**
+     * Delete a chart
+     * @description Remove a chart by id.
+     */
+    delete: operations['deleteChart'];
     options?: never;
     head?: never;
     patch?: never;
@@ -760,6 +851,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/runs/{run_id}/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve experiment summary
+     * @description Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
+     */
+    get: operations['getExperimentSummary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/runs/{run_id}/result': {
     parameters: {
       query?: never;
@@ -768,10 +879,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Retrieve experiment result
-     * @description Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
+     * Retrieve experiment result (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/runs/{run_id}/summary` instead.
      */
-    get: operations['getExperimentResult'];
+    get: operations['getExperimentResultLegacy'];
     put?: never;
     post?: never;
     delete?: never;
@@ -970,6 +1082,70 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    CreateChartRequest: {
+      name: string;
+      description?: string;
+      metric: string;
+      func?: string;
+      groupBy?: string | null;
+      /**
+       * @default day
+       * @enum {string}
+       */
+      bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+      dateRange?:
+        | components['schemas']['RelativeDateRange']
+        | components['schemas']['AbsoluteDateRange'];
+      query?: components['schemas']['QueryFilter'][];
+      owner_id?: string;
+    };
+    RelativeDateRange: {
+      relative: string;
+    };
+    AbsoluteDateRange: {
+      $gte: string | number;
+      $lte: string | number;
+    };
+    QueryFilter: {
+      field: string;
+      value: string | null;
+      type: string;
+      operator: string;
+    };
+    CreateChartResponse: {
+      success: boolean;
+      data: components['schemas']['CreateChartResponseData'];
+    };
+    DeleteChartResponse: {
+      success: boolean;
+      message: string;
+    };
+    GetChartResponse: {
+      success: boolean;
+      data: components['schemas']['GetChartResponseData'];
+    };
+    GetChartsResponse: {
+      success: boolean;
+      data: components['schemas']['GetChartsResponseDataItem'][];
+    };
+    UpdateChartRequest: {
+      name?: string;
+      description?: string;
+      metric?: string;
+      func?: string;
+      groupBy?: string | null;
+      /** @enum {string} */
+      bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+      dateRange?:
+        | components['schemas']['RelativeDateRange']
+        | components['schemas']['AbsoluteDateRange'];
+      query?: components['schemas']['QueryFilter'][];
+      owner_id?: string;
+    };
+    UpdateChartResponse: {
+      success: boolean;
+      data: components['schemas']['UpdateChartResponseData'];
+    };
     SelectedFunction: {
       id: string;
       name: string;
@@ -1824,7 +2000,10 @@ export interface components {
     };
     /** @description Query parameters for GET /events */
     GetEventsQuery: {
-      dateRange?: components['schemas']['DateRange'];
+      /** @description Date range filter */
+      dateRange?:
+        | components['schemas']['RelativeDateRange']
+        | components['schemas']['AbsoluteDateRange'];
       /** @description Event filters to apply */
       filters?: components['schemas']['FiltersArray'];
       /** @description Fields to include in the response */
@@ -1837,17 +2016,6 @@ export interface components {
       page?: number;
       /** @description Filter by evaluation/experiment run ID */
       evaluation_id?: string;
-    };
-    /** @description Date range filter */
-    DateRange:
-      | components['schemas']['RelativeDateRange']
-      | components['schemas']['AbsoluteDateRange'];
-    RelativeDateRange: {
-      relative: string;
-    };
-    AbsoluteDateRange: {
-      $gte: string | number;
-      $lte: string | number;
     };
     /** @description Response after creating an event */
     PostEventResponse: {
@@ -2094,8 +2262,31 @@ export interface components {
       /** @description Filters to apply to metrics */
       filters?: string | unknown[];
     };
-    /** @description Query parameters for GET /runs/{run_id}/result */
-    GetExperimentRunResultQuery: {
+    /** @description Query parameters for GET /runs/{run_id}/summary */
+    GetExperimentRunSummaryQuery: {
+      /**
+       * @description Aggregation function to apply (default: average)
+       * @default average
+       * @enum {string}
+       */
+      aggregate_function?:
+        | 'average'
+        | 'min'
+        | 'max'
+        | 'median'
+        | 'p95'
+        | 'p99'
+        | 'p90'
+        | 'sum'
+        | 'count';
+      /** @description Filters to apply to results */
+      filters?: string | unknown[];
+    };
+    /**
+     * @deprecated
+     * @description Query parameters for GET /runs/{run_id}/result (deprecated — use GET /runs/{run_id}/summary)
+     */
+    LegacyGetExperimentRunResultQuery: {
       /**
        * @description Aggregation function to apply (default: average)
        * @default average
@@ -2680,9 +2871,23 @@ export interface components {
       /** @description IDs of child events in this session */
       children_ids?: string[];
     };
-    /** @description Request to add traces to a session */
+    /**
+     * @deprecated
+     * @description Request body for POST /session/{session_id}/traces (deprecated — use POST /v1/sessions/{session_id}/events/batch). Exactly one of `logs` (deprecated) or `events` must be present.
+     */
     AddSessionTracesRequest: {
-      logs: components['schemas']['LegacyEvent'][];
+      /**
+       * @deprecated
+       * @description Deprecated: use `events` instead. Traces to add as raw event objects.
+       */
+      logs?: components['schemas']['LegacyEvent'][];
+      /** @description Traces to add as raw event objects. Replaces `logs`. */
+      events?: components['schemas']['LegacyEvent'][];
+    };
+    /** @description Request body for POST /v1/sessions/{session_id}/events/batch */
+    SessionEventBatchRequest: {
+      /** @description Events to add to the session */
+      events: components['schemas']['PostEventRequest'][];
     };
     /** @description Full session event object returned after starting a new session */
     PostSessionStartResponse: {
@@ -2718,6 +2923,86 @@ export interface components {
     TODOSchema: {
       /** @description Placeholder - Zod schema not yet implemented */
       message: string;
+    };
+    CreateChartResponseData: {
+      id: string;
+      name: string;
+      description: string | null;
+      metric: string;
+      func: string | null;
+      groupBy: string | null;
+      bucketing: string;
+      dateRange: {
+        [key: string]: unknown;
+      } | null;
+      query: components['schemas']['QueryFilter'][] | null;
+      owner_id: string | null;
+      owner_profile?: {
+        [key: string]: unknown;
+      } | null;
+      is_active: boolean;
+      created_at: string;
+      updated_at: string | null;
+    };
+    GetChartResponseData: {
+      id: string;
+      name: string;
+      description: string | null;
+      metric: string;
+      func: string | null;
+      groupBy: string | null;
+      bucketing: string;
+      dateRange: {
+        [key: string]: unknown;
+      } | null;
+      query: components['schemas']['QueryFilter'][] | null;
+      owner_id: string | null;
+      owner_profile?: {
+        [key: string]: unknown;
+      } | null;
+      is_active: boolean;
+      created_at: string;
+      updated_at: string | null;
+    };
+    GetChartsResponseDataItem: {
+      id: string;
+      name: string;
+      description: string | null;
+      metric: string;
+      func: string | null;
+      groupBy: string | null;
+      bucketing: string;
+      dateRange: {
+        [key: string]: unknown;
+      } | null;
+      query: components['schemas']['QueryFilter'][] | null;
+      owner_id: string | null;
+      owner_profile?: {
+        [key: string]: unknown;
+      } | null;
+      is_active: boolean;
+      created_at: string;
+      updated_at: string | null;
+    };
+    UpdateChartResponseData: {
+      id: string;
+      name: string;
+      description: string | null;
+      metric: string;
+      func: string | null;
+      groupBy: string | null;
+      bucketing: string;
+      dateRange: {
+        [key: string]: unknown;
+      } | null;
+      query: components['schemas']['QueryFilter'][] | null;
+      owner_id: string | null;
+      owner_profile?: {
+        [key: string]: unknown;
+      } | null;
+      is_active: boolean;
+      created_at: string;
+      updated_at: string | null;
     };
     CreateDatapointResponseResult: {
       insertedIds: string[];
@@ -3177,7 +3462,7 @@ export interface operations {
       };
     };
   };
-  addSessionTraces: {
+  addSessionTracesLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -3201,6 +3486,13 @@ export interface operations {
         content: {
           'application/json': components['schemas']['SessionTracesResponse'];
         };
+      };
+      /** @description Bad request — both `logs` and `events` supplied, or neither, or invalid event payload. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -3228,6 +3520,52 @@ export interface operations {
       };
       /** @description Bad request (invalid session data) */
       400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  createSessionEventBatch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Session ID to add events to */
+        session_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SessionEventBatchRequest'];
+      };
+    };
+    responses: {
+      /** @description Events added successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          /**
+           * @example {
+           *       "success": true
+           *     }
+           */
+          'application/json': components['schemas']['SessionTracesResponse'];
+        };
+      };
+      /** @description Bad request (invalid event data or missing required fields) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Events partially added */
+      500: {
         headers: {
           [name: string]: unknown;
         };
@@ -3531,7 +3869,7 @@ export interface operations {
       };
     };
   };
-  createModelEvent: {
+  createModelEventLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -3602,7 +3940,7 @@ export interface operations {
       };
     };
   };
-  createModelEventBatch: {
+  createModelEventBatchLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -3639,6 +3977,123 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+    };
+  };
+  getCharts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Charts retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetChartsResponse'];
+        };
+      };
+    };
+  };
+  createChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateChartRequest'];
+      };
+    };
+    responses: {
+      /** @description Chart created successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreateChartResponse'];
+        };
+      };
+    };
+  };
+  getChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the chart to retrieve */
+        chart_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Chart retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetChartResponse'];
+        };
+      };
+    };
+  };
+  updateChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the chart to update */
+        chart_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateChartRequest'];
+      };
+    };
+    responses: {
+      /** @description Chart updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UpdateChartResponse'];
+        };
+      };
+    };
+  };
+  deleteChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the chart to delete */
+        chart_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Chart deleted successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeleteChartResponse'];
+        };
       };
     };
   };
@@ -4502,7 +4957,51 @@ export interface operations {
       };
     };
   };
-  getExperimentResult: {
+  getExperimentSummary: {
+    parameters: {
+      query?: {
+        /** @description Aggregation function to apply to metrics */
+        aggregate_function?:
+          | 'average'
+          | 'min'
+          | 'max'
+          | 'median'
+          | 'p95'
+          | 'p99'
+          | 'p90'
+          | 'sum'
+          | 'count';
+        /** @description Optional filters to apply (JSON string or array of filter objects) */
+        filters?: string | Record<string, never>[];
+      };
+      header?: never;
+      path: {
+        /** @description Experiment run ID (UUIDv4) */
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Experiment summary retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetExperimentRunResultResponse'];
+        };
+      };
+      /** @description Error processing experiment summary */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getExperimentResultLegacy: {
     parameters: {
       query?: {
         /** @description Aggregation function to apply to metrics */

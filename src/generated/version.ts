@@ -1,3 +1,3 @@
 // AUTO-GENERATED — do not edit manually. Run `pnpm generate:client` to regenerate.
 
-export const SDK_VERSION = '1.0.1';
+export const SDK_VERSION = '1.1.0';

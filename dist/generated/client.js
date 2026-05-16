@@ -50,6 +50,41 @@ class SessionsNamespace {
     create(request) {
         return unwrap(this.#client.POST('/v1/sessions', { body: request }));
     }
+    /**
+     * Add a batch of events to a session
+     *
+     * AIP-233 nested batch create. Adds a batch of events to an existing
+     * session. Each event in the batch is stored with `session_id` set from
+     * the URL path, overriding any `session_id` in the event body.
+     *
+     * **Required properties:**
+     *
+     * - `events` (array of event objects) — Each event must include
+     *   `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
+     *
+     * Unknown top-level fields and unknown per-event fields are rejected at
+     * the SDK boundary; the deprecated per-event `project` field is no
+     * longer accepted.
+     *
+     * Events are processed sequentially (not via the worker-pool batch path
+     * used by `POST /v1/events/batch`) — semantics match the legacy
+     * `POST /session/{session_id}/traces` route per the Normalize Routes
+     * RFC.
+     *
+     * @example Response
+     * ```json
+     * {
+     *   "success": true
+     * }
+     * ```
+     */
+    createEventBatch(request) {
+        const { session_id, ...body } = request;
+        return unwrap(this.#client.POST('/v1/sessions/{session_id}/events/batch', {
+            params: { path: { session_id } },
+            body,
+        }));
+    }
 }
 /** @inline */
 class EventsNamespace {
@@ -196,6 +231,56 @@ class EventsNamespace {
      */
     createBatch(request) {
         return unwrap(this.#client.POST('/v1/events/batch', { body: request }));
+    }
+}
+/** @inline */
+class ChartsNamespace {
+    #client;
+    constructor(client) {
+        this.#client = client;
+    }
+    /**
+     * List charts
+     *
+     * Retrieve all charts in the current scope.
+     */
+    list() {
+        return unwrap(this.#client.GET('/v1/charts'));
+    }
+    /**
+     * Create a new chart
+     *
+     * Add a new chart
+     */
+    create(request) {
+        return unwrap(this.#client.POST('/v1/charts', { body: request }));
+    }
+    /**
+     * Get a chart
+     *
+     * Retrieve a single chart by id.
+     */
+    get(request) {
+        const { chart_id } = request;
+        return unwrap(this.#client.GET('/v1/charts/{chart_id}', { params: { path: { chart_id } } }));
+    }
+    /**
+     * Update a chart
+     *
+     * Update a chart's editable fields. Only fields included in the request body are modified.
+     */
+    update(request) {
+        const { chart_id, ...body } = request;
+        return unwrap(this.#client.PUT('/v1/charts/{chart_id}', { params: { path: { chart_id } }, body }));
+    }
+    /**
+     * Delete a chart
+     *
+     * Remove a chart by id.
+     */
+    delete(request) {
+        const { chart_id } = request;
+        return unwrap(this.#client.DELETE('/v1/charts/{chart_id}', { params: { path: { chart_id } } }));
     }
 }
 /** @inline */
@@ -461,6 +546,17 @@ class ExperimentsNamespace {
         }));
     }
     /**
+     * Retrieve experiment summary
+     *
+     * Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
+     */
+    getSummary(request) {
+        const { run_id, aggregate_function, filters } = request;
+        return unwrap(this.#client.GET('/v1/runs/{run_id}/summary', {
+            params: { path: { run_id }, query: { aggregate_function, filters } },
+        }));
+    }
+    /**
      * Retrieve experiment comparison
      *
      * Compare metrics and results between two experiment runs
@@ -490,6 +586,7 @@ export class Client {
     #client;
     sessions;
     events;
+    charts;
     metrics;
     datapoints;
     datasets;
@@ -498,6 +595,7 @@ export class Client {
         this.#client = createApiClient(options);
         this.sessions = new SessionsNamespace(this.#client);
         this.events = new EventsNamespace(this.#client);
+        this.charts = new ChartsNamespace(this.#client);
         this.metrics = new MetricsNamespace(this.#client);
         this.datapoints = new DatapointsNamespace(this.#client);
         this.datasets = new DatasetsNamespace(this.#client);

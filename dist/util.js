@@ -102,6 +102,26 @@ export function createApiClient(options) {
 export class HoneyHiveError extends Error {
 }
 /**
+ * Type guard that returns the payload as ErrorResponse if it matches the
+ * canonical shape, or undefined otherwise.
+ */
+function asErrorResponse(e) {
+    if (typeof e === 'object' &&
+        e !== null &&
+        'message' in e &&
+        typeof e.message === 'string' &&
+        'statusCode' in e &&
+        typeof e.statusCode === 'number' &&
+        'success' in e &&
+        typeof e.success === 'boolean' &&
+        // TODO: remove the `true` fallback once we've rolled out enough of the
+        // backend to guarantee that all errors have errorCode
+        ('errorCode' in e ? typeof e.errorCode === 'string' : true)) {
+        return e;
+    }
+    return undefined;
+}
+/**
  * An error that is thrown when the API call was not successful
  *
  * @property status - The HTTP status code of the response
@@ -113,7 +133,9 @@ export class ApiError extends HoneyHiveError {
     response;
     error;
     constructor(status, error, response) {
-        super(`API error ${status}`, { cause: error });
+        const parsed = asErrorResponse(error);
+        const message = parsed !== undefined ? `API error ${status}: ${parsed.message}` : `API error ${status}`;
+        super(message, { cause: error });
         this.name = 'ApiError';
         this.status = status;
         this.response = response;
@@ -130,22 +152,7 @@ export class ApiError extends HoneyHiveError {
      * we return undefined.
      */
     parseError() {
-        const e = this.error;
-        if (typeof e === 'object' &&
-            e !== null &&
-            'message' in e &&
-            typeof e.message === 'string' &&
-            'statusCode' in e &&
-            typeof e.statusCode === 'number' &&
-            'success' in e &&
-            // TODO: remove the `true` fallback once we've rolled out enough of the
-            // backend to guarantee that all errors have errorCode
-            'errorCode' in e
-            ? typeof e.errorCode === 'string'
-            : true) {
-            return e;
-        }
-        return undefined;
+        return asErrorResponse(this.error);
     }
 }
 /**

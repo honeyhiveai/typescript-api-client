@@ -6,7 +6,7 @@ export {
   type ClientConfig,
   type ErrorResponse,
 } from './util.js';
-// AUTO-GENERATED — do not edit below this line. Run `pnpm generate:client` to regenerate.
+// AUTO-GENERATED — do not edit below this line. Run `pnpm turbo run generate` to regenerate.
 export type {
   CreateSessionRequest,
   CreateSessionEventBatchRequest,

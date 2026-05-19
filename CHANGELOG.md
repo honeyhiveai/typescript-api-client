@@ -1,3 +1,8 @@
+## [1.1.1] - 2026-05-19
+
+### Fixes & Improvements
+- Fixed a bug where `error.message` on thrown API errors was not populated, causing error logs and CLI output to omit the underlying failure detail.
+
 ## [1.1.0] - 2026-05-15
 
 ### What's New

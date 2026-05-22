@@ -1,5 +1,9 @@
 # TypeScript API SDK Changelog
 
+## [1.2.1] - 2026-05-22
+
+Internal improvements only.
+
 ## [1.2.0] - 2026-05-21
 
 ### What's New

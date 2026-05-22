@@ -1,3 +1,17 @@
+# TypeScript API SDK Changelog
+
+## [1.2.0] - 2026-05-21
+
+### What's New
+- Added a `dataPlaneUrl` client option and `HH_DATA_PLANE_URL` environment variable for configuring the data plane URL. These replace the previous `serverUrl` option and `HH_API_URL` environment variable.
+- The verbose logging output now labels the resolved URL as `Data plane URL:` (previously `API URL:`).
+
+### Fixes & Improvements
+- Environment variables set to the empty string (e.g. `HH_API_KEY=`, `HH_DATA_PLANE_URL=`) are now treated as unset and fall back to defaults, rather than being propagated as a literal empty string.
+
+### Compatibility & Deprecations
+- The `serverUrl` client option and `HH_API_URL` environment variable are deprecated and will be removed in the next major version. They continue to work but log a one-time deprecation warning to stderr on client construction. Migrate to `dataPlaneUrl` / `HH_DATA_PLANE_URL`.
+
 ## [1.1.1] - 2026-05-19
 
 ### Fixes & Improvements

@@ -1,11 +1,23 @@
 import createClient, { type ClientOptions, type Middleware } from 'openapi-fetch';
 /**
+ * Test-only escape hatch to reset the per-process deprecation-dedup set so
+ * each test can assert warning behavior in isolation. Not exported from
+ * `index.ts` — only the test suite should reach for this.
+ */
+export declare function _testOnlyResetWarnedDeprecations(): void;
+/**
  * Configuration options for the HoneyHive API client. They extend the options
- * from openapi-fetch, but replace 'baseUrl' with 'serverUrl' for consistency
- * with our other SDKs.
+ * from openapi-fetch, but replace 'baseUrl' with 'dataPlaneUrl' so the name is
+ * unambiguous now that the SDK can also talk to the HoneyHive control plane.
  */
 export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'> {
     apiKey?: string;
+    dataPlaneUrl?: string;
+    /**
+     * @deprecated Use `dataPlaneUrl` instead. The old name will be removed in
+     * the next major version. Setting this option still works but logs a
+     * deprecation warning to stderr on client construction.
+     */
     serverUrl?: string;
     middleware?: Middleware[];
     /**

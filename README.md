@@ -19,8 +19,8 @@ import { Client } from '@honeyhive/api-client';
 import OpenAI from 'openai';
 
 // The API key is read from the HH_API_KEY environment variable.
-// The Server URL is read from the HH_API_URL environment variable and defaults
-// to https://api.dp1.us.honeyhive.ai
+// The data plane URL is read from the HH_DATA_PLANE_URL environment variable
+// and defaults to https://api.dp1.us.honeyhive.ai
 const client = new Client();
 
 // The API key is read from the OPENAI_API_KEY environment variable.
@@ -74,8 +74,8 @@ The following example creates a dataset, appends a datapoint to it, lists the da
 import { Client } from '@honeyhive/api-client';
 
 // The API key is read from the HH_API_KEY environment variable.
-// The Server URL is read from the HH_API_URL environment variable and defaults
-// to https://api.dp1.us.honeyhive.ai
+// The data plane URL is read from the HH_DATA_PLANE_URL environment variable
+// and defaults to https://api.dp1.us.honeyhive.ai
 const client = new Client();
 
 // 1. Create a dataset
@@ -150,13 +150,29 @@ const client = new Client({
 
 See the [openapi-fetch middleware documentation](https://openapi-ts.dev/openapi-fetch/middleware-auth) for more details on the `Middleware` interface and additional use cases.
 
+## Data plane URL
+
+By default the client talks to `https://api.dp1.us.honeyhive.ai`. To point at a self-hosted deployment or a staging environment, set the `HH_DATA_PLANE_URL` environment variable or pass `dataPlaneUrl`:
+
+```sh
+export HH_DATA_PLANE_URL=https://honeyhive.example.com
+```
+
+```typescript
+const client = new Client({
+  dataPlaneUrl: 'https://honeyhive.example.com',
+});
+```
+
+> **Deprecated aliases:** the `serverUrl` constructor option and the `HH_API_URL` environment variable are still accepted but will be removed in the next major version. Using either logs a deprecation warning to stderr on client construction. Migrate to `dataPlaneUrl` / `HH_DATA_PLANE_URL`.
+
 ## Verbose logging
 
-Set `verbose: true` (or the `HH_VERBOSE` environment variable to `true`) to log the resolved API URL, a masked API key, and the SDK package + version when the client is constructed. Useful for confirming which environment and credential the client is configured with — particularly when debugging "is this hitting prod or staging?" or "did `HH_API_KEY` actually get picked up?".
+Set `verbose: true` (or the `HH_VERBOSE` environment variable to `true`) to log the resolved data plane URL, a masked API key, and the SDK package + version when the client is constructed. Useful for confirming which environment and credential the client is configured with — particularly when debugging "is this hitting prod or staging?" or "did `HH_API_KEY` actually get picked up?".
 
 ```typescript
 const client = new Client({ verbose: true });
-// API URL: https://api.dp1.us.honeyhive.ai
+// Data plane URL: https://api.dp1.us.honeyhive.ai
 // API Key: hh_****5Qrg
 // Package: @honeyhive/api-client v1.0.0
 ```

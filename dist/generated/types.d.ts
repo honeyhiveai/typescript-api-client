@@ -486,6 +486,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    '/v1/metrics/{metric_id}/versions': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List versions for a metric
+         * @description Retrieve all snapshot versions of the metric's definition, ordered oldest-first. Returns the entire history unpaginated — a deliberate departure from AIP-158 because the per-metric version count is bounded in practice by how many times a user has clicked "Save" (typically single or double digits). If usage patterns change, swap to the repo-standard `page` / `limit` / `pagination` shape used by `/v1/runs`.
+         */
+        get: operations['getMetricVersions'];
+        put?: never;
+        /**
+         * Create a new metric version
+         * @description Snapshot the supplied metric definition as a new version. By default the version is created as a draft (`deployed: false`); set `deploy_immediately: true` to also make it the live version in the same transaction.
+         */
+        post: operations['createMetricVersion'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/v1/metrics/{metric_id}/versions/{version_name}/deploy': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Deploy a specific metric version
+         * @description Mark the named version as the live version for the metric, unmarking any previously deployed version.
+         */
+        post: operations['deployMetricVersion'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     '/v1/metrics/run': {
         parameters: {
             query?: never;
@@ -2616,6 +2660,132 @@ export interface components {
             result: boolean | number | string | null;
             explanation: string | null;
         };
+        /** @description Versioned snapshot of a metric definition. */
+        MetricVersionContent: {
+            name: string;
+            /** @enum {string} */
+            type: 'PYTHON' | 'LLM' | 'HUMAN' | 'COMPOSITE';
+            criteria: string;
+            description: string | null;
+            /** @enum {string} */
+            return_type: 'float' | 'boolean' | 'string' | 'categorical';
+            enabled_in_prod: boolean;
+            needs_ground_truth: boolean;
+            sampling_percentage: number;
+            model_provider?: string | null;
+            model_name?: string | null;
+            scale?: number | null;
+            threshold?: {
+                min?: number;
+                max?: number;
+                pass_when?: boolean | number;
+                passing_categories?: string[];
+            } | null;
+            categories?: components['schemas']['MetricVersionContentCategoriesItem'][] | null;
+            child_metrics?: components['schemas']['MetricVersionContentChildMetricsItem'][] | null;
+            filters: components['schemas']['MetricVersionContentFilters'];
+        };
+        /**
+         * @description Metric definition snapshot accepted by POST /v1/metrics/{metric_id}/versions.
+         *     Six fields are optional and fall back to server-side defaults when omitted:
+         *     - `description` → `""`
+         *     - `return_type` → `"float"`
+         *     - `enabled_in_prod` → `true` for HUMAN metrics, `false` otherwise
+         *     - `needs_ground_truth` → `false`
+         *     - `sampling_percentage` → `10`
+         *     - `filters` → `{ "filterArray": [] }`
+         */
+        MetricVersionContentRequest: {
+            name: string;
+            /** @enum {string} */
+            type: 'PYTHON' | 'LLM' | 'HUMAN' | 'COMPOSITE';
+            criteria: string;
+            /**
+             * @description Free-form description of the metric. Defaults to an empty string.
+             * @default
+             */
+            description?: string;
+            /**
+             * @description Return type of the metric. Defaults to `float`.
+             * @default float
+             * @enum {string}
+             */
+            return_type?: 'float' | 'boolean' | 'string' | 'categorical';
+            /**
+             * @description Whether this version should run against production traffic. Defaults to `false` for non-HUMAN metrics and `true` for HUMAN metrics.
+             * @default false
+             */
+            enabled_in_prod?: boolean;
+            /**
+             * @description Whether this metric requires ground-truth labels to evaluate. Defaults to `false`.
+             * @default false
+             */
+            needs_ground_truth?: boolean;
+            /**
+             * @description Percentage of events the metric should run against, 0–100. Defaults to `10`.
+             * @default 10
+             */
+            sampling_percentage?: number;
+            model_provider?: string | null;
+            model_name?: string | null;
+            scale?: number | null;
+            threshold?: {
+                min?: number;
+                max?: number;
+                pass_when?: boolean | number;
+                passing_categories?: string[];
+            } | null;
+            categories?: components['schemas']['MetricVersionContentRequestCategoriesItem'][] | null;
+            child_metrics?: components['schemas']['MetricVersionContentRequestChildMetricsItem'][] | null;
+            filters?: components['schemas']['MetricVersionContentRequestFilters'];
+        };
+        /** @description A versioned snapshot of a metric definition. */
+        MetricVersion: {
+            name: string;
+            full_sha: string;
+            message: string;
+            /** Format: date-time */
+            date: string;
+            deployed: boolean;
+            content: components['schemas']['MetricVersionContent'];
+        };
+        /** @description Path parameters for GET /v1/metrics/{metric_id}/versions */
+        GetMetricVersionsParams: {
+            metric_id: string;
+        };
+        /** @description Path parameters for POST /v1/metrics/{metric_id}/versions */
+        CreateMetricVersionParams: {
+            metric_id: string;
+        };
+        /** @description Path parameters for POST /v1/metrics/{metric_id}/versions/{version_name}/deploy */
+        DeployMetricVersionParams: {
+            metric_id: string;
+            version_name: string;
+        };
+        /** @description Request body for POST /v1/metrics/{metric_id}/versions */
+        CreateMetricVersionRequest: {
+            message: string;
+            content: components['schemas']['MetricVersionContentRequest'];
+            deploy_immediately?: boolean;
+        };
+        /** @description Response for GET /v1/metrics/{metric_id}/versions */
+        GetMetricVersionsResponse: {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['MetricVersion'][];
+        };
+        /** @description Response for POST /v1/metrics/{metric_id}/versions */
+        CreateMetricVersionResponse: {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['MetricVersion'];
+        };
+        /** @description Response for POST /v1/metrics/{metric_id}/versions/{version_name}/deploy */
+        DeployMetricVersionResponse: {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['MetricVersion'];
+        };
         /** @description Project object */
         ProjectItem: {
             id: string;
@@ -3243,6 +3413,38 @@ export interface components {
             feedback?: components['schemas']['LegacyRunMetricRequestEventFeedback'];
         } & {
             [key: string]: unknown;
+        };
+        MetricVersionContentCategoriesItem: {
+            category: string;
+            score: number | null;
+        };
+        MetricVersionContentChildMetricsItem: {
+            id?: string;
+            name: string;
+            weight: number;
+            scale?: number | null;
+        };
+        MetricVersionContentFilters: {
+            filterArray: components['schemas']['FiltersArray'];
+        };
+        MetricVersionContentRequestCategoriesItem: {
+            category: string;
+            score: number | null;
+        };
+        MetricVersionContentRequestChildMetricsItem: {
+            id?: string;
+            name: string;
+            weight: number;
+            scale?: number | null;
+        };
+        /**
+         * @description ETL filter narrowing which events this metric applies to. Defaults to `{ filterArray: [] }` (no filtering).
+         * @default {
+         *       "filterArray": []
+         *     }
+         */
+        MetricVersionContentRequestFilters: {
+            filterArray: components['schemas']['FiltersArray'];
         };
         AnnotationQueueFilters: {
             filterArray: components['schemas']['FiltersArray'];
@@ -4187,6 +4389,109 @@ export interface operations {
                 content: {
                     'application/json': components['schemas']['DeleteMetricResponse'];
                 };
+            };
+        };
+    };
+    getMetricVersions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the metric whose versions are being listed */
+                metric_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metric versions retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['GetMetricVersionsResponse'];
+                };
+            };
+            /** @description No metric with the given `metric_id` exists in the caller's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    createMetricVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the metric to version */
+                metric_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['CreateMetricVersionRequest'];
+            };
+        };
+        responses: {
+            /** @description Metric version created successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['CreateMetricVersionResponse'];
+                };
+            };
+            /** @description Invalid `content` payload — fails cross-field validation (e.g. an `LLM` metric without `model_provider`/`model_name`, or a `COMPOSITE` metric without `child_metrics`). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No metric with the given `metric_id` exists in the caller's scope. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deployMetricVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the metric */
+                metric_id: string;
+                /** @description The name of the version to deploy */
+                version_name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Metric version deployed successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['DeployMetricVersionResponse'];
+                };
+            };
+            /** @description No metric with the given `metric_id` exists in the caller's scope, or no version with the given `version_name` exists for that metric. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

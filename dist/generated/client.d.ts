@@ -1,5 +1,5 @@
 import { type paths } from './types.js';
-import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
+import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetMetricVersionsRequest, type CreateMetricVersionRequest, type DeployMetricVersionRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetMetricVersionsResponse, type CreateMetricVersionResponse, type DeployMetricVersionResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
 import { type ClientConfig, createApiClient } from '../util.js';
 /** @inline */
 declare class SessionsNamespace {
@@ -284,6 +284,29 @@ declare class MetricsNamespace {
     run(request: RunMetricRequest): Promise<RunMetricResponse>;
 }
 /** @inline */
+declare class MetricVersionsNamespace {
+    #private;
+    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    /**
+     * List versions for a metric
+     *
+     * Retrieve all snapshot versions of the metric's definition, ordered oldest-first. Returns the entire history unpaginated — a deliberate departure from AIP-158 because the per-metric version count is bounded in practice by how many times a user has clicked "Save" (typically single or double digits). If usage patterns change, swap to the repo-standard `page` / `limit` / `pagination` shape used by `/v1/runs`.
+     */
+    list(request: GetMetricVersionsRequest): Promise<GetMetricVersionsResponse>;
+    /**
+     * Create a new metric version
+     *
+     * Snapshot the supplied metric definition as a new version. By default the version is created as a draft (`deployed: false`); set `deploy_immediately: true` to also make it the live version in the same transaction.
+     */
+    create(request: CreateMetricVersionRequest): Promise<CreateMetricVersionResponse>;
+    /**
+     * Deploy a specific metric version
+     *
+     * Mark the named version as the live version for the metric, unmarking any previously deployed version.
+     */
+    deploy(request: DeployMetricVersionRequest): Promise<DeployMetricVersionResponse>;
+}
+/** @inline */
 declare class DatapointsNamespace {
     #private;
     constructor(client: ReturnType<typeof createApiClient<paths>>);
@@ -442,6 +465,7 @@ export declare class Client {
     readonly events: EventsNamespace;
     readonly charts: ChartsNamespace;
     readonly metrics: MetricsNamespace;
+    readonly metricVersions: MetricVersionsNamespace;
     readonly datapoints: DatapointsNamespace;
     readonly datasets: DatasetsNamespace;
     readonly experiments: ExperimentsNamespace;

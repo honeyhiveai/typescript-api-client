@@ -1,3 +1,3 @@
 // AUTO-GENERATED — do not edit manually. Run `pnpm turbo run generate` to regenerate.
 
-export const SDK_VERSION = '1.2.1';
+export const SDK_VERSION = '1.3.0';

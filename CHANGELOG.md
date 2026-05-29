@@ -1,5 +1,11 @@
 # TypeScript API SDK Changelog
 
+## [1.3.0] - 2026-05-29
+
+### What's New
+- New `client.metricVersions` namespace with `list`, `create`, and `deploy` methods for managing snapshot versions of a metric's definition via `/v1/metrics/{metric_id}/versions` and `/v1/metrics/{metric_id}/versions/{version_name}/deploy`.
+- New exported request/response types: `GetMetricVersionsRequest`/`Response`, `CreateMetricVersionRequest`/`Response`, and `DeployMetricVersionRequest`/`Response`.
+
 ## [1.2.1] - 2026-05-22
 
 Internal improvements only.

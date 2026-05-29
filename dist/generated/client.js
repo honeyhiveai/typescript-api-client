@@ -334,6 +334,45 @@ class MetricsNamespace {
     }
 }
 /** @inline */
+class MetricVersionsNamespace {
+    #client;
+    constructor(client) {
+        this.#client = client;
+    }
+    /**
+     * List versions for a metric
+     *
+     * Retrieve all snapshot versions of the metric's definition, ordered oldest-first. Returns the entire history unpaginated — a deliberate departure from AIP-158 because the per-metric version count is bounded in practice by how many times a user has clicked "Save" (typically single or double digits). If usage patterns change, swap to the repo-standard `page` / `limit` / `pagination` shape used by `/v1/runs`.
+     */
+    list(request) {
+        const { metric_id } = request;
+        return unwrap(this.#client.GET('/v1/metrics/{metric_id}/versions', { params: { path: { metric_id } } }));
+    }
+    /**
+     * Create a new metric version
+     *
+     * Snapshot the supplied metric definition as a new version. By default the version is created as a draft (`deployed: false`); set `deploy_immediately: true` to also make it the live version in the same transaction.
+     */
+    create(request) {
+        const { metric_id, ...body } = request;
+        return unwrap(this.#client.POST('/v1/metrics/{metric_id}/versions', {
+            params: { path: { metric_id } },
+            body,
+        }));
+    }
+    /**
+     * Deploy a specific metric version
+     *
+     * Mark the named version as the live version for the metric, unmarking any previously deployed version.
+     */
+    deploy(request) {
+        const { metric_id, version_name } = request;
+        return unwrap(this.#client.POST('/v1/metrics/{metric_id}/versions/{version_name}/deploy', {
+            params: { path: { metric_id, version_name } },
+        }));
+    }
+}
+/** @inline */
 class DatapointsNamespace {
     #client;
     constructor(client) {
@@ -588,6 +627,7 @@ export class Client {
     events;
     charts;
     metrics;
+    metricVersions;
     datapoints;
     datasets;
     experiments;
@@ -597,6 +637,7 @@ export class Client {
         this.events = new EventsNamespace(this.#client);
         this.charts = new ChartsNamespace(this.#client);
         this.metrics = new MetricsNamespace(this.#client);
+        this.metricVersions = new MetricVersionsNamespace(this.#client);
         this.datapoints = new DatapointsNamespace(this.#client);
         this.datasets = new DatasetsNamespace(this.#client);
         this.experiments = new ExperimentsNamespace(this.#client);

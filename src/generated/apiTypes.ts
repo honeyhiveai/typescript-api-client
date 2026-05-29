@@ -273,6 +273,26 @@ export interface RunMetricRequest {
   event: RunMetricRequestEvent;
 }
 
+export interface GetMetricVersionsRequest {
+  /** @description The unique identifier of the metric whose versions are being listed */
+  metric_id: string;
+}
+
+export interface CreateMetricVersionRequest {
+  /** @description The unique identifier of the metric to version */
+  metric_id: string;
+  message: string;
+  content: MetricVersionContentRequest;
+  deploy_immediately?: boolean;
+}
+
+export interface DeployMetricVersionRequest {
+  /** @description The unique identifier of the metric */
+  metric_id: string;
+  /** @description The name of the version to deploy */
+  version_name: string;
+}
+
 export interface GetDatapointsRequest {
   /** @description List of datapoint ids to fetch */
   datapoint_ids?: string[];
@@ -689,6 +709,33 @@ export type RunMetricResponse = {
   loading: boolean;
   result: boolean | number | string | null;
   explanation: string | null;
+};
+
+/**
+ * @description Response for GET /v1/metrics/{metric_id}/versions
+ */
+export type GetMetricVersionsResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: MetricVersion[];
+};
+
+/**
+ * @description Response for POST /v1/metrics/{metric_id}/versions
+ */
+export type CreateMetricVersionResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: MetricVersion;
+};
+
+/**
+ * @description Response for POST /v1/metrics/{metric_id}/versions/{version_name}/deploy
+ */
+export type DeployMetricVersionResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: MetricVersion;
 };
 
 /**
@@ -2325,6 +2372,130 @@ export type LegacyRunMetricRequest = {
 };
 
 /**
+ * @description Versioned snapshot of a metric definition.
+ * @inline
+ */
+export type MetricVersionContent = {
+  name: string;
+  /** @enum {string} */
+  type: 'PYTHON' | 'LLM' | 'HUMAN' | 'COMPOSITE';
+  criteria: string;
+  description: string | null;
+  /** @enum {string} */
+  return_type: 'float' | 'boolean' | 'string' | 'categorical';
+  enabled_in_prod: boolean;
+  needs_ground_truth: boolean;
+  sampling_percentage: number;
+  model_provider?: string | null;
+  model_name?: string | null;
+  scale?: number | null;
+  threshold?: {
+    min?: number;
+    max?: number;
+    pass_when?: boolean | number;
+    passing_categories?: string[];
+  } | null;
+  categories?: MetricVersionContentCategoriesItem[] | null;
+  child_metrics?: MetricVersionContentChildMetricsItem[] | null;
+  filters: MetricVersionContentFilters;
+};
+
+/**
+ * @description Metric definition snapshot accepted by POST /v1/metrics/{metric_id}/versions.
+ *     Six fields are optional and fall back to server-side defaults when omitted:
+ *     - `description` → `""`
+ *     - `return_type` → `"float"`
+ *     - `enabled_in_prod` → `true` for HUMAN metrics, `false` otherwise
+ *     - `needs_ground_truth` → `false`
+ *     - `sampling_percentage` → `10`
+ *     - `filters` → `{ "filterArray": [] }`
+ * @inline
+ */
+export type MetricVersionContentRequest = {
+  name: string;
+  /** @enum {string} */
+  type: 'PYTHON' | 'LLM' | 'HUMAN' | 'COMPOSITE';
+  criteria: string;
+  /**
+   * @description Free-form description of the metric. Defaults to an empty string.
+   * @default
+   */
+  description?: string;
+  /**
+   * @description Return type of the metric. Defaults to `float`.
+   * @default float
+   * @enum {string}
+   */
+  return_type?: 'float' | 'boolean' | 'string' | 'categorical';
+  /**
+   * @description Whether this version should run against production traffic. Defaults to `false` for non-HUMAN metrics and `true` for HUMAN metrics.
+   * @default false
+   */
+  enabled_in_prod?: boolean;
+  /**
+   * @description Whether this metric requires ground-truth labels to evaluate. Defaults to `false`.
+   * @default false
+   */
+  needs_ground_truth?: boolean;
+  /**
+   * @description Percentage of events the metric should run against, 0–100. Defaults to `10`.
+   * @default 10
+   */
+  sampling_percentage?: number;
+  model_provider?: string | null;
+  model_name?: string | null;
+  scale?: number | null;
+  threshold?: {
+    min?: number;
+    max?: number;
+    pass_when?: boolean | number;
+    passing_categories?: string[];
+  } | null;
+  categories?: MetricVersionContentRequestCategoriesItem[] | null;
+  child_metrics?: MetricVersionContentRequestChildMetricsItem[] | null;
+  filters?: MetricVersionContentRequestFilters;
+};
+
+/**
+ * @description A versioned snapshot of a metric definition.
+ * @inline
+ */
+export type MetricVersion = {
+  name: string;
+  full_sha: string;
+  message: string;
+  /** Format: date-time */
+  date: string;
+  deployed: boolean;
+  content: MetricVersionContent;
+};
+
+/**
+ * @description Path parameters for GET /v1/metrics/{metric_id}/versions
+ * @inline
+ */
+export type GetMetricVersionsParams = {
+  metric_id: string;
+};
+
+/**
+ * @description Path parameters for POST /v1/metrics/{metric_id}/versions
+ * @inline
+ */
+export type CreateMetricVersionParams = {
+  metric_id: string;
+};
+
+/**
+ * @description Path parameters for POST /v1/metrics/{metric_id}/versions/{version_name}/deploy
+ * @inline
+ */
+export type DeployMetricVersionParams = {
+  metric_id: string;
+  version_name: string;
+};
+
+/**
  * @description Project object
  * @inline
  */
@@ -3086,6 +3257,60 @@ export type LegacyRunMetricRequestEvent = {
   feedback?: LegacyRunMetricRequestEventFeedback;
 } & {
   [key: string]: unknown;
+};
+
+/**
+ * @inline
+ */
+export type MetricVersionContentCategoriesItem = {
+  category: string;
+  score: number | null;
+};
+
+/**
+ * @inline
+ */
+export type MetricVersionContentChildMetricsItem = {
+  id?: string;
+  name: string;
+  weight: number;
+  scale?: number | null;
+};
+
+/**
+ * @inline
+ */
+export type MetricVersionContentFilters = {
+  filterArray: FiltersArray;
+};
+
+/**
+ * @inline
+ */
+export type MetricVersionContentRequestCategoriesItem = {
+  category: string;
+  score: number | null;
+};
+
+/**
+ * @inline
+ */
+export type MetricVersionContentRequestChildMetricsItem = {
+  id?: string;
+  name: string;
+  weight: number;
+  scale?: number | null;
+};
+
+/**
+ * @description ETL filter narrowing which events this metric applies to. Defaults to `{ filterArray: [] }` (no filtering).
+ * @default {
+ *       "filterArray": []
+ *     }
+ * @inline
+ */
+export type MetricVersionContentRequestFilters = {
+  filterArray: FiltersArray;
 };
 
 /**

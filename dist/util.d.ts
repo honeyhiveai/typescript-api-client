@@ -11,6 +11,12 @@ export declare function _testOnlyResetWarnedDeprecations(): void;
  * unambiguous now that the SDK can also talk to the HoneyHive control plane.
  */
 export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'> {
+    projectApiKey?: string;
+    /**
+     * @deprecated Use `projectApiKey` instead. The old name will be removed in
+     * the next major version. Setting this option still works but logs a
+     * deprecation warning to stderr on client construction.
+     */
     apiKey?: string;
     dataPlaneUrl?: string;
     /**
@@ -40,6 +46,29 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
     headers?: Record<string, string>;
 }
 export declare function createApiClient<Paths extends {}>(options: ClientConfig): ReturnType<typeof createClient<Paths>>;
+/**
+ * Per-request fetch-level options that are orthogonal to the API request
+ * payload. These are passed through to the underlying `fetch()` call via
+ * openapi-fetch's init spread.
+ *
+ * Intentionally kept separate from `*Request` types so API-domain interfaces
+ * stay serializable and free of DOM/transport concerns.
+ */
+export interface FetchOptions {
+    /**
+     * An `AbortSignal` to cancel the in-flight HTTP request. When the signal
+     * fires, the underlying `fetch()` rejects with an `AbortError` wrapped in
+     * a `NetworkError`.
+     *
+     * @example
+     * ```ts
+     * const controller = new AbortController();
+     * setTimeout(() => controller.abort(), 5000);
+     * const result = await client.events.search(request, { signal: controller.signal });
+     * ```
+     */
+    signal?: AbortSignal;
+}
 /** Structural match for both branches of openapi-fetch's FetchResponse union. */
 type FetchResult<T = unknown, E = unknown> = {
     data: T;

@@ -1,6 +1,6 @@
 import { type paths } from './types.js';
-import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetMetricVersionsRequest, type CreateMetricVersionRequest, type DeployMetricVersionRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetMetricVersionsResponse, type CreateMetricVersionResponse, type DeployMetricVersionResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
-import { type ClientConfig, createApiClient } from '../util.js';
+import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type GetEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetMetricVersionsRequest, type CreateMetricVersionRequest, type DeployMetricVersionRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type GetEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetMetricVersionsResponse, type CreateMetricVersionResponse, type DeployMetricVersionResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
+import { type ClientConfig, type FetchOptions, createApiClient } from '../util.js';
 /** @inline */
 declare class SessionsNamespace {
     #private;
@@ -12,61 +12,53 @@ declare class SessionsNamespace {
      * `session` wrapper). The server creates a session event and returns
      * it.
      *
-     * **No required properties** — every field has a server-side fallback.
+     * **No required properties.** Every field has a server-side fallback.
      *
      * **Auto-generated properties** (provided by the server when omitted):
      *
-     * - `session_id` (string, UUID) — Server generates a UUIDv4 if omitted
+     * - `session_id` (string, UUID): Server generates a UUIDv4 if omitted
      *   or if the supplied value is not a valid UUID.
      *
      * **Optional properties with defaults:**
      *
-     * - `event_name` (string) — Falls back to `session_name` when not
+     * - `event_name` (string): Falls back to `session_name` when not
      *   provided; defaults to `"unknown"` if both are absent.
-     * - `source` (string) — Defaults to `"unknown"`.
+     * - `source` (string): Defaults to `"unknown"`.
      *
      * **Optional properties:**
      *
-     * - `session_name` (string) — Display name for the session.
-     * - `start_time` (number) — Session start time as Unix milliseconds.
+     * - `session_name` (string): Display name for the session.
+     * - `start_time` (number): Session start time as Unix milliseconds.
      *   The session normalizer uses `getInt64()` which only accepts numeric
      *   types; if a string is passed, the server silently falls back to the
      *   current time.
-     * - `end_time` (number) — Session end time as Unix milliseconds (same
+     * - `end_time` (number): Session end time as Unix milliseconds (same
      *   numeric-only caveat as `start_time`).
-     * - `duration` (number) — Session duration in milliseconds.
-     * - `config` (object) — Configuration associated with the session.
-     * - `inputs` (object) — Input data for the session.
-     * - `outputs` (object) — Output data from the session.
-     * - `metadata` (object) — Arbitrary metadata.
-     * - `user_properties` (object) — User properties.
-     * - `children_ids` (array of strings) — IDs of child events.
+     * - `duration` (number): Session duration in milliseconds.
+     * - `config` (object): Configuration associated with the session.
+     * - `inputs` (object): Input data for the session.
+     * - `outputs` (object): Output data from the session.
+     * - `metadata` (object): Arbitrary metadata.
+     * - `user_properties` (object): User properties.
+     * - `children_ids` (array of strings): IDs of child events.
      *
      * Idempotent on `session_id`: posting twice with the same `session_id`
      * merges metadata/user_properties into the existing session and returns
      * the existing event.
      */
-    create(request: CreateSessionRequest): Promise<CreateSessionResponse>;
+    create(request: CreateSessionRequest, options?: FetchOptions): Promise<CreateSessionResponse>;
     /**
      * Add a batch of events to a session
      *
-     * AIP-233 nested batch create. Adds a batch of events to an existing
-     * session. Each event in the batch is stored with `session_id` set from
-     * the URL path, overriding any `session_id` in the event body.
+     * Add a batch of events to an existing session. Each event in the batch
+     * is stored with `session_id` set from the URL path, overriding any
+     * `session_id` in the event body.
      *
-     * **Required properties:**
-     *
-     * - `events` (array of event objects) — Each event must include
-     *   `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
-     *
-     * Unknown top-level fields and unknown per-event fields are rejected at
-     * the SDK boundary; the deprecated per-event `project` field is no
-     * longer accepted.
-     *
-     * Events are processed sequentially (not via the worker-pool batch path
-     * used by `POST /v1/events/batch`) — semantics match the legacy
-     * `POST /session/{session_id}/traces` route per the Normalize Routes
-     * RFC.
+     * Each event must include `event_type` (one of `chain`, `model`, `tool`,
+     * `session`) and `inputs`. Unknown top-level fields and unknown per-event
+     * fields are rejected. Events are processed sequentially. For
+     * higher-throughput ingestion across sessions, use
+     * `POST /v1/events/batch` instead.
      *
      * @example Response
      * ```json
@@ -75,7 +67,7 @@ declare class SessionsNamespace {
      * }
      * ```
      */
-    createEventBatch(request: CreateSessionEventBatchRequest): Promise<CreateSessionEventBatchResponse>;
+    createEventBatch(request: CreateSessionEventBatchRequest, options?: FetchOptions): Promise<CreateSessionEventBatchResponse>;
 }
 /** @inline */
 declare class EventsNamespace {
@@ -90,33 +82,33 @@ declare class EventsNamespace {
      *
      * **Required properties:**
      *
-     * - `event_type` (string) — Must be one of: `chain`, `model`, `tool`, `session`.
-     * - `inputs` (object) — Input data for the event.
+     * - `event_type` (string): Must be one of: `chain`, `model`, `tool`, `session`.
+     * - `inputs` (object): Input data for the event.
      *
      * **Auto-generated properties** (provided by the server when omitted):
      *
-     * - `event_id` (string, UUID) — Unique identifier for the event.
-     * - `session_id` (string, UUID) — Session/trace identifier.
-     * - `parent_id` (string, UUID) — Parent event ID. Defaults to `session_id`.
+     * - `event_id` (string, UUID): Unique identifier for the event.
+     * - `session_id` (string, UUID): Session/trace identifier.
+     * - `parent_id` (string, UUID): Parent event ID. Defaults to `session_id`.
      *
      * **Optional properties with defaults:**
      *
-     * - `event_name` (string) — Name of the event. Defaults to `"unknown"`.
-     * - `source` (string) — Source of the event (e.g. `sdk-python`). Defaults to `"unknown"`.
+     * - `event_name` (string): Name of the event. Defaults to `"unknown"`.
+     * - `source` (string): Source of the event (e.g. `sdk-python`). Defaults to `"unknown"`.
      *
      * **Optional properties:**
      *
-     * - `config` (object) — Configuration data (e.g. model parameters, prompt templates).
-     * - `outputs` (object) — Output data from the event.
-     * - `error` (string or null) — Error message if the event failed.
-     * - `children_ids` (array of strings) — IDs of child events.
-     * - `duration` (number) — Duration of the event in milliseconds.
-     * - `start_time` (number) — Unix timestamp in milliseconds for event start.
-     * - `end_time` (number) — Unix timestamp in milliseconds for event end.
-     * - `metadata` (object) — Additional metadata (e.g. token counts, cost).
-     * - `metrics` (object) — Custom metrics.
-     * - `feedback` (object) — Feedback data (e.g. ratings, ground truth).
-     * - `user_properties` (object) — User properties associated with the event.
+     * - `config` (object): Configuration data (e.g. model parameters, prompt templates).
+     * - `outputs` (object): Output data from the event.
+     * - `error` (string or null): Error message if the event failed.
+     * - `children_ids` (array of strings): IDs of child events.
+     * - `duration` (number): Duration of the event in milliseconds.
+     * - `start_time` (number): Unix timestamp in milliseconds for event start.
+     * - `end_time` (number): Unix timestamp in milliseconds for event end.
+     * - `metadata` (object): Additional metadata (e.g. token counts, cost).
+     * - `metrics` (object): Custom metrics.
+     * - `feedback` (object): Feedback data (e.g. ratings, ground truth).
+     * - `user_properties` (object): User properties associated with the event.
      *
      * @example Response
      * ```json
@@ -126,7 +118,14 @@ declare class EventsNamespace {
      * }
      * ```
      */
-    create(request: CreateEventRequest): Promise<CreateEventResponse>;
+    create(request: CreateEventRequest, options?: FetchOptions): Promise<CreateEventResponse>;
+    /**
+     * Get an event by ID
+     *
+     * Retrieve a single event by its unique identifier. The event is fetched
+     * directly from S3/MinIO storage.
+     */
+    get(request: GetEventRequest, options?: FetchOptions): Promise<GetEventResponse>;
     /**
      * Update an event
      *
@@ -168,13 +167,13 @@ declare class EventsNamespace {
      * }
      * ```
      */
-    update(request: UpdateEventRequest): Promise<void>;
+    update(request: UpdateEventRequest, options?: FetchOptions): Promise<void>;
     /**
      * Retrieve events based on filters
      *
      * Search events via POST with filtering and pagination. This is the primary method for retrieving events from HoneyHive.
      */
-    search(request: SearchEventsRequest): Promise<SearchEventsResponse>;
+    search(request: SearchEventsRequest, options?: FetchOptions): Promise<SearchEventsResponse>;
     /**
      * Create a batch of events
      *
@@ -184,14 +183,14 @@ declare class EventsNamespace {
      *
      * **Required properties:**
      *
-     * - `events` (array of event objects) — Each event must include
+     * - `events` (array of event objects): Each event must include
      *   `event_type` (one of `chain`, `model`, `tool`, `session`) and `inputs`.
      *
      * **Optional properties:**
      *
-     * - `single_session` (boolean) — If true, all events share a single session
+     * - `single_session` (boolean): If true, all events share a single session
      *   created from `session_properties`. Defaults to false.
-     * - `session_properties` (object) — Session metadata used when
+     * - `session_properties` (object): Session metadata used when
      *   `single_session` is true. May include `session_name`, `start_time`,
      *   `metadata`.
      *
@@ -211,7 +210,7 @@ declare class EventsNamespace {
      * }
      * ```
      */
-    createBatch(request: CreateEventBatchRequest): Promise<CreateEventBatchResponse>;
+    createBatch(request: CreateEventBatchRequest, options?: FetchOptions): Promise<CreateEventBatchResponse>;
 }
 /** @inline */
 declare class ChartsNamespace {
@@ -222,66 +221,46 @@ declare class ChartsNamespace {
      *
      * Retrieve all charts in the current scope.
      */
-    list(): Promise<GetChartsResponse>;
-    /**
-     * Create a new chart
-     *
-     * Add a new chart
-     */
-    create(request: CreateChartRequest): Promise<CreateChartResponse>;
+    list(options?: FetchOptions): Promise<GetChartsResponse>;
+    /** Create a new chart */
+    create(request: CreateChartRequest, options?: FetchOptions): Promise<CreateChartResponse>;
     /**
      * Get a chart
      *
      * Retrieve a single chart by id.
      */
-    get(request: GetChartRequest): Promise<GetChartResponse>;
+    get(request: GetChartRequest, options?: FetchOptions): Promise<GetChartResponse>;
     /**
      * Update a chart
      *
      * Update a chart's editable fields. Only fields included in the request body are modified.
      */
-    update(request: UpdateChartRequest): Promise<UpdateChartResponse>;
-    /**
-     * Delete a chart
-     *
-     * Remove a chart by id.
-     */
-    delete(request: DeleteChartRequest): Promise<DeleteChartResponse>;
+    update(request: UpdateChartRequest, options?: FetchOptions): Promise<UpdateChartResponse>;
+    /** Delete a chart */
+    delete(request: DeleteChartRequest, options?: FetchOptions): Promise<DeleteChartResponse>;
 }
 /** @inline */
 declare class MetricsNamespace {
     #private;
     constructor(client: ReturnType<typeof createApiClient<paths>>);
-    /**
-     * Get all metrics
-     *
-     * Retrieve a list of all metrics
-     */
-    list(request?: GetMetricsRequest): Promise<GetMetricsResponse>;
-    /**
-     * Create a new metric
-     *
-     * Add a new metric
-     */
-    create(request: CreateMetricRequest): Promise<CreateMetricResponse>;
+    /** List all metrics */
+    list(request?: GetMetricsRequest, options?: FetchOptions): Promise<GetMetricsResponse>;
+    /** Create a new metric */
+    create(request: CreateMetricRequest, options?: FetchOptions): Promise<CreateMetricResponse>;
     /**
      * Update an existing metric
      *
      * Update a metric's editable fields. Only fields included in the request body are modified.
      */
-    update(request: UpdateMetricRequest): Promise<UpdateMetricResponse>;
-    /**
-     * Delete a metric
-     *
-     * Remove a metric by id.
-     */
-    delete(request: DeleteMetricRequest): Promise<DeleteMetricResponse>;
+    update(request: UpdateMetricRequest, options?: FetchOptions): Promise<UpdateMetricResponse>;
+    /** Delete a metric */
+    delete(request: DeleteMetricRequest, options?: FetchOptions): Promise<DeleteMetricResponse>;
     /**
      * Run a metric evaluation
      *
      * Execute a metric on a specific event
      */
-    run(request: RunMetricRequest): Promise<RunMetricResponse>;
+    run(request: RunMetricRequest, options?: FetchOptions): Promise<RunMetricResponse>;
 }
 /** @inline */
 declare class MetricVersionsNamespace {
@@ -290,21 +269,21 @@ declare class MetricVersionsNamespace {
     /**
      * List versions for a metric
      *
-     * Retrieve all snapshot versions of the metric's definition, ordered oldest-first. Returns the entire history unpaginated — a deliberate departure from AIP-158 because the per-metric version count is bounded in practice by how many times a user has clicked "Save" (typically single or double digits). If usage patterns change, swap to the repo-standard `page` / `limit` / `pagination` shape used by `/v1/runs`.
+     * Retrieve all snapshot versions of the metric's definition, ordered oldest-first. Returns the full version history unpaginated.
      */
-    list(request: GetMetricVersionsRequest): Promise<GetMetricVersionsResponse>;
+    list(request: GetMetricVersionsRequest, options?: FetchOptions): Promise<GetMetricVersionsResponse>;
     /**
      * Create a new metric version
      *
      * Snapshot the supplied metric definition as a new version. By default the version is created as a draft (`deployed: false`); set `deploy_immediately: true` to also make it the live version in the same transaction.
      */
-    create(request: CreateMetricVersionRequest): Promise<CreateMetricVersionResponse>;
+    create(request: CreateMetricVersionRequest, options?: FetchOptions): Promise<CreateMetricVersionResponse>;
     /**
      * Deploy a specific metric version
      *
      * Mark the named version as the live version for the metric, unmarking any previously deployed version.
      */
-    deploy(request: DeployMetricVersionRequest): Promise<DeployMetricVersionResponse>;
+    deploy(request: DeployMetricVersionRequest, options?: FetchOptions): Promise<DeployMetricVersionResponse>;
 }
 /** @inline */
 declare class DatapointsNamespace {
@@ -315,37 +294,37 @@ declare class DatapointsNamespace {
      *
      * Retrieve datapoints, optionally filtered by a list of datapoint IDs or dataset name.
      */
-    list(request?: GetDatapointsRequest): Promise<GetDatapointsResponse>;
+    list(request?: GetDatapointsRequest, options?: FetchOptions): Promise<GetDatapointsResponse>;
     /**
      * Create a new datapoint
      *
      * Create a single datapoint with inputs, history, ground truth, and metadata.
      */
-    create(request: CreateDatapointRequest): Promise<CreateDatapointResponse>;
+    create(request: CreateDatapointRequest, options?: FetchOptions): Promise<CreateDatapointResponse>;
     /**
      * Create multiple datapoints in batch
      *
      * Create multiple datapoints from events using field mappings and optional filters.
      */
-    createBatch(request: BatchCreateDatapointsRequest): Promise<BatchCreateDatapointsResponse>;
+    createBatch(request: BatchCreateDatapointsRequest, options?: FetchOptions): Promise<BatchCreateDatapointsResponse>;
     /**
      * Retrieve a specific datapoint
      *
      * Get a single datapoint by its unique identifier.
      */
-    get(request: GetDatapointRequest): Promise<GetDatapointResponse>;
+    get(request: GetDatapointRequest, options?: FetchOptions): Promise<GetDatapointResponse>;
     /**
      * Update a specific datapoint
      *
      * Update fields on an existing datapoint. Only the provided fields are modified.
      */
-    update(request: UpdateDatapointRequest): Promise<UpdateDatapointResponse>;
+    update(request: UpdateDatapointRequest, options?: FetchOptions): Promise<UpdateDatapointResponse>;
     /**
      * Delete a specific datapoint
      *
      * Permanently delete a datapoint by its unique identifier.
      */
-    delete(request: DeleteDatapointRequest): Promise<DeleteDatapointResponse>;
+    delete(request: DeleteDatapointRequest, options?: FetchOptions): Promise<DeleteDatapointResponse>;
 }
 /** @inline */
 declare class DatasetsNamespace {
@@ -356,37 +335,37 @@ declare class DatasetsNamespace {
      *
      * Retrieve datasets, optionally filtered by dataset ID or name.
      */
-    list(request?: GetDatasetsRequest): Promise<GetDatasetsResponse>;
+    list(request?: GetDatasetsRequest, options?: FetchOptions): Promise<GetDatasetsResponse>;
     /**
      * Create a dataset
      *
      * Create a new dataset with an optional name, description, and initial set of datapoint IDs.
      */
-    create(request: CreateDatasetRequest): Promise<CreateDatasetResponse>;
+    create(request: CreateDatasetRequest, options?: FetchOptions): Promise<CreateDatasetResponse>;
     /**
      * Update a dataset
      *
      * Update a dataset's name, description, or list of datapoint IDs.
      */
-    update(request: UpdateDatasetRequest): Promise<UpdateDatasetResponse>;
+    update(request: UpdateDatasetRequest, options?: FetchOptions): Promise<UpdateDatasetResponse>;
     /**
      * Delete a dataset
      *
      * Permanently delete a dataset by its unique identifier.
      */
-    delete(request: DeleteDatasetRequest): Promise<DeleteDatasetResponse>;
+    delete(request: DeleteDatasetRequest, options?: FetchOptions): Promise<DeleteDatasetResponse>;
     /**
      * Add datapoints to a dataset
      *
      * Add new datapoints to an existing dataset. Provide raw data objects and a field mapping that specifies which fields map to inputs, ground truth, and history.
      */
-    addDatapoints(request: AddDatapointsRequest): Promise<AddDatapointsResponse>;
+    addDatapoints(request: AddDatapointsRequest, options?: FetchOptions): Promise<AddDatapointsResponse>;
     /**
      * Remove a datapoint from a dataset
      *
      * Remove a specific datapoint from a dataset. The datapoint itself is not deleted, only dereferenced from the dataset.
      */
-    removeDatapoint(request: RemoveDatapointRequest): Promise<RemoveDatapointResponse>;
+    removeDatapoint(request: RemoveDatapointRequest, options?: FetchOptions): Promise<RemoveDatapointResponse>;
 }
 /** @inline */
 declare class ExperimentsNamespace {
@@ -397,67 +376,67 @@ declare class ExperimentsNamespace {
      *
      * List experiment runs with optional filtering by dataset, status, name, date range, and specific run IDs. Results are paginated and sortable.
      */
-    listRuns(request?: GetRunsRequest): Promise<GetRunsResponse>;
+    listRuns(request?: GetRunsRequest, options?: FetchOptions): Promise<GetRunsResponse>;
     /**
      * Create a new evaluation run
      *
      * Create a new experiment run to track an evaluation against a dataset.
      */
-    createRun(request: CreateRunRequest): Promise<CreateRunResponse>;
+    createRun(request: CreateRunRequest, options?: FetchOptions): Promise<CreateRunResponse>;
     /**
      * Get events schema across all experiment runs in a project
      *
      * Retrieve the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
      */
-    getRunsSchema(request?: GetRunsSchemaRequest): Promise<GetRunsSchemaResponse>;
+    getRunsSchema(request?: GetRunsSchemaRequest, options?: FetchOptions): Promise<GetRunsSchemaResponse>;
     /**
      * Get details of an evaluation run
      *
      * Retrieve the full details of a single experiment run by its run ID.
      */
-    getRun(request: GetRunRequest): Promise<GetRunResponse>;
+    getRun(request: GetRunRequest, options?: FetchOptions): Promise<GetRunResponse>;
     /**
      * Update an evaluation run
      *
      * Update fields on an existing experiment run such as name, status, metadata, or results.
      */
-    updateRun(request: UpdateRunRequest): Promise<UpdateRunResponse>;
+    updateRun(request: UpdateRunRequest, options?: FetchOptions): Promise<UpdateRunResponse>;
     /**
      * Delete an evaluation run
      *
      * Permanently delete an experiment run by its run ID.
      */
-    deleteRun(request: DeleteRunRequest): Promise<DeleteRunResponse>;
+    deleteRun(request: DeleteRunRequest, options?: FetchOptions): Promise<DeleteRunResponse>;
     /**
      * Get events schema for a single experiment run
      *
      * Retrieve the events schema (fields, datasets, mappings) for a single experiment run.
      */
-    getRunSchema(request: GetRunSchemaRequest): Promise<GetRunSchemaResponse>;
+    getRunSchema(request: GetRunSchemaRequest, options?: FetchOptions): Promise<GetRunSchemaResponse>;
     /**
      * Get event metrics for an experiment run
      *
      * Retrieve event metrics from ClickHouse for a specific experiment run
      */
-    getRunMetrics(request: GetExperimentRunMetricsRequest): Promise<GetExperimentRunMetricsResponse>;
+    getRunMetrics(request: GetExperimentRunMetricsRequest, options?: FetchOptions): Promise<GetExperimentRunMetricsResponse>;
     /**
      * Retrieve experiment summary
      *
      * Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
      */
-    getSummary(request: GetExperimentSummaryRequest): Promise<GetExperimentSummaryResponse>;
+    getSummary(request: GetExperimentSummaryRequest, options?: FetchOptions): Promise<GetExperimentSummaryResponse>;
     /**
      * Retrieve experiment comparison
      *
      * Compare metrics and results between two experiment runs
      */
-    compareRuns(request: GetExperimentComparisonRequest): Promise<GetExperimentComparisonResponse>;
+    compareRuns(request: GetExperimentComparisonRequest, options?: FetchOptions): Promise<GetExperimentComparisonResponse>;
     /**
      * Compare events between two experiment runs
      *
      * Retrieve and compare events between two experiment runs for detailed analysis
      */
-    compareRunEvents(request: GetExperimentCompareEventsRequest): Promise<GetExperimentCompareEventsResponse>;
+    compareRunEvents(request: GetExperimentCompareEventsRequest, options?: FetchOptions): Promise<GetExperimentCompareEventsResponse>;
 }
 export declare class Client {
     #private;

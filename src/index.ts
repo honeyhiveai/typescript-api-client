@@ -5,12 +5,14 @@ export {
   NetworkError,
   type ClientConfig,
   type ErrorResponse,
+  type FetchOptions,
 } from './util.js';
 // AUTO-GENERATED — do not edit below this line. Run `pnpm turbo run generate` to regenerate.
 export type {
   CreateSessionRequest,
   CreateSessionEventBatchRequest,
   CreateEventRequest,
+  GetEventRequest,
   UpdateEventRequest,
   SearchEventsRequest,
   CreateEventBatchRequest,
@@ -52,6 +54,7 @@ export type {
   CreateSessionResponse,
   CreateSessionEventBatchResponse,
   CreateEventResponse,
+  GetEventResponse,
   SearchEventsResponse,
   CreateEventBatchResponse,
   GetChartsResponse,

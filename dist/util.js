@@ -12,10 +12,10 @@ const DEFAULT_DATA_PLANE_URL = 'https://api.dp1.us.honeyhive.ai';
  * propagate the empty string as if it were a real value.
  *
  * **This is cross-cutting behavior, not specific to URL resolution.** Every
- * caller (currently `HH_API_KEY`, `HH_API_URL`, `HH_DATA_PLANE_URL`,
- * `HH_VERBOSE`) sees the empty-string-as-unset behavior. When adding a new
- * env var via `getEnv('HH_FOO', 'default')`, be aware that `HH_FOO=""`
- * will resolve to `'default'`, not `''`. Existing callers were audited
+ * caller (currently `HH_PROJECT_API_KEY`, `HH_API_KEY`, `HH_API_URL`,
+ * `HH_DATA_PLANE_URL`, `HH_VERBOSE`) sees the empty-string-as-unset behavior.
+ * When adding a new env var via `getEnv('HH_FOO', 'default')`, be aware that
+ * `HH_FOO=""` will resolve to `'default'`, not `''`. Existing callers were audited
  * and have no regression — they either treat empty-string as falsy
  * already (`HH_API_KEY`, `HH_VERBOSE`) or use the value as a URL where
  * empty-string would have been the bug this normalization fixes.
@@ -36,7 +36,7 @@ function getEnv(key, defaultValue) {
  * canonical mask in `@hive-kube/server-api-key-service` — the SDK keeps its
  * own copy to avoid depending on a server package.
  */
-const API_KEY_PREFIXES = ['hh_org_', 'hh_ws_', 'hh_cp_', 'hh_dp_', 'hh_'];
+const API_KEY_PREFIXES = ['hh_org_', 'hh_ws_', 'hh_cp_', 'hh_dp_', 'hh_ro_', 'hh_'];
 /**
  * Returns a display-safe rendering of an API key for verbose logging.
  *
@@ -78,7 +78,7 @@ export function _testOnlyResetWarnedDeprecations() {
  * deprecation warning** (`console.warn` with the shape
  * `[@honeyhive/api-client] <thing> is deprecated and will be removed in the
  * next major version.`, see
- * `typescript/packages/server-sdk-generator/src/spec.ts` — search for
+ * `typescript/packages/server-client-generator/src/spec.ts` — search for
  * `deprecationWarning` / `is deprecated and will be removed`). The
  * `message` passed in here typically appends a `Use '<replacement>'
  * instead.` clause because the replacement is known at this call site;
@@ -88,7 +88,7 @@ export function _testOnlyResetWarnedDeprecations() {
  *
  * The CLI's deprecation warnings follow a different convention
  * (`Warning: <kind> "..." is deprecated …`, no package prefix) and are
- * owned by `typescript/packages/server-sdk-generator/src/cli.ts` /
+ * owned by `typescript/packages/server-client-generator/src/cli.ts` /
  * `typescript/public/honeyhive-cli/src/utils.ts`.
  */
 function warnDeprecated(key, message) {
@@ -112,14 +112,16 @@ function querySerializer(queryParams) {
 }
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- needs to match openapi-fetch's own createClient<Paths extends {}> signature
 export function createApiClient(options) {
-    const { apiKey, dataPlaneUrl, serverUrl, middleware, verbose, _internal_provenance, ...clientOptions } = options;
-    const resolvedApiKey = apiKey ?? getEnv('HH_API_KEY');
+    const { projectApiKey, apiKey, dataPlaneUrl, serverUrl, middleware, verbose, _internal_provenance, ...clientOptions } = options;
     // Fire deprecation warnings for any old-named input that the caller
     // actually supplied. Warnings fire even when the new name also wins
     // resolution — we want callers to remove the old name from their code, not
     // just be told that the new name took precedence. `warnDeprecated` dedupes
     // per process by key so multi-client callers (e.g. the CP frontend's
     // per-render `useApiClient`) don't spam the console.
+    if (apiKey !== undefined) {
+        warnDeprecated('apiKey', "The 'apiKey' option is deprecated and will be removed in the next major version. Use 'projectApiKey' instead.");
+    }
     if (serverUrl !== undefined) {
         warnDeprecated('serverUrl', "The 'serverUrl' option is deprecated and will be removed in the next major version. Use 'dataPlaneUrl' instead.");
     }
@@ -127,6 +129,14 @@ export function createApiClient(options) {
     if (envHhApiUrl !== undefined) {
         warnDeprecated('HH_API_URL', "The 'HH_API_URL' environment variable is deprecated and will be removed in the next major version. Use 'HH_DATA_PLANE_URL' instead.");
     }
+    const envHhApiKey = getEnv('HH_API_KEY');
+    if (envHhApiKey !== undefined) {
+        warnDeprecated('HH_API_KEY', "The 'HH_API_KEY' environment variable is deprecated and will be removed in the next major version. Use 'HH_PROJECT_API_KEY' instead.");
+    }
+    // Resolution order: new option > old option > new env var > old env var.
+    // There is no default (an API key is required). Mirrors the URL chain below,
+    // minus the default.
+    const resolvedApiKey = projectApiKey ?? apiKey ?? getEnv('HH_PROJECT_API_KEY') ?? envHhApiKey;
     // Resolution order: new option > old option > new env var > old env var >
     // default. For options, any non-undefined value wins (so explicit
     // undefined falls back). For env vars, both unset and empty-string fall
@@ -146,12 +156,12 @@ export function createApiClient(options) {
     // resolve when construction is about to fail.
     if (resolvedVerbose) {
         console.error(`Data plane URL: ${resolvedDataPlaneUrl}`);
-        console.error(`API Key: ${resolvedApiKey ? maskApiKey(resolvedApiKey) : '(none)'}`);
+        console.error(`Project API key: ${resolvedApiKey ? maskApiKey(resolvedApiKey) : '(none)'}`);
         console.error(`Package: ${provenance.package} v${provenance.version}`);
     }
     // When middleware is provided, it is assumed to handle authentication itself.
     if (!resolvedApiKey && !middleware?.length) {
-        throw new Error('Missing API key: provide apiKey in options or set the HH_API_KEY environment variable');
+        throw new Error('Missing project API key: provide projectApiKey in options or set the HH_PROJECT_API_KEY environment variable');
     }
     const headers = {
         'hh-client-package': provenance.package,

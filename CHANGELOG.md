@@ -1,5 +1,20 @@
 # TypeScript API SDK Changelog
 
+## [1.4.0] - 2026-06-26
+
+### What's New
+- New `client.events.get({ event_id })` method for `GET /v1/events/{event_id}`, fetching a single event by ID.
+- All SDK methods now accept an optional `options?: FetchOptions` second argument for cancelling in-flight requests via `AbortController`. New exported `FetchOptions` type (`{ signal?: AbortSignal }`). Example: `await client.events.search(request, { signal: controller.signal })`.
+- New `projectApiKey` client option and `HH_PROJECT_API_KEY` environment variable for supplying the project-scoped API key. These replace the previous `apiKey` option and `HH_API_KEY` environment variable.
+- Experiment run objects now include a `dataset_name` field alongside `dataset_id`.
+
+### Fixes & Improvements
+- The `outputs` field on update-event requests is now typed as an object or `null` (previously `unknown`). Passing a non-object value (array, string, or scalar) previously corrupted the stored event and broke downstream consumers such as the Python SDK; such values are now rejected. Passing `null` preserves the existing outputs.
+
+### Compatibility & Deprecations
+- The `apiKey` client option and `HH_API_KEY` environment variable are deprecated and will be removed in the next major version. They continue to work but log a one-time deprecation warning to stderr on client construction. Migrate to `projectApiKey` / `HH_PROJECT_API_KEY`.
+- Bumped `axios` from `1.16.0` to `1.18.0`.
+
 ## [1.3.0] - 2026-05-29
 
 ### What's New

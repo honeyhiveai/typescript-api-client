@@ -99,6 +99,10 @@ export interface CreateEventRequest {
         [key: string]: unknown;
     };
 }
+export interface GetEventRequest {
+    /** @description The unique identifier of the event to retrieve */
+    event_id: string;
+}
 export interface UpdateEventRequest {
     /** @description The unique identifier of the event to update */
     event_id: string;
@@ -114,8 +118,10 @@ export interface UpdateEventRequest {
     metrics?: {
         [key: string]: unknown;
     };
-    /** @description Output data to replace on the event (accepts objects, strings, arrays, or scalars) */
-    outputs?: unknown;
+    /** @description Output object to replace on the event. Must be an object or null; null preserves the existing outputs. Non-object values (strings, arrays, scalars) are rejected. */
+    outputs?: {
+        [key: string]: unknown;
+    } | null;
     /** @description Configuration fields to merge into the event */
     config?: {
         [key: string]: unknown;
@@ -139,7 +145,7 @@ export interface SearchEventsRequest {
     limit?: number;
     /** @description Page number of results (default 1) */
     page?: number;
-    /** @description Deprecated: accepted for SDK back-compat but treated as a no-op. Pagination requires a stable ORDER BY to produce consistent pages, and with the 1000-row cap skipping the sort is not worth the inconsistency. The route always orders by start_time DESC. */
+    /** @description Deprecated: accepted but ignored. Results are always ordered by start_time descending. */
     ignore_order?: boolean;
     /** @description Filter by evaluation/experiment run ID */
     evaluation_id?: string;
@@ -152,18 +158,27 @@ export interface CreateEventBatchRequest {
     session_properties?: SessionProperties;
 }
 export interface CreateChartRequest {
+    /** @description Display name for the chart */
     name: string;
+    /** @description Description of what the chart shows */
     description?: string;
+    /** @description Name of the metric to visualize */
     metric: string;
+    /** @description Aggregation function to apply (e.g. sum, avg, median, min, max) */
     func?: string;
+    /** @description Field to group results by */
     groupBy?: string | null;
     /**
+     * @description Time bucket granularity for aggregation
      * @default day
      * @enum {string}
      */
     bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+    /** @description Time range to query */
     dateRange?: RelativeDateRange | AbsoluteDateRange;
+    /** @description Filters to apply to the chart data */
     query?: QueryFilter[];
+    /** @description ID of the user who owns this chart */
     owner_id?: string;
 }
 export interface GetChartRequest {
@@ -173,15 +188,26 @@ export interface GetChartRequest {
 export interface UpdateChartRequest {
     /** @description The unique identifier of the chart to update */
     chart_id: string;
+    /** @description Display name for the chart */
     name?: string;
+    /** @description Description of what the chart shows */
     description?: string;
+    /** @description Name of the metric to visualize */
     metric?: string;
+    /** @description Aggregation function to apply (e.g. sum, avg, median, min, max) */
     func?: string;
+    /** @description Field to group results by */
     groupBy?: string | null;
-    /** @enum {string} */
+    /**
+     * @description Time bucket granularity for aggregation
+     * @enum {string}
+     */
     bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+    /** @description Time range to query */
     dateRange?: RelativeDateRange | AbsoluteDateRange;
+    /** @description Filters to apply to the chart data */
     query?: QueryFilter[];
+    /** @description ID of the user who owns this chart */
     owner_id?: string;
 }
 export interface DeleteChartRequest {
@@ -561,6 +587,12 @@ export type CreateEventResponse = {
     event_id: string;
 };
 /**
+ * @description Response for GET /events/:event_id — single event payload
+ */
+export type GetEventResponse = {
+    event: GetEventResponseEvent;
+};
+/**
  * @description Response for POST /v1/events/search and POST /v1/events/export
  */
 export type SearchEventsResponse = {
@@ -829,6 +861,29 @@ export type GetExperimentCompareEventsResponse = {
 /**
  * @inline
  */
+export type SingleFilter = {
+    field: string;
+    /** @enum {string} */
+    operator: 'exists' | 'not exists' | 'is' | 'is not' | 'contains' | 'not contains' | 'greater than' | 'less than' | 'after' | 'before';
+    value: string | number | boolean | null;
+    /** @enum {string} */
+    type: 'string' | 'number' | 'boolean' | 'datetime';
+};
+/**
+ * @inline
+ */
+export type Pagination = {
+    page: number;
+    limit: number;
+    total: number;
+    total_unfiltered: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+};
+/**
+ * @inline
+ */
 export type RelativeDateRange = {
     relative: string;
 };
@@ -843,9 +898,13 @@ export type AbsoluteDateRange = {
  * @inline
  */
 export type QueryFilter = {
+    /** @description Name of the field to filter on */
     field: string;
+    /** @description Value to compare against */
     value: string | null;
+    /** @description Data type of the field (e.g. string, number) */
     type: string;
+    /** @description Comparison operator (e.g. is, is not, contains, greater than, less than) */
     operator: string;
 };
 /**
@@ -1118,16 +1177,6 @@ export type LegacyDeleteDatasetQuery = {
     dataset_id: string;
 };
 /**
- * @description Path parameters for DELETE /datasets/{dataset_id}/datapoints/{datapoint_id}
- * @inline
- */
-export type RemoveDatapointFromDatasetParams = {
-    /** @description Unique identifier of the dataset */
-    dataset_id: string;
-    /** @description Unique identifier of the datapoint to remove */
-    datapoint_id: string;
-};
-/**
  * @deprecated
  * @description Path parameters for DELETE /datasets/{dataset_id}/{datapoint_id} (deprecated — use DELETE /datasets/{dataset_id}/datapoints/{datapoint_id})
  * @inline
@@ -1149,17 +1198,6 @@ export type InsertResult = {
  */
 export type DeleteResult = {
     id: string;
-};
-/**
- * @inline
- */
-export type SingleFilter = {
-    field: string;
-    /** @enum {string} */
-    operator: 'exists' | 'not exists' | 'is' | 'is not' | 'contains' | 'not contains' | 'greater than' | 'less than' | 'after' | 'before';
-    value: string | number | boolean | null;
-    /** @enum {string} */
-    type: 'string' | 'number' | 'boolean' | 'datetime';
 };
 /**
  * @inline
@@ -1447,8 +1485,10 @@ export type LegacyUpdateEventRequest = {
     metrics?: {
         [key: string]: unknown;
     };
-    /** @description Output data to replace on the event (accepts objects, strings, arrays, or scalars) */
-    outputs?: unknown;
+    /** @description Output object to replace on the event. Must be an object or null; null preserves the existing outputs. Non-object values (strings, arrays, scalars) are rejected. */
+    outputs?: {
+        [key: string]: unknown;
+    } | null;
     /** @description Configuration fields to merge into the event */
     config?: {
         [key: string]: unknown;
@@ -1633,18 +1673,6 @@ export type GetEventsResponse = {
 /**
  * @inline
  */
-export type Pagination = {
-    page: number;
-    limit: number;
-    total: number;
-    total_unfiltered: number;
-    total_pages: number;
-    has_next: boolean;
-    has_prev: boolean;
-};
-/**
- * @inline
- */
 export type PassingRange = {
     min?: number;
     max?: number;
@@ -1744,6 +1772,7 @@ export type ExperimentRunObject = {
     scope_type: string;
     scope_id: string;
     dataset_id?: string | null;
+    dataset_name?: string | null;
 };
 /**
  * @inline
@@ -1851,20 +1880,6 @@ export type GetExperimentRunMetricsQuery = {
     filters?: string | unknown[];
 };
 /**
- * @description Query parameters for GET /runs/{run_id}/summary
- * @inline
- */
-export type GetExperimentRunSummaryQuery = {
-    /**
-     * @description Aggregation function to apply (default: average)
-     * @default average
-     * @enum {string}
-     */
-    aggregate_function?: 'average' | 'min' | 'max' | 'median' | 'p95' | 'p99' | 'p90' | 'sum' | 'count';
-    /** @description Filters to apply to results */
-    filters?: string | unknown[];
-};
-/**
  * @deprecated
  * @description Query parameters for GET /runs/{run_id}/result (deprecated — use GET /runs/{run_id}/summary)
  * @inline
@@ -1876,30 +1891,6 @@ export type LegacyGetExperimentRunResultQuery = {
      */
     aggregate_function?: string;
     /** @description Filters to apply to results */
-    filters?: string | unknown[];
-};
-/**
- * @description Path parameters for GET /runs/{new_run_id}/compare/{old_run_id}
- * @inline
- */
-export type GetExperimentRunCompareParams = {
-    /** @description The new run ID to compare */
-    new_run_id: string;
-    /** @description The old run ID to compare against */
-    old_run_id: string;
-};
-/**
- * @description Query parameters for GET /runs/{new_run_id}/compare/{old_run_id}
- * @inline
- */
-export type GetExperimentRunCompareQuery = {
-    /**
-     * @description Aggregation function to apply (default: average)
-     * @default average
-     * @enum {string}
-     */
-    aggregate_function?: 'average' | 'min' | 'max' | 'median' | 'p95' | 'p99' | 'p90' | 'sum' | 'count';
-    /** @description Filters to apply to comparison */
     filters?: string | unknown[];
 };
 /**
@@ -1926,40 +1917,6 @@ export type LegacyGetExperimentRunCompareQuery = {
     aggregate_function?: string;
     /** @description Filters to apply to comparison */
     filters?: string | unknown[];
-};
-/**
- * @description Path parameters for GET /runs/{new_run_id}/compare/{old_run_id}/events
- * @inline
- */
-export type GetExperimentRunCompareEventsParams = {
-    /** @description The new run ID to compare */
-    new_run_id: string;
-    /** @description The old run ID to compare against */
-    old_run_id: string;
-};
-/**
- * @description Query parameters for GET /runs/{new_run_id}/compare/{old_run_id}/events
- * @inline
- */
-export type GetExperimentRunCompareEventsQuery = {
-    /** @description Filter by event name */
-    event_name?: string;
-    /** @description Filter by event type */
-    event_type?: string;
-    /** @description Additional filter criteria */
-    filter?: string | {
-        [key: string]: unknown;
-    };
-    /**
-     * @description Maximum number of results (max 1000)
-     * @default 1000
-     */
-    limit?: number;
-    /**
-     * @description Page number for pagination
-     * @default 1
-     */
-    page?: number;
 };
 /**
  * @deprecated
@@ -2009,22 +1966,6 @@ export type LegacyGetEventsSchemaQuery = {
     evaluation_id?: string;
 };
 /**
- * @description Query parameters for GET /runs/{run_id}/schema
- * @inline
- */
-export type GetRunSchemaQuery = {
-    /** @description Date range to filter schema by */
-    dateRange?: string | AbsoluteDateRange;
-};
-/**
- * @description Query parameters for GET /runs/schema
- * @inline
- */
-export type GetRunsSchemaQuery = {
-    /** @description Date range to filter schema by */
-    dateRange?: string | AbsoluteDateRange;
-};
-/**
  * @inline
  */
 export type MetricItem = {
@@ -2055,14 +1996,6 @@ export type MetricItem = {
     created_at: string;
     /** Format: date-time */
     updated_at: string | null;
-};
-/**
- * @description Path parameters for PUT /metrics/{metric_id}
- * @inline
- */
-export type UpdateMetricParams = {
-    /** @description Unique identifier of the metric to update */
-    metric_id: string;
 };
 /**
  * @deprecated
@@ -2103,23 +2036,6 @@ export type GetMetricsQuery = {
     type?: string;
     /** @description Filter by metric ID */
     id?: string;
-};
-/**
- * @description Path parameters for DELETE /metrics/{metric_id}
- * @inline
- */
-export type DeleteMetricParams = {
-    /** @description Unique identifier of the metric to delete */
-    metric_id: string;
-};
-/**
- * @deprecated
- * @description Query parameters for DELETE /metrics (deprecated — use DELETE /metrics/{metric_id})
- * @inline
- */
-export type LegacyDeleteMetricQuery = {
-    /** @description Unique identifier of the metric to delete */
-    metric_id: string;
 };
 /**
  * @deprecated
@@ -2227,140 +2143,6 @@ export type MetricVersion = {
     content: MetricVersionContent;
 };
 /**
- * @description Path parameters for GET /v1/metrics/{metric_id}/versions
- * @inline
- */
-export type GetMetricVersionsParams = {
-    metric_id: string;
-};
-/**
- * @description Path parameters for POST /v1/metrics/{metric_id}/versions
- * @inline
- */
-export type CreateMetricVersionParams = {
-    metric_id: string;
-};
-/**
- * @description Path parameters for POST /v1/metrics/{metric_id}/versions/{version_name}/deploy
- * @inline
- */
-export type DeployMetricVersionParams = {
-    metric_id: string;
-    version_name: string;
-};
-/**
- * @description Project object
- * @inline
- */
-export type ProjectItem = {
-    id: string;
-    /** @description Project name */
-    name: string;
-    /** @description Project description */
-    description?: string;
-    /**
-     * @description Project type
-     * @enum {string}
-     */
-    type?: 'evaluation' | 'completion';
-    /** @description Organization ID */
-    org_id: string;
-    /** Format: date-time */
-    created_at?: string;
-    /** Format: date-time */
-    updated_at?: string;
-} & {
-    [key: string]: unknown;
-};
-/**
- * @description Request body for creating a project
- * @inline
- */
-export type PostProjectRequest = {
-    /** @description Project name */
-    name: string;
-    /** @description Project description */
-    description?: string;
-    /**
-     * @description Project type
-     * @enum {string}
-     */
-    type?: 'evaluation' | 'completion';
-};
-/**
- * @description Request body for updating a project
- * @inline
- */
-export type PutProjectRequest = {
-    /** @description Project name to identify the project */
-    name: string;
-    /** @description New project name */
-    new_name?: string;
-    /** @description New project description */
-    description?: string;
-    /**
-     * @description New project type
-     * @enum {string}
-     */
-    type?: 'evaluation' | 'completion';
-};
-/**
- * @description Array of projects
- * @inline
- */
-export type GetProjectsResponse = ProjectItem[];
-/**
- * @description Created project
- * @inline
- */
-export type PostProjectResponse = {
-    id: string;
-    /** @description Project name */
-    name: string;
-    /** @description Project description */
-    description?: string;
-    /**
-     * @description Project type
-     * @enum {string}
-     */
-    type?: 'evaluation' | 'completion';
-    /** @description Organization ID */
-    org_id: string;
-    /** Format: date-time */
-    created_at?: string;
-    /** Format: date-time */
-    updated_at?: string;
-} & {
-    [key: string]: unknown;
-};
-/**
- * @inline
- */
-export type AnnotationQueue = {
-    name: string;
-    description: string;
-    filters: AnnotationQueueFilters;
-    enabled: boolean;
-    id: string;
-    scope_id: string;
-    /** @enum {string} */
-    scope_type: 'system' | 'controlplane' | 'dataplane' | 'org' | 'workspace' | 'project';
-    is_active: boolean;
-    /** Format: date-time */
-    created_at: string;
-    /** Format: date-time */
-    updated_at: string | null;
-};
-/**
- * @inline
- */
-export type BaseAnnotationQueue = {
-    name: string;
-    description: string;
-    filters: BaseAnnotationQueueFilters;
-    enabled: boolean;
-};
-/**
  * @inline
  */
 export type CreateAnnotationQueueRequest = {
@@ -2384,12 +2166,6 @@ export type UpdateAnnotationQueueRequest = {
     id: string;
     add_event_ids?: string[];
     remove_event_ids?: string[];
-};
-/**
- * @inline
- */
-export type GetAnnotationQueuesQuery = {
-    enabled?: boolean | null;
 };
 /**
  * @inline
@@ -2682,6 +2458,73 @@ export type LegacyExportEventsRequestDateRange = {
     $gte: string;
     /** @description ISO String for end of date range */
     $lte: string;
+};
+/**
+ * @description Full event object for legacy event creation endpoints
+ * @inline
+ */
+export type GetEventResponseEvent = {
+    /**
+     * @deprecated
+     * @description Project name (ignored by server — project is determined from API key scope)
+     */
+    project?: string;
+    /** @description Project ID */
+    project_id?: string;
+    /** @description Source of the event (e.g., sdk-python) */
+    source?: string;
+    /** @description Name of the event */
+    event_name?: string;
+    /**
+     * @description Type of event (model, tool, chain, or session)
+     * @enum {string}
+     */
+    event_type?: 'model' | 'tool' | 'chain' | 'session';
+    event_id: string;
+    /** @description Session this event belongs to */
+    session_id?: string;
+    /** @description Parent event ID in the trace hierarchy */
+    parent_id?: string;
+    /** @description Child event IDs in the trace hierarchy */
+    children_ids?: string[];
+    /** @description Configuration used for this event */
+    config?: {
+        [key: string]: unknown;
+    };
+    /** @description Input data for the event */
+    inputs?: {
+        [key: string]: unknown;
+    };
+    /** @description Output data from the event */
+    outputs?: {
+        [key: string]: unknown;
+    };
+    /** @description Error message if the event failed */
+    error?: string | null;
+    /** @description Event start time as Unix milliseconds */
+    start_time?: number;
+    /** @description Event end time as Unix milliseconds */
+    end_time?: number;
+    /** @description Event duration in milliseconds */
+    duration?: number;
+    /** @description Arbitrary metadata for the event */
+    metadata?: {
+        [key: string]: unknown;
+    };
+    /** @description Feedback data associated with the event */
+    feedback?: {
+        [key: string]: unknown;
+    };
+    /** @description Metric values computed for the event */
+    metrics?: {
+        [key: string]: unknown;
+    };
+    /** @description User properties associated with the event */
+    user_properties?: {
+        [key: string]: unknown;
+    };
+} & {
+    [key: string]: unknown;
 };
 /**
  * @inline
@@ -3003,18 +2846,6 @@ export type MetricVersionContentRequestChildMetricsItem = {
  * @inline
  */
 export type MetricVersionContentRequestFilters = {
-    filterArray: FiltersArray;
-};
-/**
- * @inline
- */
-export type AnnotationQueueFilters = {
-    filterArray: FiltersArray;
-};
-/**
- * @inline
- */
-export type BaseAnnotationQueueFilters = {
     filterArray: FiltersArray;
 };
 /**

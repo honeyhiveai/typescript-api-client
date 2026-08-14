@@ -248,6 +248,10 @@ export interface CreateMetricRequest {
         passing_categories?: string[];
     } | null;
     categories?: CreateMetricRequestCategoriesItem[] | null;
+    /**
+     * @deprecated
+     * @description Deprecated and ignored. Composite metrics are no longer supported.
+     */
     child_metrics?: CreateMetricRequestChildMetricsItem[] | null;
     filters?: CreateMetricRequestFilters;
 }
@@ -269,7 +273,11 @@ export interface UpdateMetricRequest {
     scale?: number | null;
     threshold?: UpdateMetricRequestThreshold;
     categories?: UpdateMetricRequestCategoriesItem[];
-    child_metrics?: UpdateMetricRequestChildMetricsItem[];
+    /**
+     * @deprecated
+     * @description Deprecated and ignored. Composite metrics are no longer supported.
+     */
+    child_metrics?: UpdateMetricRequestChildMetricsItem[] | null;
     filters?: UpdateMetricRequestFilters;
 }
 export interface DeleteMetricRequest {
@@ -435,6 +443,7 @@ export interface GetRunsRequest {
 }
 export interface CreateRunRequest {
     run_id?: string;
+    /** @description Experiment run display name */
     name?: string;
     description?: string;
     /**
@@ -473,6 +482,7 @@ export interface GetRunRequest {
 }
 export interface UpdateRunRequest {
     run_id: string;
+    /** @description Experiment run display name */
     name?: string;
     description?: string;
     /** @enum {string} */
@@ -1989,6 +1999,10 @@ export type MetricItem = {
         passing_categories?: string[];
     } | null;
     categories?: MetricItemCategoriesItem[] | null;
+    /**
+     * @deprecated
+     * @description Deprecated and ignored. Composite metrics are no longer supported.
+     */
     child_metrics?: MetricItemChildMetricsItem[] | null;
     filters: MetricItemFilters;
     id: string;
@@ -2023,6 +2037,10 @@ export type LegacyUpdateMetricRequest = {
         passing_categories?: string[];
     } | null;
     categories?: LegacyUpdateMetricRequestCategoriesItem[] | null;
+    /**
+     * @deprecated
+     * @description Deprecated and ignored. Composite metrics are no longer supported.
+     */
     child_metrics?: LegacyUpdateMetricRequestChildMetricsItem[] | null;
     filters?: LegacyUpdateMetricRequestFilters;
     id: string;
@@ -2071,6 +2089,10 @@ export type MetricVersionContent = {
         passing_categories?: string[];
     } | null;
     categories?: MetricVersionContentCategoriesItem[] | null;
+    /**
+     * @deprecated
+     * @description Deprecated and ignored. Composite metrics are no longer supported.
+     */
     child_metrics?: MetricVersionContentChildMetricsItem[] | null;
     filters: MetricVersionContentFilters;
 };
@@ -2126,6 +2148,10 @@ export type MetricVersionContentRequest = {
         passing_categories?: string[];
     } | null;
     categories?: MetricVersionContentRequestCategoriesItem[] | null;
+    /**
+     * @deprecated
+     * @description Deprecated and ignored. Composite metrics are no longer supported.
+     */
     child_metrics?: MetricVersionContentRequestChildMetricsItem[] | null;
     filters?: MetricVersionContentRequestFilters;
 };
@@ -2254,7 +2280,7 @@ export type AddSessionTracesRequest = {
     events?: LegacyEvent[];
 };
 /**
- * @description TODO: This is a placeholder schema. Proper Zod schemas need to be created in @hive-kube/iso-core-ts for: Sessions, Events, Projects, and Experiment comparison/result endpoints.
+ * @description Placeholder schema. The response shape for this endpoint is not yet fully specified; refer to the endpoint documentation for the fields it returns.
  * @inline
  */
 export type TODOSchema = {
@@ -2688,6 +2714,10 @@ export type RunMetricRequestMetric = {
         passing_categories?: string[];
     } | null;
     categories?: RunMetricRequestMetricCategoriesItem[] | null;
+    /**
+     * @deprecated
+     * @description Deprecated and ignored. Composite metrics are no longer supported.
+     */
     child_metrics?: RunMetricRequestMetricChildMetricsItem[] | null;
     filters?: RunMetricRequestMetricFilters;
 };
@@ -2772,6 +2802,10 @@ export type LegacyRunMetricRequestMetric = {
         passing_categories?: string[];
     } | null;
     categories?: LegacyRunMetricRequestMetricCategoriesItem[] | null;
+    /**
+     * @deprecated
+     * @description Deprecated and ignored. Composite metrics are no longer supported.
+     */
     child_metrics?: LegacyRunMetricRequestMetricChildMetricsItem[] | null;
     filters?: LegacyRunMetricRequestMetricFilters;
 };

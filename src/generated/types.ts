@@ -1154,8 +1154,7 @@ export interface components {
       bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
       /** @description Time range to query */
       dateRange?:
-        | components['schemas']['RelativeDateRange']
-        | components['schemas']['AbsoluteDateRange'];
+        components['schemas']['RelativeDateRange'] | components['schemas']['AbsoluteDateRange'];
       /** @description Filters to apply to the chart data */
       query?: components['schemas']['QueryFilter'][];
       /** @description ID of the user who owns this chart */
@@ -1212,8 +1211,7 @@ export interface components {
       bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
       /** @description Time range to query */
       dateRange?:
-        | components['schemas']['RelativeDateRange']
-        | components['schemas']['AbsoluteDateRange'];
+        components['schemas']['RelativeDateRange'] | components['schemas']['AbsoluteDateRange'];
       /** @description Filters to apply to the chart data */
       query?: components['schemas']['QueryFilter'][];
       /** @description ID of the user who owns this chart */
@@ -2058,8 +2056,7 @@ export interface components {
     GetEventsQuery: {
       /** @description Date range filter */
       dateRange?:
-        | components['schemas']['RelativeDateRange']
-        | components['schemas']['AbsoluteDateRange'];
+        components['schemas']['RelativeDateRange'] | components['schemas']['AbsoluteDateRange'];
       /** @description Event filters to apply */
       filters?: components['schemas']['FiltersArray'];
       /** @description Fields to include in the response */
@@ -2213,6 +2210,7 @@ export interface components {
     /** @description Request body for POST /runs */
     PostExperimentRunRequest: {
       run_id?: string;
+      /** @description Experiment run display name */
       name?: string;
       description?: string;
       /**
@@ -2244,6 +2242,7 @@ export interface components {
     };
     /** @description Request body for PUT /runs/{run_id} */
     PutExperimentRunRequest: {
+      /** @description Experiment run display name */
       name?: string;
       description?: string;
       /** @enum {string} */
@@ -2480,6 +2479,10 @@ export interface components {
         passing_categories?: string[];
       } | null;
       categories?: components['schemas']['MetricItemCategoriesItem'][] | null;
+      /**
+       * @deprecated
+       * @description Deprecated and ignored. Composite metrics are no longer supported.
+       */
       child_metrics?: components['schemas']['MetricItemChildMetricsItem'][] | null;
       filters: components['schemas']['MetricItemFilters'];
       id: string;
@@ -2517,6 +2520,10 @@ export interface components {
         passing_categories?: string[];
       } | null;
       categories?: components['schemas']['CreateMetricRequestCategoriesItem'][] | null;
+      /**
+       * @deprecated
+       * @description Deprecated and ignored. Composite metrics are no longer supported.
+       */
       child_metrics?: components['schemas']['CreateMetricRequestChildMetricsItem'][] | null;
       filters?: components['schemas']['CreateMetricRequestFilters'];
     };
@@ -2537,7 +2544,11 @@ export interface components {
       scale?: number | null;
       threshold?: components['schemas']['UpdateMetricRequestThreshold'];
       categories?: components['schemas']['UpdateMetricRequestCategoriesItem'][];
-      child_metrics?: components['schemas']['UpdateMetricRequestChildMetricsItem'][];
+      /**
+       * @deprecated
+       * @description Deprecated and ignored. Composite metrics are no longer supported.
+       */
+      child_metrics?: components['schemas']['UpdateMetricRequestChildMetricsItem'][] | null;
       filters?: components['schemas']['UpdateMetricRequestFilters'];
     };
     /**
@@ -2565,6 +2576,10 @@ export interface components {
         passing_categories?: string[];
       } | null;
       categories?: components['schemas']['LegacyUpdateMetricRequestCategoriesItem'][] | null;
+      /**
+       * @deprecated
+       * @description Deprecated and ignored. Composite metrics are no longer supported.
+       */
       child_metrics?: components['schemas']['LegacyUpdateMetricRequestChildMetricsItem'][] | null;
       filters?: components['schemas']['LegacyUpdateMetricRequestFilters'];
       id: string;
@@ -2635,6 +2650,10 @@ export interface components {
         passing_categories?: string[];
       } | null;
       categories?: components['schemas']['MetricVersionContentCategoriesItem'][] | null;
+      /**
+       * @deprecated
+       * @description Deprecated and ignored. Composite metrics are no longer supported.
+       */
       child_metrics?: components['schemas']['MetricVersionContentChildMetricsItem'][] | null;
       filters: components['schemas']['MetricVersionContentFilters'];
     };
@@ -2689,6 +2708,10 @@ export interface components {
         passing_categories?: string[];
       } | null;
       categories?: components['schemas']['MetricVersionContentRequestCategoriesItem'][] | null;
+      /**
+       * @deprecated
+       * @description Deprecated and ignored. Composite metrics are no longer supported.
+       */
       child_metrics?: components['schemas']['MetricVersionContentRequestChildMetricsItem'][] | null;
       filters?: components['schemas']['MetricVersionContentRequestFilters'];
     };
@@ -2885,7 +2908,7 @@ export interface components {
     SessionTracesResponse: {
       success: boolean;
     };
-    /** @description TODO: This is a placeholder schema. Proper Zod schemas need to be created in @hive-kube/iso-core-ts for: Sessions, Events, Projects, and Experiment comparison/result endpoints. */
+    /** @description Placeholder schema. The response shape for this endpoint is not yet fully specified; refer to the endpoint documentation for the fields it returns. */
     TODOSchema: {
       /** @description Placeholder - Zod schema not yet implemented */
       message: string;
@@ -3234,6 +3257,10 @@ export interface components {
         passing_categories?: string[];
       } | null;
       categories?: components['schemas']['RunMetricRequestMetricCategoriesItem'][] | null;
+      /**
+       * @deprecated
+       * @description Deprecated and ignored. Composite metrics are no longer supported.
+       */
       child_metrics?: components['schemas']['RunMetricRequestMetricChildMetricsItem'][] | null;
       filters?: components['schemas']['RunMetricRequestMetricFilters'];
     };
@@ -3302,9 +3329,12 @@ export interface components {
         passing_categories?: string[];
       } | null;
       categories?: components['schemas']['LegacyRunMetricRequestMetricCategoriesItem'][] | null;
+      /**
+       * @deprecated
+       * @description Deprecated and ignored. Composite metrics are no longer supported.
+       */
       child_metrics?:
-        | components['schemas']['LegacyRunMetricRequestMetricChildMetricsItem'][]
-        | null;
+        components['schemas']['LegacyRunMetricRequestMetricChildMetricsItem'][] | null;
       filters?: components['schemas']['LegacyRunMetricRequestMetricFilters'];
     };
     LegacyRunMetricRequestEventFeedback: {
@@ -4390,7 +4420,7 @@ export interface operations {
           'application/json': components['schemas']['CreateMetricVersionResponse'];
         };
       };
-      /** @description Invalid `content` payload. Fails cross-field validation (e.g. an `LLM` metric without `model_provider`/`model_name`, or a `COMPOSITE` metric without `child_metrics`). */
+      /** @description Invalid `content` payload. Fails cross-field validation (e.g. an `LLM` metric without `model_provider`/`model_name`). */
       400: {
         headers: {
           [name: string]: unknown;
@@ -4451,7 +4481,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Metric execution result */
+      /** @description Metric evaluation succeeded */
       200: {
         headers: {
           [name: string]: unknown;
@@ -4459,6 +4489,27 @@ export interface operations {
         content: {
           'application/json': components['schemas']['RunMetricResponse'];
         };
+      };
+      /** @description Bad request. Either the request body failed validation (malformed metric or event), or the metric could not be evaluated because the request was deficient before any compute ran (the metric requires ground truth the event lacks, or the metric config is invalid). The error `message` describes the specific cause. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Could not process content. A compute request was dispatched but evaluation failed — e.g. the metric's code raised an error (`errorCode` `execution_error`, `compilation_error`) or the LLM evaluator's template/provider/response failed (`template_render_error`, `llm_response_parse_error`, ...). The error `message` carries the evaluator's detailed failure text. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal error while running the metric. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -4475,7 +4526,7 @@ export interface operations {
       };
     };
     responses: {
-      /** @description Metric execution result */
+      /** @description Metric evaluation succeeded */
       200: {
         headers: {
           [name: string]: unknown;
@@ -4483,6 +4534,27 @@ export interface operations {
         content: {
           'application/json': components['schemas']['RunMetricResponse'];
         };
+      };
+      /** @description Bad request. Either the request body failed validation (malformed metric or event), or the metric could not be evaluated because the request was deficient before any compute ran (missing ground truth, invalid metric config). The error `message` describes the specific cause. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Could not process content. A compute request was dispatched but evaluation failed (e.g. `execution_error`, `template_render_error`, `llm_response_parse_error`). */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Internal error while running the metric. */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -5158,15 +5230,7 @@ export interface operations {
       query?: {
         /** @description Aggregation function to apply to metrics */
         aggregate_function?:
-          | 'average'
-          | 'min'
-          | 'max'
-          | 'median'
-          | 'p95'
-          | 'p99'
-          | 'p90'
-          | 'sum'
-          | 'count';
+          'average' | 'min' | 'max' | 'median' | 'p95' | 'p99' | 'p90' | 'sum' | 'count';
         /** @description Optional filters to apply (JSON string or array of filter objects) */
         filters?: string | Record<string, never>[];
       };
@@ -5202,15 +5266,7 @@ export interface operations {
       query?: {
         /** @description Aggregation function to apply to metrics */
         aggregate_function?:
-          | 'average'
-          | 'min'
-          | 'max'
-          | 'median'
-          | 'p95'
-          | 'p99'
-          | 'p90'
-          | 'sum'
-          | 'count';
+          'average' | 'min' | 'max' | 'median' | 'p95' | 'p99' | 'p90' | 'sum' | 'count';
         /** @description Optional filters to apply (JSON string or array of filter objects) */
         filters?: string | Record<string, never>[];
       };
@@ -5246,15 +5302,7 @@ export interface operations {
       query?: {
         /** @description Aggregation function to apply to metrics */
         aggregate_function?:
-          | 'average'
-          | 'min'
-          | 'max'
-          | 'median'
-          | 'p95'
-          | 'p99'
-          | 'p90'
-          | 'sum'
-          | 'count';
+          'average' | 'min' | 'max' | 'median' | 'p95' | 'p99' | 'p90' | 'sum' | 'count';
         /** @description Optional filters to apply (JSON string or array of filter objects) */
         filters?: string | Record<string, never>[];
       };

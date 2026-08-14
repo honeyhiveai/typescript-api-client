@@ -104,17 +104,16 @@ export declare class ApiError extends HoneyHiveError {
      * Returns the parsed error response body with its known type, or `undefined`
      * if the body doesn't match the expected shape.
      *
-     * The server's errorResponseHandler middleware always returns `{ statusCode,
-     * message, success, errorCode }` as JSON for all error responses. However,
-     * non-application errors (e.g. a load balancer HTML 502, or Express's default
-     * 404) can bypass that middleware and pass us an unknown shape, in which case
-     * we return undefined.
+     * The HoneyHive API returns `{ statusCode, message, success, errorCode }` as
+     * JSON for all error responses. However, failures that happen before a request
+     * reaches the API (e.g. an HTML 502 from a load balancer, or a generic 404) can
+     * arrive in an unrecognized shape, in which case we return undefined.
      */
     parseError(): ErrorResponse | undefined;
 }
 /**
- * The standard error response shape returned by the server's error handler
- * for all non-2xx responses.
+ * The standard error response shape the HoneyHive API returns for all non-2xx
+ * responses.
  */
 export interface ErrorResponse {
     statusCode: number;

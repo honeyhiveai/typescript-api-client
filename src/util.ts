@@ -36,17 +36,30 @@ function getEnv(key: string, defaultValue?: string): string | undefined {
 
 /**
  * Recognized API key prefixes, longest-first so that prefix detection picks
- * the most specific match (e.g. `hh_org_` before `hh_`). Mirrors the server's
- * canonical mask in `@hive-kube/server-api-key-service` — the SDK keeps its
- * own copy to avoid depending on a server package.
+ * the most specific match (`hh_ro_` before `hh_`). Used only to render a
+ * masked key for verbose logging; the SDK does not validate a key's type.
+ *
+ * Only the prefixes that can authenticate a data plane request today are listed:
+ * a full project key and a read-only project key. Other HoneyHive prefixes exist
+ * in the codebase (`hh_org_`, `hh_ws_`, `hh_cp_`), but none of them can reach
+ * this SDK, by opposite mechanisms. An org key can be minted, and no endpoint
+ * accepts it. A workspace key would be accepted (the data plane lists
+ * `WORKSPACE_API_KEY` in `allowedApiKeyActorTypes`), but cannot be minted: both
+ * api-key routes gate on scope, so the WORKSPACE branch of the mint path is
+ * unreachable. Naming either would advertise a credential type nobody can hold.
+ *
+ * Add an entry when a prefix can both be minted and authenticate a data plane
+ * request. Until then, a value carrying one renders under the generic `hh_`
+ * prefix, since every HoneyHive prefix begins with `hh_`. Only a value that
+ * isn't HoneyHive-shaped at all is redacted wholesale.
  */
-const API_KEY_PREFIXES = ['hh_org_', 'hh_ws_', 'hh_cp_', 'hh_dp_', 'hh_ro_', 'hh_'] as const;
+const API_KEY_PREFIXES = ['hh_ro_', 'hh_'] as const;
 
 /**
  * Returns a display-safe rendering of an API key for verbose logging.
  *
  * For recognized HoneyHive keys, renders `<prefix>****<last 4 chars>` (e.g.
- * `hh_org_****o5p6`). For anything else, returns 8 fixed-width asterisks so
+ * `hh_ro_****o5p6`). For anything else, returns 8 fixed-width asterisks so
  * the output never reveals length or content of an unrecognized secret.
  */
 function maskApiKey(apiKey: string): string {
@@ -61,7 +74,7 @@ function maskApiKey(apiKey: string): string {
  * Tracks which deprecation warnings have already fired in this process, keyed
  * by a stable identifier (e.g. `'serverUrl'`, `'HH_API_URL'`) so the same
  * warning isn't emitted N times when the SDK constructs N clients. The CP
- * frontend instantiates a new client per render via `useApiClient`; without
+ * frontend instantiates a new client per render via `useDataPlaneClient`; without
  * per-process dedup the devtools console would fill with duplicates.
  */
 const warnedDeprecations = new Set<string>();
@@ -82,22 +95,17 @@ export function _testOnlyResetWarnedDeprecations(): void {
  * not gated on `verbose` so customers see it during normal development and
  * migrate off the old name.
  *
- * **Chassis must stay in sync with the SDK generator's per-operation
- * deprecation warning** (`console.warn` with the shape
+ * **Chassis must stay in sync with the generated per-operation deprecation
+ * warning**, which calls `console.warn` with the shape
  * `[@honeyhive/api-client] <thing> is deprecated and will be removed in the
- * next major version.`, see
- * `typescript/packages/server-client-generator/src/spec.ts` — search for
- * `deprecationWarning` / `is deprecated and will be removed`). The
- * `message` passed in here typically appends a `Use '<replacement>'
- * instead.` clause because the replacement is known at this call site;
- * the generator omits that clause because the OpenAPI spec doesn't yet
- * model replacements. If the chassis changes, update both sides (the Use
- * clause only appears in hand-written warnings).
+ * next major version.` The `message` passed in here typically appends a
+ * `Use '<replacement>' instead.` clause because the replacement is known at
+ * this call site. The generated warning omits that clause because the OpenAPI
+ * spec does not yet model replacements. If the chassis changes, update both
+ * sides. The Use clause only appears in a hand-written warning.
  *
- * The CLI's deprecation warnings follow a different convention
- * (`Warning: <kind> "..." is deprecated …`, no package prefix) and are
- * owned by `typescript/packages/server-client-generator/src/cli.ts` /
- * `typescript/public/honeyhive-cli/src/utils.ts`.
+ * The CLI deprecation warnings follow a different convention
+ * (`Warning: <kind> "..." is deprecated …`, no package prefix).
  */
 function warnDeprecated(key: string, message: string): void {
   if (warnedDeprecations.has(key)) return;
@@ -155,13 +163,12 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
 }
 
 /**
- * Custom query serializer that delegates to axios for exact parity with the
- * old axios-based client.
+ * Custom query serializer that delegates to axios.
  *
- * openapi-fetch defaults to "explode" style (`key=a&key=b`), but Express parses
- * a single repeated param as a plain string instead of a one-element array.
- * Axios uses bracket notation (`key[]=a&key[]=b`) and handles nested
- * objects/arrays recursively, which Express parses correctly.
+ * openapi-fetch defaults to "explode" style (`key=a&key=b`), which the HoneyHive
+ * API reads as a plain string rather than a one-element array. Axios uses bracket
+ * notation (`key[]=a&key[]=b`) and handles nested objects and arrays
+ * recursively, which the API parses correctly.
  */
 function querySerializer(queryParams: Record<string, unknown>): string {
   const uri = axios.getUri({ url: '', params: queryParams });
@@ -188,7 +195,7 @@ export function createApiClient<Paths extends {}>(
   // resolution — we want callers to remove the old name from their code, not
   // just be told that the new name took precedence. `warnDeprecated` dedupes
   // per process by key so multi-client callers (e.g. the CP frontend's
-  // per-render `useApiClient`) don't spam the console.
+  // per-render `useDataPlaneClient`) don't spam the console.
   if (apiKey !== undefined) {
     warnDeprecated(
       'apiKey',
@@ -332,8 +339,8 @@ function asErrorResponse(e: unknown): ErrorResponse | undefined {
     typeof e.statusCode === 'number' &&
     'success' in e &&
     typeof e.success === 'boolean' &&
-    // TODO: remove the `true` fallback once we've rolled out enough of the
-    // backend to guarantee that all errors have errorCode
+    // `errorCode` is optional here because not every error response carries it
+    // yet; it will become required in a future major version.
     ('errorCode' in e ? typeof e.errorCode === 'string' : true)
   ) {
     return e as ErrorResponse;
@@ -368,11 +375,10 @@ export class ApiError extends HoneyHiveError {
    * Returns the parsed error response body with its known type, or `undefined`
    * if the body doesn't match the expected shape.
    *
-   * The server's errorResponseHandler middleware always returns `{ statusCode,
-   * message, success, errorCode }` as JSON for all error responses. However,
-   * non-application errors (e.g. a load balancer HTML 502, or Express's default
-   * 404) can bypass that middleware and pass us an unknown shape, in which case
-   * we return undefined.
+   * The HoneyHive API returns `{ statusCode, message, success, errorCode }` as
+   * JSON for all error responses. However, failures that happen before a request
+   * reaches the API (e.g. an HTML 502 from a load balancer, or a generic 404) can
+   * arrive in an unrecognized shape, in which case we return undefined.
    */
   public parseError(): ErrorResponse | undefined {
     return asErrorResponse(this.error);
@@ -380,8 +386,8 @@ export class ApiError extends HoneyHiveError {
 }
 
 /**
- * The standard error response shape returned by the server's error handler
- * for all non-2xx responses.
+ * The standard error response shape the HoneyHive API returns for all non-2xx
+ * responses.
  */
 export interface ErrorResponse {
   statusCode: number;

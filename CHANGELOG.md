@@ -1,5 +1,15 @@
 # TypeScript API SDK Changelog
 
+## [1.4.1] - 2026-08-14
+
+### Fixes & Improvements
+- `client.metrics.run()` now distinguishes failure classes: `400` when the request is invalid or is missing inputs the metric needs (e.g. ground truth the event doesn't carry), `422` when evaluation itself failed (`execution_error`, `compilation_error`, `template_render_error`, `llm_response_parse_error`, …), and `500` for internal errors. `ApiError.parseError()` returns the `errorCode` along with the evaluator's detailed failure text in `message`.
+- Empty or whitespace-only `name` values passed to `client.experiments.createRun()` and `client.experiments.updateRun()` are now rejected with a `400`, and accepted names are trimmed before storage. Such names previously created runs with a blank display name.
+
+### Compatibility & Deprecations
+- Composite metrics are no longer supported. `child_metrics` is marked deprecated on every metric request and response type and is now ignored by the API, and creating or updating a metric with `type: 'COMPOSITE'` returns a `400`. Both remain in the type definitions so existing code keeps compiling; replace composite metrics with standalone metrics.
+- Bumped `axios` from `1.18.0` to `1.19.0`.
+
 ## [1.4.0] - 2026-06-26
 
 ### What's New

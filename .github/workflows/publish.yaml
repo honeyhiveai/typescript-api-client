@@ -21,9 +21,11 @@ on:
         # Note: npm publish --dry-run does NOT exercise OIDC auth, and the
         # GitHub Release step is skipped. Dry run mostly validates the package
         # contents and the changelog extraction.
-        description: "Dry run — skip the actual npm publish and GitHub Release"
+        # Defaults to false: a bare dispatch performs the real publish. Opt into
+        # a dry run explicitly — a forgotten dry run silently ships nothing.
+        description: "Dry run — skip the actual npm publish and GitHub Release (opt-in; defaults to a real publish)"
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: write

@@ -1,10 +1,20 @@
+import { type Client as OpenapiFetchClient } from 'openapi-fetch';
 import { type paths } from './types.js';
 import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type GetEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetMetricVersionsRequest, type CreateMetricVersionRequest, type DeployMetricVersionRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type GetEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetMetricVersionsResponse, type CreateMetricVersionResponse, type DeployMetricVersionResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
-import { type ClientConfig, type FetchOptions, createApiClient } from '../util.js';
+import { type ClientConfig, type FetchOptions } from '../util.js';
+/** Every security scheme the API's OpenAPI spec defines. */
+export type SecurityScheme = 'BearerAuth' | 'IngestionApiKey';
+/**
+ * What `createApiClient` returns: for every security scheme the spec defines,
+ * the openapi-fetch client that carries the credential for it. The hand-written
+ * chassis builds this table, so a scheme added to or removed from the spec
+ * fails to compile there until the table says which client serves it.
+ */
+export type ApiClients = Record<SecurityScheme, OpenapiFetchClient<paths>>;
 /** @inline */
 declare class SessionsNamespace {
     #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    constructor(clients: ApiClients);
     /**
      * Start a new session
      *
@@ -72,7 +82,7 @@ declare class SessionsNamespace {
 /** @inline */
 declare class EventsNamespace {
     #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    constructor(clients: ApiClients);
     /**
      * Create a new event
      *
@@ -215,7 +225,7 @@ declare class EventsNamespace {
 /** @inline */
 declare class ChartsNamespace {
     #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    constructor(clients: ApiClients);
     /**
      * List charts
      *
@@ -242,7 +252,7 @@ declare class ChartsNamespace {
 /** @inline */
 declare class MetricsNamespace {
     #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    constructor(clients: ApiClients);
     /** List all metrics */
     list(request?: GetMetricsRequest, options?: FetchOptions): Promise<GetMetricsResponse>;
     /** Create a new metric */
@@ -265,7 +275,7 @@ declare class MetricsNamespace {
 /** @inline */
 declare class MetricVersionsNamespace {
     #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    constructor(clients: ApiClients);
     /**
      * List versions for a metric
      *
@@ -288,7 +298,7 @@ declare class MetricVersionsNamespace {
 /** @inline */
 declare class DatapointsNamespace {
     #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    constructor(clients: ApiClients);
     /**
      * Retrieve a list of datapoints
      *
@@ -329,7 +339,7 @@ declare class DatapointsNamespace {
 /** @inline */
 declare class DatasetsNamespace {
     #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    constructor(clients: ApiClients);
     /**
      * Get datasets
      *
@@ -370,7 +380,7 @@ declare class DatasetsNamespace {
 /** @inline */
 declare class ExperimentsNamespace {
     #private;
-    constructor(client: ReturnType<typeof createApiClient<paths>>);
+    constructor(clients: ApiClients);
     /**
      * Get a list of evaluation runs
      *

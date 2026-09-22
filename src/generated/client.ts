@@ -1,5 +1,7 @@
 // AUTO-GENERATED — do not edit manually. Run `pnpm turbo run generate` to regenerate.
 
+import { type Client as OpenapiFetchClient } from 'openapi-fetch';
+
 import { type paths } from './types.js';
 import {
   type CreateSessionRequest,
@@ -89,12 +91,23 @@ import {
 } from './apiTypes.js';
 import { type ClientConfig, type FetchOptions, createApiClient, unwrap } from '../util.js';
 
+/** Every security scheme the API's OpenAPI spec defines. */
+export type SecurityScheme = 'BearerAuth' | 'IngestionApiKey';
+
+/**
+ * What `createApiClient` returns: for every security scheme the spec defines,
+ * the openapi-fetch client that carries the credential for it. The hand-written
+ * chassis builds this table, so a scheme added to or removed from the spec
+ * fails to compile there until the table says which client serves it.
+ */
+export type ApiClients = Record<SecurityScheme, OpenapiFetchClient<paths>>;
+
 /** @inline */
 class SessionsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
+  #clients: ApiClients;
 
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
   }
 
   /**
@@ -142,7 +155,8 @@ class SessionsNamespace {
     request: CreateSessionRequest,
     options?: FetchOptions,
   ): Promise<CreateSessionResponse> {
-    return unwrap(this.#client.POST('/v1/sessions', { body: request, ...options }));
+    const httpClient = this.#clients.IngestionApiKey;
+    return unwrap(httpClient.POST('/v1/sessions', { body: request, ...options }));
   }
 
   /**
@@ -170,8 +184,9 @@ class SessionsNamespace {
     options?: FetchOptions,
   ): Promise<CreateSessionEventBatchResponse> {
     const { session_id, ...body } = request;
+    const httpClient = this.#clients.IngestionApiKey;
     return unwrap(
-      this.#client.POST('/v1/sessions/{session_id}/events/batch', {
+      httpClient.POST('/v1/sessions/{session_id}/events/batch', {
         params: { path: { session_id } },
         body,
         ...options,
@@ -182,10 +197,10 @@ class SessionsNamespace {
 
 /** @inline */
 class EventsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
+  #clients: ApiClients;
 
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
   }
 
   /**
@@ -234,7 +249,8 @@ class EventsNamespace {
    * ```
    */
   public create(request: CreateEventRequest, options?: FetchOptions): Promise<CreateEventResponse> {
-    return unwrap(this.#client.POST('/v1/events', { body: request, ...options }));
+    const httpClient = this.#clients.IngestionApiKey;
+    return unwrap(httpClient.POST('/v1/events', { body: request, ...options }));
   }
 
   /**
@@ -245,8 +261,9 @@ class EventsNamespace {
    */
   public get(request: GetEventRequest, options?: FetchOptions): Promise<GetEventResponse> {
     const { event_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/events/{event_id}', { params: { path: { event_id } }, ...options }),
+      httpClient.GET('/v1/events/{event_id}', { params: { path: { event_id } }, ...options }),
     );
   }
 
@@ -293,12 +310,9 @@ class EventsNamespace {
    */
   public update(request: UpdateEventRequest, options?: FetchOptions): Promise<void> {
     const { event_id, ...body } = request;
+    const httpClient = this.#clients.IngestionApiKey;
     return unwrap(
-      this.#client.PUT('/v1/events/{event_id}', {
-        params: { path: { event_id } },
-        body,
-        ...options,
-      }),
+      httpClient.PUT('/v1/events/{event_id}', { params: { path: { event_id } }, body, ...options }),
     );
   }
 
@@ -311,7 +325,8 @@ class EventsNamespace {
     request: SearchEventsRequest,
     options?: FetchOptions,
   ): Promise<SearchEventsResponse> {
-    return unwrap(this.#client.POST('/v1/events/search', { body: request, ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.POST('/v1/events/search', { body: request, ...options }));
   }
 
   /**
@@ -354,16 +369,17 @@ class EventsNamespace {
     request: CreateEventBatchRequest,
     options?: FetchOptions,
   ): Promise<CreateEventBatchResponse> {
-    return unwrap(this.#client.POST('/v1/events/batch', { body: request, ...options }));
+    const httpClient = this.#clients.IngestionApiKey;
+    return unwrap(httpClient.POST('/v1/events/batch', { body: request, ...options }));
   }
 }
 
 /** @inline */
 class ChartsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
+  #clients: ApiClients;
 
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
   }
 
   /**
@@ -372,12 +388,14 @@ class ChartsNamespace {
    * Retrieve all charts in the current scope.
    */
   public list(options?: FetchOptions): Promise<GetChartsResponse> {
-    return unwrap(this.#client.GET('/v1/charts', { ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.GET('/v1/charts', { ...options }));
   }
 
   /** Create a new chart */
   public create(request: CreateChartRequest, options?: FetchOptions): Promise<CreateChartResponse> {
-    return unwrap(this.#client.POST('/v1/charts', { body: request, ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.POST('/v1/charts', { body: request, ...options }));
   }
 
   /**
@@ -387,8 +405,9 @@ class ChartsNamespace {
    */
   public get(request: GetChartRequest, options?: FetchOptions): Promise<GetChartResponse> {
     const { chart_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }),
+      httpClient.GET('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }),
     );
   }
 
@@ -399,36 +418,35 @@ class ChartsNamespace {
    */
   public update(request: UpdateChartRequest, options?: FetchOptions): Promise<UpdateChartResponse> {
     const { chart_id, ...body } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.PUT('/v1/charts/{chart_id}', {
-        params: { path: { chart_id } },
-        body,
-        ...options,
-      }),
+      httpClient.PUT('/v1/charts/{chart_id}', { params: { path: { chart_id } }, body, ...options }),
     );
   }
 
   /** Delete a chart */
   public delete(request: DeleteChartRequest, options?: FetchOptions): Promise<DeleteChartResponse> {
     const { chart_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.DELETE('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }),
+      httpClient.DELETE('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }),
     );
   }
 }
 
 /** @inline */
 class MetricsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
+  #clients: ApiClients;
 
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
   }
 
   /** List all metrics */
   public list(request?: GetMetricsRequest, options?: FetchOptions): Promise<GetMetricsResponse> {
     const { type, id } = request ?? {};
-    return unwrap(this.#client.GET('/v1/metrics', { params: { query: { type, id } }, ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.GET('/v1/metrics', { params: { query: { type, id } }, ...options }));
   }
 
   /** Create a new metric */
@@ -436,7 +454,8 @@ class MetricsNamespace {
     request: CreateMetricRequest,
     options?: FetchOptions,
   ): Promise<CreateMetricResponse> {
-    return unwrap(this.#client.POST('/v1/metrics', { body: request, ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.POST('/v1/metrics', { body: request, ...options }));
   }
 
   /**
@@ -449,8 +468,9 @@ class MetricsNamespace {
     options?: FetchOptions,
   ): Promise<UpdateMetricResponse> {
     const { metric_id, ...body } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.PUT('/v1/metrics/{metric_id}', {
+      httpClient.PUT('/v1/metrics/{metric_id}', {
         params: { path: { metric_id } },
         body,
         ...options,
@@ -464,11 +484,9 @@ class MetricsNamespace {
     options?: FetchOptions,
   ): Promise<DeleteMetricResponse> {
     const { metric_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.DELETE('/v1/metrics/{metric_id}', {
-        params: { path: { metric_id } },
-        ...options,
-      }),
+      httpClient.DELETE('/v1/metrics/{metric_id}', { params: { path: { metric_id } }, ...options }),
     );
   }
 
@@ -478,16 +496,17 @@ class MetricsNamespace {
    * Execute a metric on a specific event
    */
   public run(request: RunMetricRequest, options?: FetchOptions): Promise<RunMetricResponse> {
-    return unwrap(this.#client.POST('/v1/metrics/run', { body: request, ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.POST('/v1/metrics/run', { body: request, ...options }));
   }
 }
 
 /** @inline */
 class MetricVersionsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
+  #clients: ApiClients;
 
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
   }
 
   /**
@@ -500,8 +519,9 @@ class MetricVersionsNamespace {
     options?: FetchOptions,
   ): Promise<GetMetricVersionsResponse> {
     const { metric_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/metrics/{metric_id}/versions', {
+      httpClient.GET('/v1/metrics/{metric_id}/versions', {
         params: { path: { metric_id } },
         ...options,
       }),
@@ -518,8 +538,9 @@ class MetricVersionsNamespace {
     options?: FetchOptions,
   ): Promise<CreateMetricVersionResponse> {
     const { metric_id, ...body } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.POST('/v1/metrics/{metric_id}/versions', {
+      httpClient.POST('/v1/metrics/{metric_id}/versions', {
         params: { path: { metric_id } },
         body,
         ...options,
@@ -537,8 +558,9 @@ class MetricVersionsNamespace {
     options?: FetchOptions,
   ): Promise<DeployMetricVersionResponse> {
     const { metric_id, version_name } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.POST('/v1/metrics/{metric_id}/versions/{version_name}/deploy', {
+      httpClient.POST('/v1/metrics/{metric_id}/versions/{version_name}/deploy', {
         params: { path: { metric_id, version_name } },
         ...options,
       }),
@@ -548,10 +570,10 @@ class MetricVersionsNamespace {
 
 /** @inline */
 class DatapointsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
+  #clients: ApiClients;
 
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
   }
 
   /**
@@ -564,8 +586,9 @@ class DatapointsNamespace {
     options?: FetchOptions,
   ): Promise<GetDatapointsResponse> {
     const { datapoint_ids, dataset_name } = request ?? {};
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/datapoints', {
+      httpClient.GET('/v1/datapoints', {
         params: { query: { datapoint_ids, dataset_name } },
         ...options,
       }),
@@ -581,7 +604,8 @@ class DatapointsNamespace {
     request: CreateDatapointRequest,
     options?: FetchOptions,
   ): Promise<CreateDatapointResponse> {
-    return unwrap(this.#client.POST('/v1/datapoints', { body: request, ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.POST('/v1/datapoints', { body: request, ...options }));
   }
 
   /**
@@ -593,7 +617,8 @@ class DatapointsNamespace {
     request: BatchCreateDatapointsRequest,
     options?: FetchOptions,
   ): Promise<BatchCreateDatapointsResponse> {
-    return unwrap(this.#client.POST('/v1/datapoints/batch', { body: request, ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.POST('/v1/datapoints/batch', { body: request, ...options }));
   }
 
   /**
@@ -603,8 +628,9 @@ class DatapointsNamespace {
    */
   public get(request: GetDatapointRequest, options?: FetchOptions): Promise<GetDatapointResponse> {
     const { datapoint_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/datapoints/{datapoint_id}', {
+      httpClient.GET('/v1/datapoints/{datapoint_id}', {
         params: { path: { datapoint_id } },
         ...options,
       }),
@@ -621,8 +647,9 @@ class DatapointsNamespace {
     options?: FetchOptions,
   ): Promise<UpdateDatapointResponse> {
     const { datapoint_id, ...body } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.PUT('/v1/datapoints/{datapoint_id}', {
+      httpClient.PUT('/v1/datapoints/{datapoint_id}', {
         params: { path: { datapoint_id } },
         body,
         ...options,
@@ -640,8 +667,9 @@ class DatapointsNamespace {
     options?: FetchOptions,
   ): Promise<DeleteDatapointResponse> {
     const { datapoint_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.DELETE('/v1/datapoints/{datapoint_id}', {
+      httpClient.DELETE('/v1/datapoints/{datapoint_id}', {
         params: { path: { datapoint_id } },
         ...options,
       }),
@@ -651,10 +679,10 @@ class DatapointsNamespace {
 
 /** @inline */
 class DatasetsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
+  #clients: ApiClients;
 
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
   }
 
   /**
@@ -664,8 +692,9 @@ class DatasetsNamespace {
    */
   public list(request?: GetDatasetsRequest, options?: FetchOptions): Promise<GetDatasetsResponse> {
     const { dataset_id, name } = request ?? {};
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/datasets', { params: { query: { dataset_id, name } }, ...options }),
+      httpClient.GET('/v1/datasets', { params: { query: { dataset_id, name } }, ...options }),
     );
   }
 
@@ -678,7 +707,8 @@ class DatasetsNamespace {
     request: CreateDatasetRequest,
     options?: FetchOptions,
   ): Promise<CreateDatasetResponse> {
-    return unwrap(this.#client.POST('/v1/datasets', { body: request, ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.POST('/v1/datasets', { body: request, ...options }));
   }
 
   /**
@@ -691,8 +721,9 @@ class DatasetsNamespace {
     options?: FetchOptions,
   ): Promise<UpdateDatasetResponse> {
     const { dataset_id, ...body } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.PUT('/v1/datasets/{dataset_id}', {
+      httpClient.PUT('/v1/datasets/{dataset_id}', {
         params: { path: { dataset_id } },
         body,
         ...options,
@@ -710,8 +741,9 @@ class DatasetsNamespace {
     options?: FetchOptions,
   ): Promise<DeleteDatasetResponse> {
     const { dataset_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.DELETE('/v1/datasets/{dataset_id}', {
+      httpClient.DELETE('/v1/datasets/{dataset_id}', {
         params: { path: { dataset_id } },
         ...options,
       }),
@@ -728,8 +760,9 @@ class DatasetsNamespace {
     options?: FetchOptions,
   ): Promise<AddDatapointsResponse> {
     const { dataset_id, ...body } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.POST('/v1/datasets/{dataset_id}/datapoints', {
+      httpClient.POST('/v1/datasets/{dataset_id}/datapoints', {
         params: { path: { dataset_id } },
         body,
         ...options,
@@ -747,8 +780,9 @@ class DatasetsNamespace {
     options?: FetchOptions,
   ): Promise<RemoveDatapointResponse> {
     const { dataset_id, datapoint_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.DELETE('/v1/datasets/{dataset_id}/datapoints/{datapoint_id}', {
+      httpClient.DELETE('/v1/datasets/{dataset_id}/datapoints/{datapoint_id}', {
         params: { path: { dataset_id, datapoint_id } },
         ...options,
       }),
@@ -758,10 +792,10 @@ class DatasetsNamespace {
 
 /** @inline */
 class ExperimentsNamespace {
-  #client: ReturnType<typeof createApiClient<paths>>;
+  #clients: ApiClients;
 
-  constructor(client: ReturnType<typeof createApiClient<paths>>) {
-    this.#client = client;
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
   }
 
   /**
@@ -772,8 +806,9 @@ class ExperimentsNamespace {
   public listRuns(request?: GetRunsRequest, options?: FetchOptions): Promise<GetRunsResponse> {
     const { dataset_id, page, limit, run_ids, name, status, dateRange, sort_by, sort_order } =
       request ?? {};
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/runs', {
+      httpClient.GET('/v1/runs', {
         params: {
           query: { dataset_id, page, limit, run_ids, name, status, dateRange, sort_by, sort_order },
         },
@@ -788,7 +823,8 @@ class ExperimentsNamespace {
    * Create a new experiment run to track an evaluation against a dataset.
    */
   public createRun(request: CreateRunRequest, options?: FetchOptions): Promise<CreateRunResponse> {
-    return unwrap(this.#client.POST('/v1/runs', { body: request, ...options }));
+    const httpClient = this.#clients.BearerAuth;
+    return unwrap(httpClient.POST('/v1/runs', { body: request, ...options }));
   }
 
   /**
@@ -801,8 +837,9 @@ class ExperimentsNamespace {
     options?: FetchOptions,
   ): Promise<GetRunsSchemaResponse> {
     const { dateRange } = request ?? {};
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/runs/schema', { params: { query: { dateRange } }, ...options }),
+      httpClient.GET('/v1/runs/schema', { params: { query: { dateRange } }, ...options }),
     );
   }
 
@@ -813,8 +850,9 @@ class ExperimentsNamespace {
    */
   public getRun(request: GetRunRequest, options?: FetchOptions): Promise<GetRunResponse> {
     const { run_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }),
+      httpClient.GET('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }),
     );
   }
 
@@ -825,8 +863,9 @@ class ExperimentsNamespace {
    */
   public updateRun(request: UpdateRunRequest, options?: FetchOptions): Promise<UpdateRunResponse> {
     const { run_id, ...body } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.PUT('/v1/runs/{run_id}', { params: { path: { run_id } }, body, ...options }),
+      httpClient.PUT('/v1/runs/{run_id}', { params: { path: { run_id } }, body, ...options }),
     );
   }
 
@@ -837,8 +876,9 @@ class ExperimentsNamespace {
    */
   public deleteRun(request: DeleteRunRequest, options?: FetchOptions): Promise<DeleteRunResponse> {
     const { run_id } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.DELETE('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }),
+      httpClient.DELETE('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }),
     );
   }
 
@@ -852,8 +892,9 @@ class ExperimentsNamespace {
     options?: FetchOptions,
   ): Promise<GetRunSchemaResponse> {
     const { run_id, dateRange } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/runs/{run_id}/schema', {
+      httpClient.GET('/v1/runs/{run_id}/schema', {
         params: { path: { run_id }, query: { dateRange } },
         ...options,
       }),
@@ -870,8 +911,9 @@ class ExperimentsNamespace {
     options?: FetchOptions,
   ): Promise<GetExperimentRunMetricsResponse> {
     const { run_id, dateRange, filters } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/runs/{run_id}/metrics', {
+      httpClient.GET('/v1/runs/{run_id}/metrics', {
         params: { path: { run_id }, query: { dateRange, filters } },
         ...options,
       }),
@@ -888,8 +930,9 @@ class ExperimentsNamespace {
     options?: FetchOptions,
   ): Promise<GetExperimentSummaryResponse> {
     const { run_id, aggregate_function, filters } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/runs/{run_id}/summary', {
+      httpClient.GET('/v1/runs/{run_id}/summary', {
         params: { path: { run_id }, query: { aggregate_function, filters } },
         ...options,
       }),
@@ -906,8 +949,9 @@ class ExperimentsNamespace {
     options?: FetchOptions,
   ): Promise<GetExperimentComparisonResponse> {
     const { new_run_id, old_run_id, aggregate_function, filters } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/runs/{new_run_id}/compare/{old_run_id}', {
+      httpClient.GET('/v1/runs/{new_run_id}/compare/{old_run_id}', {
         params: { path: { new_run_id, old_run_id }, query: { aggregate_function, filters } },
         ...options,
       }),
@@ -924,8 +968,9 @@ class ExperimentsNamespace {
     options?: FetchOptions,
   ): Promise<GetExperimentCompareEventsResponse> {
     const { new_run_id, old_run_id, event_name, event_type, filter, limit, page } = request;
+    const httpClient = this.#clients.BearerAuth;
     return unwrap(
-      this.#client.GET('/v1/runs/{new_run_id}/compare/{old_run_id}/events', {
+      httpClient.GET('/v1/runs/{new_run_id}/compare/{old_run_id}/events', {
         params: {
           path: { new_run_id, old_run_id },
           query: { event_name, event_type, filter, limit, page },
@@ -937,7 +982,7 @@ class ExperimentsNamespace {
 }
 
 export class Client {
-  #client: ReturnType<typeof createApiClient<paths>>;
+  #clients: ApiClients;
   readonly sessions: SessionsNamespace;
   readonly events: EventsNamespace;
   readonly charts: ChartsNamespace;
@@ -948,14 +993,14 @@ export class Client {
   readonly experiments: ExperimentsNamespace;
 
   constructor(options: ClientConfig = {}) {
-    this.#client = createApiClient<paths>(options);
-    this.sessions = new SessionsNamespace(this.#client);
-    this.events = new EventsNamespace(this.#client);
-    this.charts = new ChartsNamespace(this.#client);
-    this.metrics = new MetricsNamespace(this.#client);
-    this.metricVersions = new MetricVersionsNamespace(this.#client);
-    this.datapoints = new DatapointsNamespace(this.#client);
-    this.datasets = new DatasetsNamespace(this.#client);
-    this.experiments = new ExperimentsNamespace(this.#client);
+    this.#clients = createApiClient(options);
+    this.sessions = new SessionsNamespace(this.#clients);
+    this.events = new EventsNamespace(this.#clients);
+    this.charts = new ChartsNamespace(this.#clients);
+    this.metrics = new MetricsNamespace(this.#clients);
+    this.metricVersions = new MetricVersionsNamespace(this.#clients);
+    this.datapoints = new DatapointsNamespace(this.#clients);
+    this.datasets = new DatasetsNamespace(this.#clients);
+    this.experiments = new ExperimentsNamespace(this.#clients);
   }
 }

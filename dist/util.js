@@ -1,5 +1,6 @@
 import axios from 'axios';
 import createClient from 'openapi-fetch';
+import { checkIngestionApiKey, maskApiKey } from './apiKeys.js';
 import { SDK_VERSION } from './generated/version.js';
 const DEFAULT_DATA_PLANE_URL = 'https://api.dp1.us.honeyhive.ai';
 /**
@@ -12,11 +13,11 @@ const DEFAULT_DATA_PLANE_URL = 'https://api.dp1.us.honeyhive.ai';
  * propagate the empty string as if it were a real value.
  *
  * **This is cross-cutting behavior, not specific to URL resolution.** Every
- * caller (currently `HH_PROJECT_API_KEY`, `HH_API_KEY`, `HH_API_URL`,
- * `HH_DATA_PLANE_URL`, `HH_VERBOSE`) sees the empty-string-as-unset behavior.
- * When adding a new env var via `getEnv('HH_FOO', 'default')`, be aware that
- * `HH_FOO=""` will resolve to `'default'`, not `''`. Existing callers were audited
- * and have no regression — they either treat empty-string as falsy
+ * caller (currently `HH_PROJECT_API_KEY`, `HH_API_KEY`, `HH_INGESTION_API_KEY`,
+ * `HH_API_URL`, `HH_DATA_PLANE_URL`, `HH_VERBOSE`) sees the empty-string-as-unset
+ * behavior. When adding a new env var via `getEnv('HH_FOO', 'default')`, be
+ * aware that `HH_FOO=""` will resolve to `'default'`, not `''`. Existing callers
+ * were audited and have no regression — they either treat empty-string as falsy
  * already (`HH_API_KEY`, `HH_VERBOSE`) or use the value as a URL where
  * empty-string would have been the bug this normalization fixes.
  *
@@ -29,40 +30,6 @@ function getEnv(key, defaultValue) {
         return v === undefined || v === '' ? defaultValue : v;
     }
     return defaultValue;
-}
-/**
- * Recognized API key prefixes, longest-first so that prefix detection picks
- * the most specific match (`hh_ro_` before `hh_`). Used only to render a
- * masked key for verbose logging; the SDK does not validate a key's type.
- *
- * Only the prefixes that can authenticate a data plane request today are listed:
- * a full project key and a read-only project key. Other HoneyHive prefixes exist
- * in the codebase (`hh_org_`, `hh_ws_`, `hh_cp_`), but none of them can reach
- * this SDK, by opposite mechanisms. An org key can be minted, and no endpoint
- * accepts it. A workspace key would be accepted (the data plane lists
- * `WORKSPACE_API_KEY` in `allowedApiKeyActorTypes`), but cannot be minted: both
- * api-key routes gate on scope, so the WORKSPACE branch of the mint path is
- * unreachable. Naming either would advertise a credential type nobody can hold.
- *
- * Add an entry when a prefix can both be minted and authenticate a data plane
- * request. Until then, a value carrying one renders under the generic `hh_`
- * prefix, since every HoneyHive prefix begins with `hh_`. Only a value that
- * isn't HoneyHive-shaped at all is redacted wholesale.
- */
-const API_KEY_PREFIXES = ['hh_ro_', 'hh_'];
-/**
- * Returns a display-safe rendering of an API key for verbose logging.
- *
- * For recognized HoneyHive keys, renders `<prefix>****<last 4 chars>` (e.g.
- * `hh_ro_****o5p6`). For anything else, returns 8 fixed-width asterisks so
- * the output never reveals length or content of an unrecognized secret.
- */
-function maskApiKey(apiKey) {
-    const prefix = API_KEY_PREFIXES.find((p) => apiKey.startsWith(p));
-    if (!prefix) {
-        return '********';
-    }
-    return `${prefix}****${apiKey.slice(-4)}`;
 }
 /**
  * Tracks which deprecation warnings have already fired in this process, keyed
@@ -117,9 +84,14 @@ function querySerializer(queryParams) {
     const uri = axios.getUri({ url: '', params: queryParams });
     return uri.startsWith('?') ? uri.slice(1) : uri;
 }
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- needs to match openapi-fetch's own createClient<Paths extends {}> signature
+/**
+ * Resolves the client's credentials and returns the openapi-fetch clients that
+ * carry them, one per security scheme the spec defines. Every generated method
+ * indexes the result by its operation's scheme, so the choice of credential
+ * lives here and nowhere in generated code.
+ */
 export function createApiClient(options) {
-    const { projectApiKey, apiKey, dataPlaneUrl, serverUrl, middleware, verbose, _internal_provenance, ...clientOptions } = options;
+    const { projectApiKey, apiKey, ingestionApiKey, dataPlaneUrl, serverUrl, middleware, verbose, _internal_provenance, ...clientOptions } = options;
     // Fire deprecation warnings for any old-named input that the caller
     // actually supplied. Warnings fire even when the new name also wins
     // resolution — we want callers to remove the old name from their code, not
@@ -141,9 +113,14 @@ export function createApiClient(options) {
         warnDeprecated('HH_API_KEY', "The 'HH_API_KEY' environment variable is deprecated and will be removed in the next major version. Use 'HH_PROJECT_API_KEY' instead.");
     }
     // Resolution order: new option > old option > new env var > old env var.
-    // There is no default (an API key is required). Mirrors the URL chain below,
-    // minus the default.
+    // There is no default. Mirrors the URL chain below, minus the default.
     const resolvedApiKey = projectApiKey ?? apiKey ?? getEnv('HH_PROJECT_API_KEY') ?? envHhApiKey;
+    // Option > env var, no default. An empty option counts as unset, like an
+    // empty env var. The source travels with the value so the shape check below
+    // can name where a bad value came from.
+    const [rawIngestionApiKey, ingestionApiKeySource] = ingestionApiKey !== undefined && ingestionApiKey !== ''
+        ? [ingestionApiKey, 'ingestionApiKey']
+        : [getEnv('HH_INGESTION_API_KEY'), 'HH_INGESTION_API_KEY'];
     // Resolution order: new option > old option > new env var > old env var >
     // default. For options, any non-undefined value wins (so explicit
     // undefined falls back). For env vars, both unset and empty-string fall
@@ -159,38 +136,71 @@ export function createApiClient(options) {
         package: '@honeyhive/api-client',
         version: SDK_VERSION,
     };
-    // Log before the missing-key check so verbose users can see what *did*
-    // resolve when construction is about to fail.
+    // Log before either check that can throw (a malformed ingestion key, a
+    // missing key) so verbose users can see what *did* resolve when construction
+    // is about to fail. The mask redacts a malformed ingestion key wholesale.
     if (resolvedVerbose) {
         console.error(`Data plane URL: ${resolvedDataPlaneUrl}`);
         console.error(`Project API key: ${resolvedApiKey ? maskApiKey(resolvedApiKey) : '(none)'}`);
+        console.error(`Ingestion API key: ${rawIngestionApiKey ? maskApiKey(rawIngestionApiKey) : '(none)'}`);
         console.error(`Package: ${provenance.package} v${provenance.version}`);
     }
-    // When middleware is provided, it is assumed to handle authentication itself.
-    if (!resolvedApiKey && !middleware?.length) {
-        throw new Error('Missing project API key: provide projectApiKey in options or set the HH_PROJECT_API_KEY environment variable');
+    // A present ingestion key is checked for shape here, at construction,
+    // whether or not this client goes on to send an ingestion request.
+    const resolvedIngestionApiKey = rawIngestionApiKey === undefined
+        ? undefined
+        : checkIngestionApiKey(rawIngestionApiKey, ingestionApiKeySource);
+    // Either key is a credential: a process that only sends traces and events
+    // can hold an ingestion key alone. When middleware is provided, it is
+    // assumed to handle authentication itself.
+    if (!resolvedApiKey && !resolvedIngestionApiKey && !middleware?.length) {
+        throw new Error('Missing API key: provide projectApiKey or ingestionApiKey in options, or set the HH_PROJECT_API_KEY or HH_INGESTION_API_KEY environment variable');
     }
-    const headers = {
-        'hh-client-package': provenance.package,
-        'hh-client-version': provenance.version,
-        'hh-client-language': 'typescript',
+    const { headers: userHeaders = {}, ...restClientOptions } = clientOptions;
+    const build = (token) => {
+        // An empty key sends no header, and a caller-supplied Authorization header
+        // wins over the resolved key.
+        const headers = {
+            'hh-client-package': provenance.package,
+            'hh-client-version': provenance.version,
+            'hh-client-language': 'typescript',
+        };
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
+        const client = createClient({
+            ...restClientOptions,
+            querySerializer,
+            baseUrl: resolvedDataPlaneUrl,
+            headers: { ...headers, ...userHeaders },
+        });
+        if (middleware?.length) {
+            client.use(...middleware);
+        }
+        return client;
     };
-    if (resolvedApiKey) {
-        headers.Authorization = `Bearer ${resolvedApiKey}`;
-    }
-    const client = createClient({
-        ...clientOptions,
-        querySerializer,
-        baseUrl: resolvedDataPlaneUrl,
-        headers: {
-            ...headers,
-            ...clientOptions.headers,
-        },
-    });
-    if (middleware?.length) {
-        client.use(...middleware);
-    }
-    return client;
+    // The project client is the client this SDK has always built, and it knows
+    // nothing about the ingestion key: an operation that takes the project key
+    // behaves exactly as it did before the ingestion key existed, whether or not
+    // one is configured.
+    const project = build(resolvedApiKey);
+    // An operation that accepts the ingestion key gets it when one is
+    // configured, and the project client otherwise: the ingestion endpoints
+    // accept a coarse-grained project key even though the spec no longer says
+    // so, and this line is the one place that knowledge lives. Delete it when
+    // coarse-grained keys are retired.
+    const ingestion = resolvedIngestionApiKey === undefined ? project : build(resolvedIngestionApiKey);
+    // Keyed by the schemes the spec defines, so a scheme added to or removed
+    // from the spec fails to compile here until this table says which client
+    // serves it. The table never narrows what an operation accepts to what the
+    // spec declares: the spec deliberately understates what the ingestion
+    // endpoints take while coarse-grained keys exist, and the fallback above is
+    // what keeps a project-key-only client working on them.
+    const clients = {
+        BearerAuth: project,
+        IngestionApiKey: ingestion,
+    };
+    return clients;
 }
 /**
  * HoneyHiveError is a base class for all errors thrown by the HoneyHive API

@@ -1,4 +1,5 @@
-import createClient, { type ClientOptions, type Middleware } from 'openapi-fetch';
+import { type ClientOptions, type Middleware } from 'openapi-fetch';
+import { type ApiClients } from './generated/client.js';
 /**
  * Test-only escape hatch to reset the per-process deprecation-dedup set so
  * each test can assert warning behavior in isolation. Not exported from
@@ -18,6 +19,18 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
      * deprecation warning to stderr on client construction.
      */
     apiKey?: string;
+    /**
+     * An ingestion API key (`hh_ingst_…`), the credential for sending traces
+     * and events: creating sessions and writing events. Defaults to the
+     * `HH_INGESTION_API_KEY` environment variable. A process that only sends
+     * traces and events holds this key alone; every other operation then
+     * behaves as it does on a client with no project API key configured.
+     *
+     * A value that is set but is not an ingestion key throws at construction.
+     * For compatibility, a client with a project API key and no ingestion key
+     * sends the project key on the ingestion operations too.
+     */
+    ingestionApiKey?: string;
     dataPlaneUrl?: string;
     /**
      * @deprecated Use `dataPlaneUrl` instead. The old name will be removed in
@@ -27,10 +40,10 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
     serverUrl?: string;
     middleware?: Middleware[];
     /**
-     * When true, logs the resolved API URL, a masked API key, and the SDK
+     * When true, logs the resolved API URL, the masked API keys, and the SDK
      * package + version via `console.error` on client construction (stderr in
      * Node, devtools in the browser). Useful for confirming which environment,
-     * credential, and SDK build the client is configured with. Defaults to
+     * credentials, and SDK build the client is configured with. Defaults to
      * true when the `HH_VERBOSE` environment variable is set to `'true'`
      * (case-insensitive).
      */
@@ -45,7 +58,13 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
     };
     headers?: Record<string, string>;
 }
-export declare function createApiClient<Paths extends {}>(options: ClientConfig): ReturnType<typeof createClient<Paths>>;
+/**
+ * Resolves the client's credentials and returns the openapi-fetch clients that
+ * carry them, one per security scheme the spec defines. Every generated method
+ * indexes the result by its operation's scheme, so the choice of credential
+ * lives here and nowhere in generated code.
+ */
+export declare function createApiClient(options: ClientConfig): ApiClients;
 /**
  * Per-request fetch-level options that are orthogonal to the API request
  * payload. These are passed through to the underlying `fetch()` call via

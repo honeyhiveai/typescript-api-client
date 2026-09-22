@@ -250,8 +250,6 @@ export interface CreateMetricRequest {
   return_type?: 'float' | 'boolean' | 'string' | 'categorical';
   /** @default false */
   enabled_in_prod?: boolean;
-  /** @default false */
-  needs_ground_truth?: boolean;
   /** @default 10 */
   sampling_percentage?: number;
   model_provider?: string | null;
@@ -264,6 +262,11 @@ export interface CreateMetricRequest {
     passing_categories?: string[];
   } | null;
   categories?: CreateMetricRequestCategoriesItem[] | null;
+  /**
+   * @deprecated
+   * @description Deprecated and ignored. Ground-truth use is inferred from the evaluator definition.
+   */
+  needs_ground_truth?: boolean;
   /**
    * @deprecated
    * @description Deprecated and ignored. Composite metrics are no longer supported.
@@ -283,13 +286,17 @@ export interface UpdateMetricRequest {
   /** @enum {string} */
   return_type?: 'float' | 'boolean' | 'string' | 'categorical';
   enabled_in_prod?: boolean;
-  needs_ground_truth?: boolean;
   sampling_percentage?: number;
   model_provider?: string | null;
   model_name?: string | null;
   scale?: number | null;
   threshold?: UpdateMetricRequestThreshold;
   categories?: UpdateMetricRequestCategoriesItem[];
+  /**
+   * @deprecated
+   * @description Deprecated and ignored. Ground-truth use is inferred from the evaluator definition.
+   */
+  needs_ground_truth?: boolean;
   /**
    * @deprecated
    * @description Deprecated and ignored. Composite metrics are no longer supported.
@@ -2179,7 +2186,6 @@ export type MetricItem = {
   /** @enum {string} */
   return_type: 'float' | 'boolean' | 'string' | 'categorical';
   enabled_in_prod: boolean;
-  needs_ground_truth: boolean;
   sampling_percentage: number;
   model_provider?: string | null;
   model_name?: string | null;
@@ -2191,6 +2197,11 @@ export type MetricItem = {
     passing_categories?: string[];
   } | null;
   categories?: MetricItemCategoriesItem[] | null;
+  /**
+   * @deprecated
+   * @description Deprecated and ignored. Ground-truth use is inferred from the evaluator definition.
+   */
+  needs_ground_truth: boolean;
   /**
    * @deprecated
    * @description Deprecated and ignored. Composite metrics are no longer supported.
@@ -2218,7 +2229,6 @@ export type LegacyUpdateMetricRequest = {
   /** @enum {string} */
   return_type?: 'float' | 'boolean' | 'string' | 'categorical';
   enabled_in_prod?: boolean;
-  needs_ground_truth?: boolean;
   sampling_percentage?: number;
   model_provider?: string | null;
   model_name?: string | null;
@@ -2230,6 +2240,11 @@ export type LegacyUpdateMetricRequest = {
     passing_categories?: string[];
   } | null;
   categories?: LegacyUpdateMetricRequestCategoriesItem[] | null;
+  /**
+   * @deprecated
+   * @description Deprecated and ignored. Ground-truth use is inferred from the evaluator definition.
+   */
+  needs_ground_truth?: boolean;
   /**
    * @deprecated
    * @description Deprecated and ignored. Composite metrics are no longer supported.
@@ -2273,7 +2288,6 @@ export type MetricVersionContent = {
   /** @enum {string} */
   return_type: 'float' | 'boolean' | 'string' | 'categorical';
   enabled_in_prod: boolean;
-  needs_ground_truth: boolean;
   sampling_percentage: number;
   model_provider?: string | null;
   model_name?: string | null;
@@ -2287,6 +2301,11 @@ export type MetricVersionContent = {
   categories?: MetricVersionContentCategoriesItem[] | null;
   /**
    * @deprecated
+   * @description Deprecated and ignored. Ground-truth use is inferred from the evaluator definition.
+   */
+  needs_ground_truth: boolean;
+  /**
+   * @deprecated
    * @description Deprecated and ignored. Composite metrics are no longer supported.
    */
   child_metrics?: MetricVersionContentChildMetricsItem[] | null;
@@ -2295,11 +2314,10 @@ export type MetricVersionContent = {
 
 /**
  * @description Metric definition snapshot accepted by POST /v1/metrics/{metric_id}/versions.
- *     Six fields are optional and fall back to server-side defaults when omitted:
+ *     Five fields are optional and fall back to server-side defaults when omitted:
  *     - `description` → `""`
  *     - `return_type` → `"float"`
  *     - `enabled_in_prod` → `true` for HUMAN metrics, `false` otherwise
- *     - `needs_ground_truth` → `false`
  *     - `sampling_percentage` → `10`
  *     - `filters` → `{ "filterArray": [] }`
  * @inline
@@ -2326,11 +2344,6 @@ export type MetricVersionContentRequest = {
    */
   enabled_in_prod?: boolean;
   /**
-   * @description Whether this metric requires ground-truth labels to evaluate. Defaults to `false`.
-   * @default false
-   */
-  needs_ground_truth?: boolean;
-  /**
    * @description Percentage of events the metric should run against, 0–100. Defaults to `10`.
    * @default 10
    */
@@ -2345,6 +2358,11 @@ export type MetricVersionContentRequest = {
     passing_categories?: string[];
   } | null;
   categories?: MetricVersionContentRequestCategoriesItem[] | null;
+  /**
+   * @deprecated
+   * @description Deprecated and ignored. Ground-truth use is inferred from the evaluator definition.
+   */
+  needs_ground_truth?: boolean;
   /**
    * @deprecated
    * @description Deprecated and ignored. Composite metrics are no longer supported.
@@ -2938,8 +2956,6 @@ export type RunMetricRequestMetric = {
   return_type?: 'float' | 'boolean' | 'string' | 'categorical';
   /** @default false */
   enabled_in_prod?: boolean;
-  /** @default false */
-  needs_ground_truth?: boolean;
   /** @default 10 */
   sampling_percentage?: number;
   model_provider?: string | null;
@@ -2952,6 +2968,11 @@ export type RunMetricRequestMetric = {
     passing_categories?: string[];
   } | null;
   categories?: RunMetricRequestMetricCategoriesItem[] | null;
+  /**
+   * @deprecated
+   * @description Deprecated and ignored. Ground-truth use is inferred from the evaluator definition.
+   */
+  needs_ground_truth?: boolean;
   /**
    * @deprecated
    * @description Deprecated and ignored. Composite metrics are no longer supported.
@@ -2981,6 +3002,10 @@ export type RunMetricRequestEvent = {
   outputs?: {
     [key: string]: unknown;
   };
+  /**
+   * @deprecated
+   * @description Deprecated: ignored. The workspace whose provider credentials run the metric is derived from the caller’s authenticated scope.
+   */
   workspace_id?: string;
   feedback?: RunMetricRequestEventFeedback;
 } & {
@@ -3032,8 +3057,6 @@ export type LegacyRunMetricRequestMetric = {
   return_type?: 'float' | 'boolean' | 'string' | 'categorical';
   /** @default false */
   enabled_in_prod?: boolean;
-  /** @default false */
-  needs_ground_truth?: boolean;
   /** @default 10 */
   sampling_percentage?: number;
   model_provider?: string | null;
@@ -3046,6 +3069,11 @@ export type LegacyRunMetricRequestMetric = {
     passing_categories?: string[];
   } | null;
   categories?: LegacyRunMetricRequestMetricCategoriesItem[] | null;
+  /**
+   * @deprecated
+   * @description Deprecated and ignored. Ground-truth use is inferred from the evaluator definition.
+   */
+  needs_ground_truth?: boolean;
   /**
    * @deprecated
    * @description Deprecated and ignored. Composite metrics are no longer supported.
@@ -3075,6 +3103,10 @@ export type LegacyRunMetricRequestEvent = {
   outputs?: {
     [key: string]: unknown;
   };
+  /**
+   * @deprecated
+   * @description Deprecated: ignored. The workspace whose provider credentials run the metric is derived from the caller’s authenticated scope.
+   */
   workspace_id?: string;
   feedback?: LegacyRunMetricRequestEventFeedback;
 } & {

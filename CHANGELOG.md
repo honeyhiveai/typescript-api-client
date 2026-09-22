@@ -1,5 +1,25 @@
 # TypeScript API SDK Changelog
 
+## [1.5.0] - 2026-09-22
+
+### What's New
+- New `ingestionApiKey` client option and `HH_INGESTION_API_KEY` environment variable for supplying an ingestion API key (a value beginning with `hh_ingst_`). The client sends it on the operations that send traces and events: `client.sessions.create()`, `client.sessions.createEventBatch()`, `client.events.create()`, `client.events.update()`, and `client.events.createBatch()`. The client sends the project API key on everything else.
+- An ingestion API key is now a credential on its own. A process that only sends traces and events can construct a client with the ingestion key and no project API key. Every other operation on such a client behaves as it does with no project API key configured.
+- An `ingestionApiKey` or `HH_INGESTION_API_KEY` value that is not a well-formed ingestion key throws when the client is constructed. The error names the option or variable the value came from and never echoes the value.
+- Verbose logging now prints an `Ingestion API key:` line next to the project key. The line shows `hh_ingst_`, the key id, and none of the secret. This is the form HoneyHive displays, so you can match the line against the key in your account. A credential that is not configured logs as `(none)`.
+
+### Fixes & Improvements
+- `client.metrics.run()` now derives the workspace whose provider credentials run the metric from the caller's authenticated scope rather than from the request body. Previously a `workspace_id` in the request event was forwarded as-is. That let an authenticated caller run an ad-hoc LLM metric against another tenant's configured provider credentials.
+- A metric run that needs ground truth the event does not carry is now skipped instead of failed. `client.metrics.run()` returns `200` with `success: false`, a null `result`, and an `explanation`. It previously threw a `400` with `ground_truth_missing`. Adding ground truth to the event re-enqueues it, and the metric computes on that pass.
+- The error thrown when no credential is configured now reads `Missing API key` and names the four current sources: `projectApiKey`, `ingestionApiKey`, `HH_PROJECT_API_KEY`, and `HH_INGESTION_API_KEY`.
+
+### Compatibility & Deprecations
+- A client configured with a project API key and no ingestion key still sends the project key on the ingestion operations.
+- `HH_INGESTION_API_KEY` is read at client construction for the first time in this release. A process that already sets it to a non-empty value that is not a well-formed ingestion key now fails to construct a client. Unset the variable, or set it to your ingestion key, before upgrading.
+- `needs_ground_truth` is deprecated and ignored on every metric request and response type, including `CreateMetricRequest`, `UpdateMetricRequest`, `MetricItem`, `MetricVersionContent`, and the metric passed to `client.metrics.run()`. The API now infers the need for ground truth from the metric definition. The property remains in the type definitions so existing code keeps compiling, and reads still return the stored value.
+- `workspace_id` on the event passed to `client.metrics.run()` is deprecated and ignored. It remains accepted, so existing code keeps compiling. Remove it and rely on the key's scope.
+- Bumped `axios` from `1.19.0` to `1.20.0`.
+
 ## [1.4.1] - 2026-08-14
 
 ### Fixes & Improvements

@@ -102,9 +102,13 @@ await client.datasets.delete({
 
 ## Authorization
 
-The HoneyHive API authenticates requests using an API key sent as a Bearer token in the `Authorization` header. There are three ways to provide it.
+The HoneyHive API authenticates requests using an API key sent as a Bearer token in the `Authorization` header. There are two kinds of key, one per kind of operation: a [project API key](#project-api-key) for managing and reading data (datasets, experiments, metrics, charts, event search), and an [ingestion API key](#ingestion-api-key) for sending traces and events (creating sessions, writing events). The client sends each key on exactly the operations it is for. Each key can be provided through an environment variable or a `ClientConfig` option; [custom middleware](#custom-middleware) is the third way to authenticate.
 
-### Environment variable (recommended)
+> **Compatibility:** a client configured with a project API key alone still sends it on the ingestion operations too, so existing setups keep working. New setups should give ingestion its own key.
+
+### Project API key
+
+#### Environment variable (recommended)
 
 Set the `HH_PROJECT_API_KEY` environment variable. The client reads it automatically when no `projectApiKey` option is provided:
 
@@ -114,7 +118,7 @@ const client = new Client();
 
 > **Deprecated alias:** the `HH_API_KEY` environment variable is still accepted but will be removed in the next major version. Using it logs a deprecation warning to stderr on client construction. Migrate to `HH_PROJECT_API_KEY`.
 
-### projectApiKey option
+#### projectApiKey option
 
 Pass the key directly in `ClientConfig`. **Never hard-code the key or commit it to source control** — always read it from a secret store or environment variable:
 
@@ -126,9 +130,47 @@ const client = new Client({
 
 > **Deprecated alias:** the `apiKey` option is still accepted but will be removed in the next major version. Setting it logs a deprecation warning to stderr on client construction. Migrate to `projectApiKey`.
 
+### Ingestion API key
+
+An ingestion API key (`hh_ingst_…`) is the credential for sending traces and events: the operations that create sessions and write events accept it, and nothing else does. A process that only sends traces and events should hold the ingestion key alone.
+
+- Every other operation on an ingestion-only client behaves as it does on a client with no project API key configured: the request is sent without a key, or with whatever [custom middleware](#custom-middleware) supplies.
+- A value in `ingestionApiKey` or `HH_INGESTION_API_KEY` that is not an ingestion API key throws when the client is constructed, so a misplaced key fails at startup rather than as a `401` on the first trace.
+
+#### Environment variable (recommended)
+
+Set the `HH_INGESTION_API_KEY` environment variable. The client reads it automatically when no `ingestionApiKey` option is provided:
+
+```sh
+export HH_INGESTION_API_KEY=...
+```
+
+```typescript
+const client = new Client();
+```
+
+#### ingestionApiKey option
+
+Pass the key directly in `ClientConfig`, under the same rule as `projectApiKey`: read it from a secret store, never hard-code it. The option takes precedence over the environment variable:
+
+```typescript
+const client = new Client({
+  ingestionApiKey: process.env.MY_HONEYHIVE_INGESTION_KEY,
+});
+```
+
+#### Both keys
+
+A process that sends traces and events and also manages or reads data holds both keys, each from its own variable or option. The client routes every operation to the key it is for:
+
+```sh
+export HH_PROJECT_API_KEY=...
+export HH_INGESTION_API_KEY=...
+```
+
 ### Custom middleware
 
-For advanced scenarios (rotating keys, fetching tokens at request time, etc.), you can supply custom middleware that sets the `Authorization` header on each request. Middleware runs after the initial headers are set, so it will override any API key provided via `projectApiKey` or `HH_PROJECT_API_KEY`.
+For advanced scenarios (rotating keys, fetching tokens at request time, etc.), you can supply custom middleware that sets the `Authorization` header on each request. Middleware runs after the initial headers are set, so it will override whichever API key the client would otherwise send.
 
 When middleware is provided without an API key, the client skips the missing-key error — it assumes the middleware handles authentication. If both are provided, the API key sets the initial header and the middleware can override it per-request.
 
@@ -172,12 +214,13 @@ const client = new Client({
 
 ## Verbose logging
 
-Set `verbose: true` (or the `HH_VERBOSE` environment variable to `true`) to log the resolved data plane URL, a masked API key, and the SDK package + version when the client is constructed. Useful for confirming which environment and credential the client is configured with — particularly when debugging "is this hitting prod or staging?" or "did `HH_PROJECT_API_KEY` actually get picked up?".
+Set `verbose: true` (or the `HH_VERBOSE` environment variable to `true`) to log the resolved data plane URL, each configured API key in masked form, and the SDK package + version when the client is constructed. Useful for confirming which environment and credentials the client is configured with — particularly when debugging "is this hitting prod or staging?" or "did `HH_PROJECT_API_KEY` actually get picked up?".
 
 ```typescript
 const client = new Client({ verbose: true });
 // Data plane URL: https://api.dp1.us.honeyhive.ai
 // Project API key: hh_****5Qrg
+// Ingestion API key: hh_ingst_Ab12Cd34Ef56Gh78Ij90Kl12_******
 // Package: @honeyhive/api-client v1.0.0
 ```
 
@@ -185,4 +228,4 @@ const client = new Client({ verbose: true });
 HH_VERBOSE=true node my-script.js
 ```
 
-Output is written via `console.error` (stderr in Node, devtools in the browser) and only fires once per client construction. An explicit `verbose: false` overrides `HH_VERBOSE`. The API key is masked so only a recognized key prefix and the last 4 characters are shown; anything else is replaced with asterisks.
+Output is written via `console.error` (stderr in Node, devtools in the browser) and only fires once per client construction. An explicit `verbose: false` overrides `HH_VERBOSE`. A credential that is not configured logs as `(none)`. The project API key is masked so only a recognized key prefix and the last 4 characters are shown; anything else is replaced with asterisks. An ingestion API key shows its prefix and key id and none of its secret, which is the form HoneyHive displays for the key, so the line can be matched against the key in your account.

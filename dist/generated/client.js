@@ -2,9 +2,9 @@
 import { createApiClient, unwrap } from '../util.js';
 /** @inline */
 class SessionsNamespace {
-    #client;
-    constructor(client) {
-        this.#client = client;
+    #clients;
+    constructor(clients) {
+        this.#clients = clients;
     }
     /**
      * Start a new session
@@ -48,7 +48,8 @@ class SessionsNamespace {
      * the existing event.
      */
     create(request, options) {
-        return unwrap(this.#client.POST('/v1/sessions', { body: request, ...options }));
+        const httpClient = this.#clients.IngestionApiKey;
+        return unwrap(httpClient.POST('/v1/sessions', { body: request, ...options }));
     }
     /**
      * Add a batch of events to a session
@@ -72,7 +73,8 @@ class SessionsNamespace {
      */
     createEventBatch(request, options) {
         const { session_id, ...body } = request;
-        return unwrap(this.#client.POST('/v1/sessions/{session_id}/events/batch', {
+        const httpClient = this.#clients.IngestionApiKey;
+        return unwrap(httpClient.POST('/v1/sessions/{session_id}/events/batch', {
             params: { path: { session_id } },
             body,
             ...options,
@@ -81,9 +83,9 @@ class SessionsNamespace {
 }
 /** @inline */
 class EventsNamespace {
-    #client;
-    constructor(client) {
-        this.#client = client;
+    #clients;
+    constructor(clients) {
+        this.#clients = clients;
     }
     /**
      * Create a new event
@@ -131,7 +133,8 @@ class EventsNamespace {
      * ```
      */
     create(request, options) {
-        return unwrap(this.#client.POST('/v1/events', { body: request, ...options }));
+        const httpClient = this.#clients.IngestionApiKey;
+        return unwrap(httpClient.POST('/v1/events', { body: request, ...options }));
     }
     /**
      * Get an event by ID
@@ -141,7 +144,8 @@ class EventsNamespace {
      */
     get(request, options) {
         const { event_id } = request;
-        return unwrap(this.#client.GET('/v1/events/{event_id}', { params: { path: { event_id } }, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/events/{event_id}', { params: { path: { event_id } }, ...options }));
     }
     /**
      * Update an event
@@ -186,11 +190,8 @@ class EventsNamespace {
      */
     update(request, options) {
         const { event_id, ...body } = request;
-        return unwrap(this.#client.PUT('/v1/events/{event_id}', {
-            params: { path: { event_id } },
-            body,
-            ...options,
-        }));
+        const httpClient = this.#clients.IngestionApiKey;
+        return unwrap(httpClient.PUT('/v1/events/{event_id}', { params: { path: { event_id } }, body, ...options }));
     }
     /**
      * Retrieve events based on filters
@@ -198,7 +199,8 @@ class EventsNamespace {
      * Search events via POST with filtering and pagination. This is the primary method for retrieving events from HoneyHive.
      */
     search(request, options) {
-        return unwrap(this.#client.POST('/v1/events/search', { body: request, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/events/search', { body: request, ...options }));
     }
     /**
      * Create a batch of events
@@ -237,14 +239,15 @@ class EventsNamespace {
      * ```
      */
     createBatch(request, options) {
-        return unwrap(this.#client.POST('/v1/events/batch', { body: request, ...options }));
+        const httpClient = this.#clients.IngestionApiKey;
+        return unwrap(httpClient.POST('/v1/events/batch', { body: request, ...options }));
     }
 }
 /** @inline */
 class ChartsNamespace {
-    #client;
-    constructor(client) {
-        this.#client = client;
+    #clients;
+    constructor(clients) {
+        this.#clients = clients;
     }
     /**
      * List charts
@@ -252,11 +255,13 @@ class ChartsNamespace {
      * Retrieve all charts in the current scope.
      */
     list(options) {
-        return unwrap(this.#client.GET('/v1/charts', { ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/charts', { ...options }));
     }
     /** Create a new chart */
     create(request, options) {
-        return unwrap(this.#client.POST('/v1/charts', { body: request, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/charts', { body: request, ...options }));
     }
     /**
      * Get a chart
@@ -265,7 +270,8 @@ class ChartsNamespace {
      */
     get(request, options) {
         const { chart_id } = request;
-        return unwrap(this.#client.GET('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }));
     }
     /**
      * Update a chart
@@ -274,32 +280,32 @@ class ChartsNamespace {
      */
     update(request, options) {
         const { chart_id, ...body } = request;
-        return unwrap(this.#client.PUT('/v1/charts/{chart_id}', {
-            params: { path: { chart_id } },
-            body,
-            ...options,
-        }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.PUT('/v1/charts/{chart_id}', { params: { path: { chart_id } }, body, ...options }));
     }
     /** Delete a chart */
     delete(request, options) {
         const { chart_id } = request;
-        return unwrap(this.#client.DELETE('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.DELETE('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }));
     }
 }
 /** @inline */
 class MetricsNamespace {
-    #client;
-    constructor(client) {
-        this.#client = client;
+    #clients;
+    constructor(clients) {
+        this.#clients = clients;
     }
     /** List all metrics */
     list(request, options) {
         const { type, id } = request ?? {};
-        return unwrap(this.#client.GET('/v1/metrics', { params: { query: { type, id } }, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/metrics', { params: { query: { type, id } }, ...options }));
     }
     /** Create a new metric */
     create(request, options) {
-        return unwrap(this.#client.POST('/v1/metrics', { body: request, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/metrics', { body: request, ...options }));
     }
     /**
      * Update an existing metric
@@ -308,7 +314,8 @@ class MetricsNamespace {
      */
     update(request, options) {
         const { metric_id, ...body } = request;
-        return unwrap(this.#client.PUT('/v1/metrics/{metric_id}', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.PUT('/v1/metrics/{metric_id}', {
             params: { path: { metric_id } },
             body,
             ...options,
@@ -317,10 +324,8 @@ class MetricsNamespace {
     /** Delete a metric */
     delete(request, options) {
         const { metric_id } = request;
-        return unwrap(this.#client.DELETE('/v1/metrics/{metric_id}', {
-            params: { path: { metric_id } },
-            ...options,
-        }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.DELETE('/v1/metrics/{metric_id}', { params: { path: { metric_id } }, ...options }));
     }
     /**
      * Run a metric evaluation
@@ -328,14 +333,15 @@ class MetricsNamespace {
      * Execute a metric on a specific event
      */
     run(request, options) {
-        return unwrap(this.#client.POST('/v1/metrics/run', { body: request, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/metrics/run', { body: request, ...options }));
     }
 }
 /** @inline */
 class MetricVersionsNamespace {
-    #client;
-    constructor(client) {
-        this.#client = client;
+    #clients;
+    constructor(clients) {
+        this.#clients = clients;
     }
     /**
      * List versions for a metric
@@ -344,7 +350,8 @@ class MetricVersionsNamespace {
      */
     list(request, options) {
         const { metric_id } = request;
-        return unwrap(this.#client.GET('/v1/metrics/{metric_id}/versions', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/metrics/{metric_id}/versions', {
             params: { path: { metric_id } },
             ...options,
         }));
@@ -356,7 +363,8 @@ class MetricVersionsNamespace {
      */
     create(request, options) {
         const { metric_id, ...body } = request;
-        return unwrap(this.#client.POST('/v1/metrics/{metric_id}/versions', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/metrics/{metric_id}/versions', {
             params: { path: { metric_id } },
             body,
             ...options,
@@ -369,7 +377,8 @@ class MetricVersionsNamespace {
      */
     deploy(request, options) {
         const { metric_id, version_name } = request;
-        return unwrap(this.#client.POST('/v1/metrics/{metric_id}/versions/{version_name}/deploy', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/metrics/{metric_id}/versions/{version_name}/deploy', {
             params: { path: { metric_id, version_name } },
             ...options,
         }));
@@ -377,9 +386,9 @@ class MetricVersionsNamespace {
 }
 /** @inline */
 class DatapointsNamespace {
-    #client;
-    constructor(client) {
-        this.#client = client;
+    #clients;
+    constructor(clients) {
+        this.#clients = clients;
     }
     /**
      * Retrieve a list of datapoints
@@ -388,7 +397,8 @@ class DatapointsNamespace {
      */
     list(request, options) {
         const { datapoint_ids, dataset_name } = request ?? {};
-        return unwrap(this.#client.GET('/v1/datapoints', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/datapoints', {
             params: { query: { datapoint_ids, dataset_name } },
             ...options,
         }));
@@ -399,7 +409,8 @@ class DatapointsNamespace {
      * Create a single datapoint with inputs, history, ground truth, and metadata.
      */
     create(request, options) {
-        return unwrap(this.#client.POST('/v1/datapoints', { body: request, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/datapoints', { body: request, ...options }));
     }
     /**
      * Create multiple datapoints in batch
@@ -407,7 +418,8 @@ class DatapointsNamespace {
      * Create multiple datapoints from events using field mappings and optional filters.
      */
     createBatch(request, options) {
-        return unwrap(this.#client.POST('/v1/datapoints/batch', { body: request, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/datapoints/batch', { body: request, ...options }));
     }
     /**
      * Retrieve a specific datapoint
@@ -416,7 +428,8 @@ class DatapointsNamespace {
      */
     get(request, options) {
         const { datapoint_id } = request;
-        return unwrap(this.#client.GET('/v1/datapoints/{datapoint_id}', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/datapoints/{datapoint_id}', {
             params: { path: { datapoint_id } },
             ...options,
         }));
@@ -428,7 +441,8 @@ class DatapointsNamespace {
      */
     update(request, options) {
         const { datapoint_id, ...body } = request;
-        return unwrap(this.#client.PUT('/v1/datapoints/{datapoint_id}', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.PUT('/v1/datapoints/{datapoint_id}', {
             params: { path: { datapoint_id } },
             body,
             ...options,
@@ -441,7 +455,8 @@ class DatapointsNamespace {
      */
     delete(request, options) {
         const { datapoint_id } = request;
-        return unwrap(this.#client.DELETE('/v1/datapoints/{datapoint_id}', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.DELETE('/v1/datapoints/{datapoint_id}', {
             params: { path: { datapoint_id } },
             ...options,
         }));
@@ -449,9 +464,9 @@ class DatapointsNamespace {
 }
 /** @inline */
 class DatasetsNamespace {
-    #client;
-    constructor(client) {
-        this.#client = client;
+    #clients;
+    constructor(clients) {
+        this.#clients = clients;
     }
     /**
      * Get datasets
@@ -460,7 +475,8 @@ class DatasetsNamespace {
      */
     list(request, options) {
         const { dataset_id, name } = request ?? {};
-        return unwrap(this.#client.GET('/v1/datasets', { params: { query: { dataset_id, name } }, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/datasets', { params: { query: { dataset_id, name } }, ...options }));
     }
     /**
      * Create a dataset
@@ -468,7 +484,8 @@ class DatasetsNamespace {
      * Create a new dataset with an optional name, description, and initial set of datapoint IDs.
      */
     create(request, options) {
-        return unwrap(this.#client.POST('/v1/datasets', { body: request, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/datasets', { body: request, ...options }));
     }
     /**
      * Update a dataset
@@ -477,7 +494,8 @@ class DatasetsNamespace {
      */
     update(request, options) {
         const { dataset_id, ...body } = request;
-        return unwrap(this.#client.PUT('/v1/datasets/{dataset_id}', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.PUT('/v1/datasets/{dataset_id}', {
             params: { path: { dataset_id } },
             body,
             ...options,
@@ -490,7 +508,8 @@ class DatasetsNamespace {
      */
     delete(request, options) {
         const { dataset_id } = request;
-        return unwrap(this.#client.DELETE('/v1/datasets/{dataset_id}', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.DELETE('/v1/datasets/{dataset_id}', {
             params: { path: { dataset_id } },
             ...options,
         }));
@@ -502,7 +521,8 @@ class DatasetsNamespace {
      */
     addDatapoints(request, options) {
         const { dataset_id, ...body } = request;
-        return unwrap(this.#client.POST('/v1/datasets/{dataset_id}/datapoints', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/datasets/{dataset_id}/datapoints', {
             params: { path: { dataset_id } },
             body,
             ...options,
@@ -515,7 +535,8 @@ class DatasetsNamespace {
      */
     removeDatapoint(request, options) {
         const { dataset_id, datapoint_id } = request;
-        return unwrap(this.#client.DELETE('/v1/datasets/{dataset_id}/datapoints/{datapoint_id}', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.DELETE('/v1/datasets/{dataset_id}/datapoints/{datapoint_id}', {
             params: { path: { dataset_id, datapoint_id } },
             ...options,
         }));
@@ -523,9 +544,9 @@ class DatasetsNamespace {
 }
 /** @inline */
 class ExperimentsNamespace {
-    #client;
-    constructor(client) {
-        this.#client = client;
+    #clients;
+    constructor(clients) {
+        this.#clients = clients;
     }
     /**
      * Get a list of evaluation runs
@@ -534,7 +555,8 @@ class ExperimentsNamespace {
      */
     listRuns(request, options) {
         const { dataset_id, page, limit, run_ids, name, status, dateRange, sort_by, sort_order } = request ?? {};
-        return unwrap(this.#client.GET('/v1/runs', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/runs', {
             params: {
                 query: { dataset_id, page, limit, run_ids, name, status, dateRange, sort_by, sort_order },
             },
@@ -547,7 +569,8 @@ class ExperimentsNamespace {
      * Create a new experiment run to track an evaluation against a dataset.
      */
     createRun(request, options) {
-        return unwrap(this.#client.POST('/v1/runs', { body: request, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.POST('/v1/runs', { body: request, ...options }));
     }
     /**
      * Get events schema across all experiment runs in a project
@@ -556,7 +579,8 @@ class ExperimentsNamespace {
      */
     getRunsSchema(request, options) {
         const { dateRange } = request ?? {};
-        return unwrap(this.#client.GET('/v1/runs/schema', { params: { query: { dateRange } }, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/runs/schema', { params: { query: { dateRange } }, ...options }));
     }
     /**
      * Get details of an evaluation run
@@ -565,7 +589,8 @@ class ExperimentsNamespace {
      */
     getRun(request, options) {
         const { run_id } = request;
-        return unwrap(this.#client.GET('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }));
     }
     /**
      * Update an evaluation run
@@ -574,7 +599,8 @@ class ExperimentsNamespace {
      */
     updateRun(request, options) {
         const { run_id, ...body } = request;
-        return unwrap(this.#client.PUT('/v1/runs/{run_id}', { params: { path: { run_id } }, body, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.PUT('/v1/runs/{run_id}', { params: { path: { run_id } }, body, ...options }));
     }
     /**
      * Delete an evaluation run
@@ -583,7 +609,8 @@ class ExperimentsNamespace {
      */
     deleteRun(request, options) {
         const { run_id } = request;
-        return unwrap(this.#client.DELETE('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }));
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.DELETE('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }));
     }
     /**
      * Get events schema for a single experiment run
@@ -592,7 +619,8 @@ class ExperimentsNamespace {
      */
     getRunSchema(request, options) {
         const { run_id, dateRange } = request;
-        return unwrap(this.#client.GET('/v1/runs/{run_id}/schema', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/runs/{run_id}/schema', {
             params: { path: { run_id }, query: { dateRange } },
             ...options,
         }));
@@ -604,7 +632,8 @@ class ExperimentsNamespace {
      */
     getRunMetrics(request, options) {
         const { run_id, dateRange, filters } = request;
-        return unwrap(this.#client.GET('/v1/runs/{run_id}/metrics', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/runs/{run_id}/metrics', {
             params: { path: { run_id }, query: { dateRange, filters } },
             ...options,
         }));
@@ -616,7 +645,8 @@ class ExperimentsNamespace {
      */
     getSummary(request, options) {
         const { run_id, aggregate_function, filters } = request;
-        return unwrap(this.#client.GET('/v1/runs/{run_id}/summary', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/runs/{run_id}/summary', {
             params: { path: { run_id }, query: { aggregate_function, filters } },
             ...options,
         }));
@@ -628,7 +658,8 @@ class ExperimentsNamespace {
      */
     compareRuns(request, options) {
         const { new_run_id, old_run_id, aggregate_function, filters } = request;
-        return unwrap(this.#client.GET('/v1/runs/{new_run_id}/compare/{old_run_id}', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/runs/{new_run_id}/compare/{old_run_id}', {
             params: { path: { new_run_id, old_run_id }, query: { aggregate_function, filters } },
             ...options,
         }));
@@ -640,7 +671,8 @@ class ExperimentsNamespace {
      */
     compareRunEvents(request, options) {
         const { new_run_id, old_run_id, event_name, event_type, filter, limit, page } = request;
-        return unwrap(this.#client.GET('/v1/runs/{new_run_id}/compare/{old_run_id}/events', {
+        const httpClient = this.#clients.BearerAuth;
+        return unwrap(httpClient.GET('/v1/runs/{new_run_id}/compare/{old_run_id}/events', {
             params: {
                 path: { new_run_id, old_run_id },
                 query: { event_name, event_type, filter, limit, page },
@@ -650,7 +682,7 @@ class ExperimentsNamespace {
     }
 }
 export class Client {
-    #client;
+    #clients;
     sessions;
     events;
     charts;
@@ -660,15 +692,15 @@ export class Client {
     datasets;
     experiments;
     constructor(options = {}) {
-        this.#client = createApiClient(options);
-        this.sessions = new SessionsNamespace(this.#client);
-        this.events = new EventsNamespace(this.#client);
-        this.charts = new ChartsNamespace(this.#client);
-        this.metrics = new MetricsNamespace(this.#client);
-        this.metricVersions = new MetricVersionsNamespace(this.#client);
-        this.datapoints = new DatapointsNamespace(this.#client);
-        this.datasets = new DatasetsNamespace(this.#client);
-        this.experiments = new ExperimentsNamespace(this.#client);
+        this.#clients = createApiClient(options);
+        this.sessions = new SessionsNamespace(this.#clients);
+        this.events = new EventsNamespace(this.#clients);
+        this.charts = new ChartsNamespace(this.#clients);
+        this.metrics = new MetricsNamespace(this.#clients);
+        this.metricVersions = new MetricVersionsNamespace(this.#clients);
+        this.datapoints = new DatapointsNamespace(this.#clients);
+        this.datasets = new DatasetsNamespace(this.#clients);
+        this.experiments = new ExperimentsNamespace(this.#clients);
     }
 }
 //# sourceMappingURL=client.js.map

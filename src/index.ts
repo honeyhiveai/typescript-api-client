@@ -1,6 +1,11 @@
 export { Client } from './generated/client.js';
 export {
   HoneyHiveError,
+  MissingApiKeyError,
+  MalformedApiKeyError,
+  type ApiKeyKind,
+} from './errors.js';
+export {
   ApiError,
   NetworkError,
   type ClientConfig,
@@ -16,10 +21,13 @@ export type {
   UpdateEventRequest,
   SearchEventsRequest,
   CreateEventBatchRequest,
+  GetChartsRequest,
   CreateChartRequest,
   GetChartRequest,
   UpdateChartRequest,
   DeleteChartRequest,
+  CreateDataPlaneApiKeyRequest,
+  CreateIngestionApiKeyRequest,
   GetMetricsRequest,
   CreateMetricRequest,
   UpdateMetricRequest,
@@ -62,6 +70,8 @@ export type {
   GetChartResponse,
   UpdateChartResponse,
   DeleteChartResponse,
+  CreateDataPlaneApiKeyResponse,
+  CreateIngestionApiKeyResponse,
   GetMetricsResponse,
   CreateMetricResponse,
   UpdateMetricResponse,

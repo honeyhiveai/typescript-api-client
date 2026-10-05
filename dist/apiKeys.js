@@ -1,50 +1,72 @@
 /**
- * What the SDK knows about the shape of HoneyHive API keys: the ingestion
- * key's format, checked at client construction, and the masks the verbose log
+ * What the SDK knows about the shape of HoneyHive API keys: the typed keys'
+ * format, checked at client construction, and the masks the verbose log
  * renders each kind of key with. Nothing here resolves or sends a key.
  */
+import { MalformedApiKeyError } from './errors.js';
+const INGESTION_API_KEY = {
+    keyKind: 'ingestion',
+    prefix: 'hh_ingst_',
+    label: 'an ingestion API key',
+};
+const DATA_PLANE_API_KEY = {
+    keyKind: 'dataPlane',
+    prefix: 'hh_fgdp_',
+    label: 'a fine-grained data plane API key',
+};
+const HASHED_KEY_KINDS = [INGESTION_API_KEY, DATA_PLANE_API_KEY];
 /**
- * The prefix of an ingestion API key, whose values have the shape
- * `hh_ingst_<key id>_<key secret>`.
- */
-const INGESTION_API_KEY_PREFIX = 'hh_ingst_';
-/**
- * The shape of the key id segment of an ingestion key: exactly 24 alphanumeric
+ * The shape of the key id segment of a hashed key: exactly 24 alphanumeric
  * characters, with `_` and `-` excluded so that an id can never read as two
  * segments. Used by the mask, which shows the id and none of the secret.
  */
-const INGESTION_KEY_ID_PATTERN = /^[A-Za-z0-9]{24}$/;
+const KEY_ID_PATTERN = /^[A-Za-z0-9]{24}$/;
 /**
- * A complete ingestion key: the prefix, a 24-character id, and a 64-character
- * secret over the URL-safe alphabet. Both lengths are fixed properties of the
- * key format, so a value of any other shape is a truncated or corrupted key,
- * never a newer variant.
+ * Everything after the prefix of a complete hashed key: a 24-character id and
+ * a 64-character secret over the URL-safe alphabet. Both lengths are fixed
+ * properties of the key format, so a value of any other shape is a truncated
+ * or corrupted key, never a newer variant.
  */
-const INGESTION_API_KEY_PATTERN = /^hh_ingst_[A-Za-z0-9]{24}_[A-Za-z0-9_-]{64}$/;
+const KEY_ID_AND_SECRET_PATTERN = /^[A-Za-z0-9]{24}_[A-Za-z0-9_-]{64}$/;
 /**
- * Returns `value` if it is a well-formed ingestion API key, and throws
- * otherwise, naming `source` (the option or environment variable the value
- * came from) and what the value looks like instead. The message never echoes
- * the value itself.
+ * Returns `value` if it is a well-formed key of `kind`, and throws a
+ * {@link MalformedApiKeyError} otherwise, naming `source` (the option or
+ * environment variable the value came from) and what the value looks like
+ * instead. The message never echoes the value itself.
  *
  * This runs at client construction whether or not the client goes on to send
  * anything with the key: a present, malformed typed credential is a deployment
  * error, and failing here names it, where a 401 from whichever request used it
  * first would not.
  */
-export function checkIngestionApiKey(value, source) {
+function checkHashedApiKey(kind, value, source) {
     const candidate = value.trim();
-    if (INGESTION_API_KEY_PATTERN.test(candidate)) {
+    if (candidate.startsWith(kind.prefix) &&
+        KEY_ID_AND_SECRET_PATTERN.test(candidate.slice(kind.prefix.length))) {
         return candidate;
     }
-    const expectation = `${source} must be an ingestion API key, a value beginning with '${INGESTION_API_KEY_PREFIX}'`;
-    if (candidate.startsWith(INGESTION_API_KEY_PREFIX)) {
-        throw new Error(`${expectation}; the value provided begins with it but is not a complete key.`);
+    let problem = 'the value provided is not a HoneyHive API key.';
+    if (candidate.startsWith(kind.prefix)) {
+        problem = 'the value provided begins with it but is not a complete key.';
     }
-    if (candidate.startsWith('hh_')) {
-        throw new Error(`${expectation}; the value provided looks like a different kind of HoneyHive API key.`);
+    else if (candidate.startsWith('hh_')) {
+        problem = 'the value provided looks like a different kind of HoneyHive API key.';
     }
-    throw new Error(`${expectation}; the value provided is not a HoneyHive API key.`);
+    throw new MalformedApiKeyError(kind.keyKind, source, `must be ${kind.label}, a value beginning with '${kind.prefix}'; ${problem}`);
+}
+/**
+ * Returns `value` if it is a well-formed ingestion API key (`hh_ingst_…`), and
+ * throws otherwise; see {@link checkHashedApiKey}.
+ */
+export function checkIngestionApiKey(value, source) {
+    return checkHashedApiKey(INGESTION_API_KEY, value, source);
+}
+/**
+ * Returns `value` if it is a well-formed fine-grained data plane API key
+ * (`hh_fgdp_…`), and throws otherwise; see {@link checkHashedApiKey}.
+ */
+export function checkDataPlaneApiKey(value, source) {
+    return checkHashedApiKey(DATA_PLANE_API_KEY, value, source);
 }
 /**
  * Recognized coarse-grained API key prefixes, sorted longest-first so that
@@ -64,19 +86,20 @@ export function checkIngestionApiKey(value, source) {
  * Add an entry when a prefix can both be minted and authenticate a data plane
  * request. Until then, a value carrying one renders under the generic `hh_`
  * prefix, since every HoneyHive prefix begins with `hh_`. Only a value that
- * isn't HoneyHive-shaped at all is redacted wholesale. Ingestion keys are not
- * in this table: they are hashed keys and take the id-based mask instead.
+ * isn't HoneyHive-shaped at all is redacted wholesale. Hashed keys are not in
+ * this table: they take the id-based mask instead.
  */
 const API_KEY_PREFIXES = ['hh_ro_', 'hh_'].sort((a, b) => b.length - a.length);
 /**
  * Returns a display-safe rendering of an API key for verbose logging.
  *
- * For an ingestion key, renders `hh_ingst_<key id>_******`, the key's id and
- * none of its secret. This is character-for-character the masked form
- * HoneyHive displays for that key, so a verbose log line can be matched
- * directly against a key in your account. A value with the prefix but a
- * mangled id segment is redacted wholesale, because the characters after the
- * prefix could then be secret material rather than an id.
+ * For a hashed key (an ingestion key or a fine-grained data plane key),
+ * renders `<prefix><key id>_******`, the key's id and none of its secret. This
+ * is character-for-character the masked form HoneyHive displays for that key,
+ * so a verbose log line can be matched directly against a key in your account.
+ * A value with a hashed prefix but a mangled id segment is redacted wholesale,
+ * because the characters after the prefix could then be secret material rather
+ * than an id.
  *
  * For recognized coarse-grained HoneyHive keys, renders `<prefix>****<last 4
  * chars>` (e.g. `hh_ro_****o5p6`). For anything else, returns 8 fixed-width
@@ -84,15 +107,14 @@ const API_KEY_PREFIXES = ['hh_ro_', 'hh_'].sort((a, b) => b.length - a.length);
  * secret.
  */
 export function maskApiKey(apiKey) {
-    if (apiKey.startsWith(INGESTION_API_KEY_PREFIX)) {
-        const rest = apiKey.slice(INGESTION_API_KEY_PREFIX.length);
+    const hashedKind = HASHED_KEY_KINDS.find((kind) => apiKey.startsWith(kind.prefix));
+    if (hashedKind) {
+        const rest = apiKey.slice(hashedKind.prefix.length);
         const separator = rest.indexOf('_');
         // An empty id never matches the pattern, so a value with no separator at
         // all takes the redacted path without a second branch.
         const keyId = separator === -1 ? '' : rest.slice(0, separator);
-        return INGESTION_KEY_ID_PATTERN.test(keyId)
-            ? `${INGESTION_API_KEY_PREFIX}${keyId}_******`
-            : '********';
+        return KEY_ID_PATTERN.test(keyId) ? `${hashedKind.prefix}${keyId}_******` : '********';
     }
     const prefix = API_KEY_PREFIXES.find((p) => apiKey.startsWith(p));
     if (!prefix) {

@@ -1,4 +1,5 @@
 import { type ClientOptions, type Middleware } from 'openapi-fetch';
+import { HoneyHiveError } from './errors.js';
 import { type ApiClients } from './generated/client.js';
 /**
  * Test-only escape hatch to reset the per-process deprecation-dedup set so
@@ -24,13 +25,27 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
      * and events: creating sessions and writing events. Defaults to the
      * `HH_INGESTION_API_KEY` environment variable. A process that only sends
      * traces and events holds this key alone; every other operation then
-     * behaves as it does on a client with no project API key configured.
+     * throws a `MissingApiKeyError`, as it does on a client with no project
+     * API key configured.
      *
      * A value that is set but is not an ingestion key throws at construction.
      * For compatibility, a client with a project API key and no ingestion key
      * sends the project key on the ingestion operations too.
      */
     ingestionApiKey?: string;
+    /**
+     * A fine-grained data plane API key (`hh_fgdp_…`), the credential for the
+     * operations that name a project in their path. Defaults to the
+     * `HH_DATA_PLANE_API_KEY` environment variable. Every other operation
+     * behaves as it does on a client without it.
+     *
+     * A value that is set but is not a fine-grained data plane key throws at
+     * construction. Without a data plane key, those operations throw a
+     * `MissingApiKeyError` before sending, whatever other key is configured,
+     * because they refuse the project key. A caller-supplied `Authorization`
+     * header or middleware is sent in its place.
+     */
+    dataPlaneApiKey?: string;
     dataPlaneUrl?: string;
     /**
      * @deprecated Use `dataPlaneUrl` instead. The old name will be removed in
@@ -98,15 +113,6 @@ type FetchResult<T = unknown, E = unknown> = {
     error: E;
     response: Response;
 };
-/**
- * HoneyHiveError is a base class for all errors thrown by the HoneyHive API
- * client.
- *
- * This error is never thrown directly, but is useful for determining if an
- * error is from the HoneyHive API client with `err instanceof HoneyHiveError`
- */
-export declare class HoneyHiveError extends Error {
-}
 /**
  * An error that is thrown when the API call was not successful
  *

@@ -1,7 +1,8 @@
 import axios from 'axios';
 import createClient, { type ClientOptions, type Middleware } from 'openapi-fetch';
 
-import { checkIngestionApiKey, maskApiKey } from './apiKeys.js';
+import { checkDataPlaneApiKey, checkIngestionApiKey, maskApiKey } from './apiKeys.js';
+import { type ApiKeyKind, HoneyHiveError, MissingApiKeyError } from './errors.js';
 import { type ApiClients } from './generated/client.js';
 import { type paths } from './generated/types.js';
 import { SDK_VERSION } from './generated/version.js';
@@ -19,8 +20,9 @@ const DEFAULT_DATA_PLANE_URL = 'https://api.dp1.us.honeyhive.ai';
  *
  * **This is cross-cutting behavior, not specific to URL resolution.** Every
  * caller (currently `HH_PROJECT_API_KEY`, `HH_API_KEY`, `HH_INGESTION_API_KEY`,
- * `HH_API_URL`, `HH_DATA_PLANE_URL`, `HH_VERBOSE`) sees the empty-string-as-unset
- * behavior. When adding a new env var via `getEnv('HH_FOO', 'default')`, be
+ * `HH_DATA_PLANE_API_KEY`, `HH_API_URL`, `HH_DATA_PLANE_URL`, `HH_VERBOSE`) sees
+ * the empty-string-as-unset behavior. When adding a new env var via
+ * `getEnv('HH_FOO', 'default')`, be
  * aware that `HH_FOO=""` will resolve to `'default'`, not `''`. Existing callers
  * were audited and have no regression — they either treat empty-string as falsy
  * already (`HH_API_KEY`, `HH_VERBOSE`) or use the value as a URL where
@@ -63,13 +65,14 @@ export function _testOnlyResetWarnedDeprecations(): void {
  * migrate off the old name.
  *
  * **Chassis must stay in sync with the generated per-operation deprecation
- * warning**, which calls `console.warn` with the shape
+ * warnings**, which call `console.warn` with the shape
  * `[@honeyhive/api-client] <thing> is deprecated and will be removed in the
  * next major version.` The `message` passed in here typically appends a
  * `Use '<replacement>' instead.` clause because the replacement is known at
- * this call site. The generated warning omits that clause because the OpenAPI
- * spec does not yet model replacements. If the chassis changes, update both
- * sides. The Use clause only appears in a hand-written warning.
+ * this call site. A generated warning names a replacement only when the API
+ * declares one: a method called without `project_id` says to pass it with a
+ * data plane API key, and a deprecated operation names nothing. If the
+ * chassis changes, update both sides.
  *
  * The CLI deprecation warnings follow a different convention
  * (`Warning: <kind> "..." is deprecated …`, no package prefix).
@@ -98,13 +101,27 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
    * and events: creating sessions and writing events. Defaults to the
    * `HH_INGESTION_API_KEY` environment variable. A process that only sends
    * traces and events holds this key alone; every other operation then
-   * behaves as it does on a client with no project API key configured.
+   * throws a `MissingApiKeyError`, as it does on a client with no project
+   * API key configured.
    *
    * A value that is set but is not an ingestion key throws at construction.
    * For compatibility, a client with a project API key and no ingestion key
    * sends the project key on the ingestion operations too.
    */
   ingestionApiKey?: string;
+  /**
+   * A fine-grained data plane API key (`hh_fgdp_…`), the credential for the
+   * operations that name a project in their path. Defaults to the
+   * `HH_DATA_PLANE_API_KEY` environment variable. Every other operation
+   * behaves as it does on a client without it.
+   *
+   * A value that is set but is not a fine-grained data plane key throws at
+   * construction. Without a data plane key, those operations throw a
+   * `MissingApiKeyError` before sending, whatever other key is configured,
+   * because they refuse the project key. A caller-supplied `Authorization`
+   * header or middleware is sent in its place.
+   */
+  dataPlaneApiKey?: string;
   dataPlaneUrl?: string;
   /**
    * @deprecated Use `dataPlaneUrl` instead. The old name will be removed in
@@ -167,6 +184,7 @@ export function createApiClient(options: ClientConfig): ApiClients {
     projectApiKey,
     apiKey,
     ingestionApiKey,
+    dataPlaneApiKey,
     dataPlaneUrl,
     serverUrl,
     middleware,
@@ -212,13 +230,17 @@ export function createApiClient(options: ClientConfig): ApiClients {
   // There is no default. Mirrors the URL chain below, minus the default.
   const resolvedApiKey = projectApiKey ?? apiKey ?? getEnv('HH_PROJECT_API_KEY') ?? envHhApiKey;
 
-  // Option > env var, no default. An empty option counts as unset, like an
-  // empty env var. The source travels with the value so the shape check below
-  // can name where a bad value came from.
+  // For each typed key: option > env var, no default. An empty option counts
+  // as unset, like an empty env var. The source travels with the value so the
+  // shape check below can name where a bad value came from.
   const [rawIngestionApiKey, ingestionApiKeySource] =
     ingestionApiKey !== undefined && ingestionApiKey !== ''
       ? [ingestionApiKey, 'ingestionApiKey']
       : [getEnv('HH_INGESTION_API_KEY'), 'HH_INGESTION_API_KEY'];
+  const [rawDataPlaneApiKey, dataPlaneApiKeySource] =
+    dataPlaneApiKey !== undefined && dataPlaneApiKey !== ''
+      ? [dataPlaneApiKey, 'dataPlaneApiKey']
+      : [getEnv('HH_DATA_PLANE_API_KEY'), 'HH_DATA_PLANE_API_KEY'];
 
   // Resolution order: new option > old option > new env var > old env var >
   // default. For options, any non-undefined value wins (so explicit
@@ -238,33 +260,31 @@ export function createApiClient(options: ClientConfig): ApiClients {
     version: SDK_VERSION,
   };
 
-  // Log before either check that can throw (a malformed ingestion key, a
-  // missing key) so verbose users can see what *did* resolve when construction
-  // is about to fail. The mask redacts a malformed ingestion key wholesale.
+  // Log before the shape checks below, which can throw, so verbose users can
+  // see what *did* resolve when construction is about to fail. The mask
+  // redacts a malformed typed key wholesale.
   if (resolvedVerbose) {
     console.error(`Data plane URL: ${resolvedDataPlaneUrl}`);
     console.error(`Project API key: ${resolvedApiKey ? maskApiKey(resolvedApiKey) : '(none)'}`);
     console.error(
       `Ingestion API key: ${rawIngestionApiKey ? maskApiKey(rawIngestionApiKey) : '(none)'}`,
     );
+    console.error(
+      `Data plane API key: ${rawDataPlaneApiKey ? maskApiKey(rawDataPlaneApiKey) : '(none)'}`,
+    );
     console.error(`Package: ${provenance.package} v${provenance.version}`);
   }
 
-  // A present ingestion key is checked for shape here, at construction,
-  // whether or not this client goes on to send an ingestion request.
+  // A present typed key is checked for shape here, at construction, whether
+  // or not this client goes on to send a request that uses it.
   const resolvedIngestionApiKey =
     rawIngestionApiKey === undefined
       ? undefined
       : checkIngestionApiKey(rawIngestionApiKey, ingestionApiKeySource);
-
-  // Either key is a credential: a process that only sends traces and events
-  // can hold an ingestion key alone. When middleware is provided, it is
-  // assumed to handle authentication itself.
-  if (!resolvedApiKey && !resolvedIngestionApiKey && !middleware?.length) {
-    throw new Error(
-      'Missing API key: provide projectApiKey or ingestionApiKey in options, or set the HH_PROJECT_API_KEY or HH_INGESTION_API_KEY environment variable',
-    );
-  }
+  const resolvedDataPlaneApiKey =
+    rawDataPlaneApiKey === undefined
+      ? undefined
+      : checkDataPlaneApiKey(rawDataPlaneApiKey, dataPlaneApiKeySource);
 
   const { headers: userHeaders = {}, ...restClientOptions } = clientOptions;
   const build = (token: string | undefined): OpenapiFetchClient => {
@@ -290,28 +310,62 @@ export function createApiClient(options: ClientConfig): ApiClients {
     return client;
   };
 
-  // The project client is the client this SDK has always built, and it knows
-  // nothing about the ingestion key: an operation that takes the project key
-  // behaves exactly as it did before the ingestion key existed, whether or not
-  // one is configured.
-  const project = build(resolvedApiKey);
-  // An operation that accepts the ingestion key gets it when one is
-  // configured, and the project client otherwise: the ingestion endpoints
-  // accept a coarse-grained project key even though the spec no longer says
-  // so, and this line is the one place that knowledge lives. Delete it when
+  // A client for an operation whose key is absent: every request through it
+  // throws before anything is sent, naming the key the operation requires.
+  const refuse = (keyKind: ApiKeyKind): OpenapiFetchClient => {
+    const client = build(undefined);
+    client.use({
+      onRequest() {
+        throw new MissingApiKeyError(keyKind);
+      },
+    });
+    return client;
+  };
+  // A caller-supplied Authorization header wins over every resolved key (see
+  // `build`), and middleware is assumed to handle authentication itself, so a
+  // client given either refuses nothing.
+  const hasCallerAuthorization =
+    Object.keys(userHeaders).some((name) => name.toLowerCase() === 'authorization') ||
+    !!middleware?.length;
+  const hasProjectCredential = !!resolvedApiKey || hasCallerAuthorization;
+
+  // An operation that takes the project key gets it, and is refused when none
+  // is configured.
+  const project = hasProjectCredential ? build(resolvedApiKey) : refuse('project');
+
+  // An ingestion operation gets the ingestion key when one is configured, the
+  // project key otherwise, and is refused, naming the ingestion key, when
+  // neither is. The ingestion endpoints accept a coarse-grained project key
+  // even though the spec no longer says so. Delete the project-key step when
   // coarse-grained keys are retired.
-  const ingestion =
-    resolvedIngestionApiKey === undefined ? project : build(resolvedIngestionApiKey);
+  const ingestion = (): OpenapiFetchClient => {
+    if (resolvedIngestionApiKey !== undefined) {
+      return build(resolvedIngestionApiKey);
+    }
+    return hasProjectCredential ? project : refuse('ingestion');
+  };
+
+  // An operation that takes the data plane key gets it, and is refused, naming
+  // it, when none is configured. The project key never stands in, because
+  // those operations refuse it at the API. A caller's own authorization still
+  // overrides the refusal, without the project key attached.
+  const dataPlane = (): OpenapiFetchClient => {
+    if (resolvedDataPlaneApiKey !== undefined) {
+      return build(resolvedDataPlaneApiKey);
+    }
+    return hasCallerAuthorization ? build(undefined) : refuse('dataPlane');
+  };
 
   // Keyed by the schemes the spec defines, so a scheme added to or removed
   // from the spec fails to compile here until this table says which client
   // serves it. The table never narrows what an operation accepts to what the
   // spec declares: the spec deliberately understates what the ingestion
-  // endpoints take while coarse-grained keys exist, and the fallback above is
-  // what keeps a project-key-only client working on them.
+  // endpoints take while coarse-grained keys exist, and the ingestion entry's
+  // project-key step is what keeps a project-key-only client working on them.
   const clients: ApiClients = {
     BearerAuth: project,
-    IngestionApiKey: ingestion,
+    IngestionApiKey: ingestion(),
+    DataPlaneApiKey: dataPlane(),
   };
   return clients;
 }
@@ -344,15 +398,6 @@ export interface FetchOptions {
 type FetchResult<T = unknown, E = unknown> =
   | { data: T; error?: undefined; response: Response }
   | { data?: undefined; error: E; response: Response };
-
-/**
- * HoneyHiveError is a base class for all errors thrown by the HoneyHive API
- * client.
- *
- * This error is never thrown directly, but is useful for determining if an
- * error is from the HoneyHive API client with `err instanceof HoneyHiveError`
- */
-export class HoneyHiveError extends Error {}
 
 /**
  * Type guard that returns the payload as ErrorResponse if it matches the

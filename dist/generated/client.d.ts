@@ -1,9 +1,9 @@
 import { type Client as OpenapiFetchClient } from 'openapi-fetch';
 import { type paths } from './types.js';
-import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type GetEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetMetricVersionsRequest, type CreateMetricVersionRequest, type DeployMetricVersionRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type GetEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetMetricVersionsResponse, type CreateMetricVersionResponse, type DeployMetricVersionResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
+import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type GetEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type GetChartsRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type CreateDataPlaneApiKeyRequest, type CreateIngestionApiKeyRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetMetricVersionsRequest, type CreateMetricVersionRequest, type DeployMetricVersionRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type GetEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type CreateDataPlaneApiKeyResponse, type CreateIngestionApiKeyResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetMetricVersionsResponse, type CreateMetricVersionResponse, type DeployMetricVersionResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
 import { type ClientConfig, type FetchOptions } from '../util.js';
 /** Every security scheme the API's OpenAPI spec defines. */
-export type SecurityScheme = 'BearerAuth' | 'IngestionApiKey';
+export type SecurityScheme = 'BearerAuth' | 'IngestionApiKey' | 'DataPlaneApiKey';
 /**
  * What `createApiClient` returns: for every security scheme the spec defines,
  * the openapi-fetch client that carries the credential for it. The hand-written
@@ -229,10 +229,20 @@ declare class ChartsNamespace {
     /**
      * List charts
      *
-     * Retrieve all charts in the current scope.
+     * Retrieve all charts in a project.
      */
     list(options?: FetchOptions): Promise<GetChartsResponse>;
-    /** Create a new chart */
+    /**
+     * List charts
+     *
+     * Retrieve all charts in a project.
+     */
+    list(request?: GetChartsRequest, options?: FetchOptions): Promise<GetChartsResponse>;
+    /**
+     * Create a new chart
+     *
+     * Create a chart in a project.
+     */
     create(request: CreateChartRequest, options?: FetchOptions): Promise<CreateChartResponse>;
     /**
      * Get a chart
@@ -246,8 +256,34 @@ declare class ChartsNamespace {
      * Update a chart's editable fields. Only fields included in the request body are modified.
      */
     update(request: UpdateChartRequest, options?: FetchOptions): Promise<UpdateChartResponse>;
-    /** Delete a chart */
+    /**
+     * Delete a chart
+     *
+     * Delete a chart from a project, removing it from the project's dashboards.
+     */
     delete(request: DeleteChartRequest, options?: FetchOptions): Promise<DeleteChartResponse>;
+}
+/** @inline */
+declare class DataPlaneApiKeysNamespace {
+    #private;
+    constructor(clients: ApiClients);
+    /**
+     * Create a data plane API key
+     *
+     * Create a fine-grained data plane API key rooted at a project. The caller's key must carry `project.fine_grained_api_key_dp.post` for the project. Only an organization-rooted key created in the organization's **Settings → API Keys**, on the **Data Plane** tab, can carry it, and a key created through this operation never can, so a provisioned key cannot create keys. The permissions requested are limited to the organization's data plane key policy, and `expires_at` to the system's maximum lifetime. The project must already exist on this data plane: a project created on the control plane reaches it asynchronously, and the operation answers 404 until it does. `key_value` is returned once and cannot be retrieved again.
+     */
+    create(request: CreateDataPlaneApiKeyRequest, options?: FetchOptions): Promise<CreateDataPlaneApiKeyResponse>;
+}
+/** @inline */
+declare class IngestionApiKeysNamespace {
+    #private;
+    constructor(clients: ApiClients);
+    /**
+     * Create an ingestion API key
+     *
+     * Create an ingestion API key for a project, the credential an application sends traces with. The caller's key must carry `project.ingestion_api_key.post` for the project. Only an organization-rooted data plane key created in the organization's **Settings → API Keys**, on the **Data Plane** tab, can carry it. An ingestion key has no permissions of its own and cannot create keys. The project must already exist on this data plane: a project created on the control plane reaches it asynchronously, and the operation answers 404 until it does. `key_value` is returned once and cannot be retrieved again.
+     */
+    create(request: CreateIngestionApiKeyRequest, options?: FetchOptions): Promise<CreateIngestionApiKeyResponse>;
 }
 /** @inline */
 declare class MetricsNamespace {
@@ -453,6 +489,8 @@ export declare class Client {
     readonly sessions: SessionsNamespace;
     readonly events: EventsNamespace;
     readonly charts: ChartsNamespace;
+    readonly dataPlaneApiKeys: DataPlaneApiKeysNamespace;
+    readonly ingestionApiKeys: IngestionApiKeysNamespace;
     readonly metrics: MetricsNamespace;
     readonly metricVersions: MetricVersionsNamespace;
     readonly datapoints: DatapointsNamespace;

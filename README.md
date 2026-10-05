@@ -16,7 +16,7 @@ npm install @honeyhive/api-client
 import { Client } from '@honeyhive/api-client';
 import OpenAI from 'openai';
 
-// The API key is read from the HH_PROJECT_API_KEY environment variable.
+// Ingestion uses HH_INGESTION_API_KEY, falling back to HH_PROJECT_API_KEY.
 // The data plane URL is read from the HH_DATA_PLANE_URL environment variable
 // and defaults to https://api.dp1.us.honeyhive.ai
 const client = new Client();
@@ -102,9 +102,38 @@ await client.datasets.delete({
 
 ## Authorization
 
-The HoneyHive API authenticates requests using an API key sent as a Bearer token in the `Authorization` header. There are two kinds of key, one per kind of operation: a [project API key](#project-api-key) for managing and reading data (datasets, experiments, metrics, charts, event search), and an [ingestion API key](#ingestion-api-key) for sending traces and events (creating sessions, writing events). The client sends each key on exactly the operations it is for. Each key can be provided through an environment variable or a `ClientConfig` option; [custom middleware](#custom-middleware) is the third way to authenticate.
+The HoneyHive API authenticates requests using an API key sent as a Bearer token in the `Authorization` header. The client selects a credential per operation:
+
+| Key | Environment variable | Constructor option | Used for |
+| --- | --- | --- | --- |
+| Data plane fine-grained (`hh_fgdp_`) | `HH_DATA_PLANE_API_KEY` | `dataPlaneApiKey` | Supported project-scoped operations, currently charts |
+| Ingestion (`hh_ingst_`) | `HH_INGESTION_API_KEY` | `ingestionApiKey` | Creating sessions and writing events |
+| Classic project (`hh_`, or `hh_ro_` for reads) | `HH_PROJECT_API_KEY` | `projectApiKey` | Other operations, and ingestion when no ingestion key is set |
+
+See [API Keys](https://docs.honeyhive.ai/v2/workspace/api-keys) to create the credentials your workload needs. You can also authenticate through [custom middleware](#custom-middleware).
 
 > **Compatibility:** a client configured with a project API key alone still sends it on the ingestion operations too, so existing setups keep working. New setups should give ingestion its own key.
+
+### Data plane API key
+
+Set `HH_DATA_PLANE_API_KEY` to a complete `hh_fgdp_` key, or pass `dataPlaneApiKey` in `ClientConfig`. The option takes precedence over the environment variable. For supported methods, include `project_id` in the request, even when the key is rooted at that project:
+
+```typescript
+import { Client } from '@honeyhive/api-client';
+
+const projectId = process.env.PROJECT_ID;
+if (!projectId) throw new Error('Set PROJECT_ID to your HoneyHive project ID');
+
+const client = new Client();
+const charts = await client.charts.list({ project_id: projectId });
+console.log(charts.data);
+```
+
+This example requires `project.chart.list`. Copy the project ID and data plane URL from **Settings > Project > API Keys > Data Plane**. Configure a non-default URL with `HH_DATA_PLANE_URL` or `dataPlaneUrl`.
+
+For a method with both legacy and scoped routes, omitting `project_id` selects the legacy route and project key, even if a data plane key is configured. Legacy chart calls are deprecated. Passing `project_id` selects the scoped route and requires a data plane key; there is no project-key fallback. See the [credential matrix](https://docs.honeyhive.ai/v2/workspace/api-keys#using-a-data-plane-key).
+
+Data plane keys cannot send traces. Keep an ingestion key for telemetry and a project key for operations that still require it. A wrong key type or incomplete value in `dataPlaneApiKey` or `HH_DATA_PLANE_API_KEY` throws a `MalformedApiKeyError` at client construction, even if no operation uses that key. Without [custom authentication](#custom-middleware), an operation whose required key is absent throws a `MissingApiKeyError` before sending a request.
 
 ### Project API key
 
@@ -134,8 +163,8 @@ const client = new Client({
 
 An ingestion API key (`hh_ingst_…`) is the credential for sending traces and events: the operations that create sessions and write events accept it, and nothing else does. A process that only sends traces and events should hold the ingestion key alone.
 
-- Every other operation on an ingestion-only client behaves as it does on a client with no project API key configured: the request is sent without a key, or with whatever [custom middleware](#custom-middleware) supplies.
-- A value in `ingestionApiKey` or `HH_INGESTION_API_KEY` that is not an ingestion API key throws when the client is constructed, so a misplaced key fails at startup rather than as a `401` on the first trace.
+- Every other operation on an ingestion-only client throws a `MissingApiKeyError` naming its required key before anything is sent, as it does on a client with no key at all. A client given [custom middleware](#custom-middleware) sends the request instead and leaves authentication to the middleware.
+- A value in `ingestionApiKey` or `HH_INGESTION_API_KEY` that is not an ingestion API key throws a `MalformedApiKeyError` when the client is constructed, so a misplaced key fails at startup rather than as a `401` on the first trace.
 
 #### Environment variable (recommended)
 
@@ -159,13 +188,14 @@ const client = new Client({
 });
 ```
 
-#### Both keys
+#### Using multiple keys
 
-A process that sends traces and events and also manages or reads data holds both keys, each from its own variable or option. The client routes every operation to the key it is for:
+A process that sends traces, manages datasets, and calls scoped chart methods can hold all three credentials. Configure each key in its own variable or option; the client selects the credential for each operation:
 
 ```sh
 export HH_PROJECT_API_KEY=...
 export HH_INGESTION_API_KEY=...
+export HH_DATA_PLANE_API_KEY=...
 ```
 
 ### Custom middleware
@@ -214,13 +244,14 @@ const client = new Client({
 
 ## Verbose logging
 
-Set `verbose: true` (or the `HH_VERBOSE` environment variable to `true`) to log the resolved data plane URL, each configured API key in masked form, and the SDK package + version when the client is constructed. Useful for confirming which environment and credentials the client is configured with — particularly when debugging "is this hitting prod or staging?" or "did `HH_PROJECT_API_KEY` actually get picked up?".
+Set `verbose: true` (or the `HH_VERBOSE` environment variable to `true`) to log the resolved data plane URL, each API key slot (masked, or `(none)` when unset), and the SDK package + version when the client is constructed. Useful for confirming which environment and credentials the client is configured with, particularly when debugging "is this hitting prod or staging?" or "did `HH_PROJECT_API_KEY` actually get picked up?".
 
 ```typescript
 const client = new Client({ verbose: true });
 // Data plane URL: https://api.dp1.us.honeyhive.ai
 // Project API key: hh_****5Qrg
 // Ingestion API key: hh_ingst_Ab12Cd34Ef56Gh78Ij90Kl12_******
+// Data plane API key: hh_fgdp_Ab12Cd34Ef56Gh78Ij90Kl12_******
 // Package: @honeyhive/api-client v1.0.0
 ```
 
@@ -228,4 +259,4 @@ const client = new Client({ verbose: true });
 HH_VERBOSE=true node my-script.js
 ```
 
-Output is written via `console.error` (stderr in Node, devtools in the browser) and only fires once per client construction. An explicit `verbose: false` overrides `HH_VERBOSE`. A credential that is not configured logs as `(none)`. The project API key is masked so only a recognized key prefix and the last 4 characters are shown; anything else is replaced with asterisks. An ingestion API key shows its prefix and key id and none of its secret, which is the form HoneyHive displays for the key, so the line can be matched against the key in your account.
+Output is written via `console.error` (stderr in Node, devtools in the browser) and only fires once per client construction. An explicit `verbose: false` overrides `HH_VERBOSE`. All three credential slots are logged; a credential that is not configured logs as `(none)`. A classic project API key shows a recognized prefix and the last 4 characters. Ingestion and data plane fine-grained keys show their prefix and key id with the secret replaced by `******`, matching the masked forms shown in the HoneyHive app. A typed key with a missing or malformed key id is replaced entirely with asterisks.

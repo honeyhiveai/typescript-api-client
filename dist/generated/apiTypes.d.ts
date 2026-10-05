@@ -157,7 +157,17 @@ export interface CreateEventBatchRequest {
     single_session?: boolean;
     session_properties?: SessionProperties;
 }
+export interface GetChartsRequest {
+    /**
+     * @description The unique identifier of the project whose charts are listed. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+     */
+    project_id?: string;
+}
 export interface CreateChartRequest {
+    /**
+     * @description The unique identifier of the project the chart is created in. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+     */
+    project_id?: string;
     /** @description Display name for the chart */
     name: string;
     /** @description Description of what the chart shows */
@@ -173,7 +183,7 @@ export interface CreateChartRequest {
      * @default day
      * @enum {string}
      */
-    bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+    bucketing?: 'minute' | 'five_minute' | 'hour' | 'day' | 'week' | 'month' | 'auto';
     /** @description Time range to query */
     dateRange?: RelativeDateRange | AbsoluteDateRange;
     /** @description Filters to apply to the chart data */
@@ -182,10 +192,18 @@ export interface CreateChartRequest {
     owner_id?: string;
 }
 export interface GetChartRequest {
+    /**
+     * @description The unique identifier of the project that owns the chart. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+     */
+    project_id?: string;
     /** @description The unique identifier of the chart to retrieve */
     chart_id: string;
 }
 export interface UpdateChartRequest {
+    /**
+     * @description The unique identifier of the project that owns the chart. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+     */
+    project_id?: string;
     /** @description The unique identifier of the chart to update */
     chart_id: string;
     /** @description Display name for the chart */
@@ -202,7 +220,7 @@ export interface UpdateChartRequest {
      * @description Time bucket granularity for aggregation
      * @enum {string}
      */
-    bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+    bucketing?: 'minute' | 'five_minute' | 'hour' | 'day' | 'week' | 'month' | 'auto';
     /** @description Time range to query */
     dateRange?: RelativeDateRange | AbsoluteDateRange;
     /** @description Filters to apply to the chart data */
@@ -211,8 +229,35 @@ export interface UpdateChartRequest {
     owner_id?: string;
 }
 export interface DeleteChartRequest {
+    /**
+     * @description The unique identifier of the project that owns the chart. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+     */
+    project_id?: string;
     /** @description The unique identifier of the chart to delete */
     chart_id: string;
+}
+export interface CreateDataPlaneApiKeyRequest {
+    /** @description The unique identifier of the project the key is rooted at */
+    project_id: string;
+    /** @description A name for the key, shown in the key list. */
+    name: string;
+    /** @description What the key is for. */
+    description?: string;
+    /** @description The permissions the key carries, such as `project.chart.get`. Each must be one the key's root scope can carry and one the organization's data plane key policy allows; the key creation screen under the project's Settings → API Keys lists them. */
+    permissions: string[];
+    /**
+     * Format: date-time
+     * @description When the key expires, as an ISO 8601 timestamp. It must be in the future and within the maximum key lifetime; a later value is refused with the limit named.
+     */
+    expires_at: string;
+}
+export interface CreateIngestionApiKeyRequest {
+    /** @description The unique identifier of the project the key belongs to */
+    project_id: string;
+    /** @description A name for the key, shown in the key list. */
+    name: string;
+    /** @description What the key is for. */
+    description?: string;
 }
 export interface GetMetricsRequest {
     /** @description Filter by metric type */
@@ -643,6 +688,16 @@ export type UpdateChartResponse = {
 export type DeleteChartResponse = {
     success: boolean;
     message: string;
+};
+export type CreateDataPlaneApiKeyResponse = {
+    /** @enum {boolean} */
+    success: true;
+    data: CreateDataPlaneApiKeyResponseData;
+};
+export type CreateIngestionApiKeyResponse = {
+    /** @enum {boolean} */
+    success: true;
+    data: CreateIngestionApiKeyResponseData;
 };
 /**
  * @description Response for GET /metrics
@@ -2304,6 +2359,31 @@ export type AddSessionTracesRequest = {
 export type TODOSchema = {
     /** @description Placeholder - Zod schema not yet implemented */
     message: string;
+};
+/**
+ * @inline
+ */
+export type CreateDataPlaneApiKeyResponseData = {
+    key_value: string;
+    key_id: string;
+    permissions: string[];
+    /** @enum {string} */
+    root_scope_type: 'project';
+    root_scope_id: string;
+    /** Format: date-time */
+    expires_at: string;
+};
+/**
+ * @inline
+ */
+export type CreateIngestionApiKeyResponseData = {
+    key_value: string;
+    key_id: string;
+    name: string;
+    description: string | null;
+    /** @enum {string} */
+    root_scope_type: 'project';
+    root_scope_id: string;
 };
 /**
  * @inline

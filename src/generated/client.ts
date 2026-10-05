@@ -11,10 +11,13 @@ import {
   type UpdateEventRequest,
   type SearchEventsRequest,
   type CreateEventBatchRequest,
+  type GetChartsRequest,
   type CreateChartRequest,
   type GetChartRequest,
   type UpdateChartRequest,
   type DeleteChartRequest,
+  type CreateDataPlaneApiKeyRequest,
+  type CreateIngestionApiKeyRequest,
   type GetMetricsRequest,
   type CreateMetricRequest,
   type UpdateMetricRequest,
@@ -57,6 +60,8 @@ import {
   type GetChartResponse,
   type UpdateChartResponse,
   type DeleteChartResponse,
+  type CreateDataPlaneApiKeyResponse,
+  type CreateIngestionApiKeyResponse,
   type GetMetricsResponse,
   type CreateMetricResponse,
   type UpdateMetricResponse,
@@ -92,7 +97,7 @@ import {
 import { type ClientConfig, type FetchOptions, createApiClient, unwrap } from '../util.js';
 
 /** Every security scheme the API's OpenAPI spec defines. */
-export type SecurityScheme = 'BearerAuth' | 'IngestionApiKey';
+export type SecurityScheme = 'BearerAuth' | 'IngestionApiKey' | 'DataPlaneApiKey';
 
 /**
  * What `createApiClient` returns: for every security scheme the spec defines,
@@ -377,6 +382,7 @@ class EventsNamespace {
 /** @inline */
 class ChartsNamespace {
   #clients: ApiClients;
+  #deprecationWarned = new Set<string>();
 
   constructor(clients: ApiClients) {
     this.#clients = clients;
@@ -385,17 +391,69 @@ class ChartsNamespace {
   /**
    * List charts
    *
-   * Retrieve all charts in the current scope.
+   * Retrieve all charts in a project.
    */
-  public list(options?: FetchOptions): Promise<GetChartsResponse> {
-    const httpClient = this.#clients.BearerAuth;
-    return unwrap(httpClient.GET('/v1/charts', { ...options }));
+  public list(options?: FetchOptions): Promise<GetChartsResponse>;
+  /**
+   * List charts
+   *
+   * Retrieve all charts in a project.
+   */
+  public list(request?: GetChartsRequest, options?: FetchOptions): Promise<GetChartsResponse>;
+  public list(
+    requestOrOptions?: GetChartsRequest | FetchOptions,
+    options?: FetchOptions,
+  ): Promise<GetChartsResponse> {
+    // A lone argument without project_id is the options of a call with no request.
+    const hasRequest =
+      options !== undefined || (requestOrOptions !== undefined && 'project_id' in requestOrOptions);
+    const request = (hasRequest ? requestOrOptions : undefined) as GetChartsRequest | undefined;
+    const fetchOptions = (hasRequest ? options : requestOrOptions) as FetchOptions | undefined;
+    const { project_id } = request ?? {};
+    if (project_id === undefined) {
+      if (!this.#deprecationWarned.has('getCharts')) {
+        this.#deprecationWarned.add('getCharts');
+        console.warn(
+          '[@honeyhive/api-client] Calling charts.list without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.',
+        );
+      }
+      const flatClient = this.#clients.BearerAuth;
+      return unwrap(flatClient.GET('/v1/charts', { ...fetchOptions }));
+    }
+    const scopedClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      scopedClient.GET('/v1/projects/{project_id}/charts', {
+        params: { path: { project_id } },
+        ...fetchOptions,
+      }),
+    );
   }
 
-  /** Create a new chart */
+  /**
+   * Create a new chart
+   *
+   * Create a chart in a project.
+   */
   public create(request: CreateChartRequest, options?: FetchOptions): Promise<CreateChartResponse> {
-    const httpClient = this.#clients.BearerAuth;
-    return unwrap(httpClient.POST('/v1/charts', { body: request, ...options }));
+    const { project_id, ...body } = request;
+    if (project_id === undefined) {
+      if (!this.#deprecationWarned.has('createChart')) {
+        this.#deprecationWarned.add('createChart');
+        console.warn(
+          '[@honeyhive/api-client] Calling charts.create without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.',
+        );
+      }
+      const flatClient = this.#clients.BearerAuth;
+      return unwrap(flatClient.POST('/v1/charts', { body, ...options }));
+    }
+    const scopedClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      scopedClient.POST('/v1/projects/{project_id}/charts', {
+        params: { path: { project_id } },
+        body,
+        ...options,
+      }),
+    );
   }
 
   /**
@@ -404,10 +462,25 @@ class ChartsNamespace {
    * Retrieve a single chart by id.
    */
   public get(request: GetChartRequest, options?: FetchOptions): Promise<GetChartResponse> {
-    const { chart_id } = request;
-    const httpClient = this.#clients.BearerAuth;
+    const { project_id, chart_id } = request;
+    if (project_id === undefined) {
+      if (!this.#deprecationWarned.has('getChart')) {
+        this.#deprecationWarned.add('getChart');
+        console.warn(
+          '[@honeyhive/api-client] Calling charts.get without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.',
+        );
+      }
+      const flatClient = this.#clients.BearerAuth;
+      return unwrap(
+        flatClient.GET('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }),
+      );
+    }
+    const scopedClient = this.#clients.DataPlaneApiKey;
     return unwrap(
-      httpClient.GET('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }),
+      scopedClient.GET('/v1/projects/{project_id}/charts/{chart_id}', {
+        params: { path: { project_id, chart_id } },
+        ...options,
+      }),
     );
   }
 
@@ -417,19 +490,116 @@ class ChartsNamespace {
    * Update a chart's editable fields. Only fields included in the request body are modified.
    */
   public update(request: UpdateChartRequest, options?: FetchOptions): Promise<UpdateChartResponse> {
-    const { chart_id, ...body } = request;
-    const httpClient = this.#clients.BearerAuth;
+    const { project_id, chart_id, ...body } = request;
+    if (project_id === undefined) {
+      if (!this.#deprecationWarned.has('updateChart')) {
+        this.#deprecationWarned.add('updateChart');
+        console.warn(
+          '[@honeyhive/api-client] Calling charts.update without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.',
+        );
+      }
+      const flatClient = this.#clients.BearerAuth;
+      return unwrap(
+        flatClient.PUT('/v1/charts/{chart_id}', {
+          params: { path: { chart_id } },
+          body,
+          ...options,
+        }),
+      );
+    }
+    const scopedClient = this.#clients.DataPlaneApiKey;
     return unwrap(
-      httpClient.PUT('/v1/charts/{chart_id}', { params: { path: { chart_id } }, body, ...options }),
+      scopedClient.PATCH('/v1/projects/{project_id}/charts/{chart_id}', {
+        params: { path: { project_id, chart_id } },
+        body,
+        ...options,
+      }),
     );
   }
 
-  /** Delete a chart */
+  /**
+   * Delete a chart
+   *
+   * Delete a chart from a project, removing it from the project's dashboards.
+   */
   public delete(request: DeleteChartRequest, options?: FetchOptions): Promise<DeleteChartResponse> {
-    const { chart_id } = request;
-    const httpClient = this.#clients.BearerAuth;
+    const { project_id, chart_id } = request;
+    if (project_id === undefined) {
+      if (!this.#deprecationWarned.has('deleteChart')) {
+        this.#deprecationWarned.add('deleteChart');
+        console.warn(
+          '[@honeyhive/api-client] Calling charts.delete without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.',
+        );
+      }
+      const flatClient = this.#clients.BearerAuth;
+      return unwrap(
+        flatClient.DELETE('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }),
+      );
+    }
+    const scopedClient = this.#clients.DataPlaneApiKey;
     return unwrap(
-      httpClient.DELETE('/v1/charts/{chart_id}', { params: { path: { chart_id } }, ...options }),
+      scopedClient.DELETE('/v1/projects/{project_id}/charts/{chart_id}', {
+        params: { path: { project_id, chart_id } },
+        ...options,
+      }),
+    );
+  }
+}
+
+/** @inline */
+class DataPlaneApiKeysNamespace {
+  #clients: ApiClients;
+
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
+  }
+
+  /**
+   * Create a data plane API key
+   *
+   * Create a fine-grained data plane API key rooted at a project. The caller's key must carry `project.fine_grained_api_key_dp.post` for the project. Only an organization-rooted key created in the organization's **Settings → API Keys**, on the **Data Plane** tab, can carry it, and a key created through this operation never can, so a provisioned key cannot create keys. The permissions requested are limited to the organization's data plane key policy, and `expires_at` to the system's maximum lifetime. The project must already exist on this data plane: a project created on the control plane reaches it asynchronously, and the operation answers 404 until it does. `key_value` is returned once and cannot be retrieved again.
+   */
+  public create(
+    request: CreateDataPlaneApiKeyRequest,
+    options?: FetchOptions,
+  ): Promise<CreateDataPlaneApiKeyResponse> {
+    const { project_id, ...body } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.POST('/v1/projects/{project_id}/fine_grained_api_keys', {
+        params: { path: { project_id } },
+        body,
+        ...options,
+      }),
+    );
+  }
+}
+
+/** @inline */
+class IngestionApiKeysNamespace {
+  #clients: ApiClients;
+
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
+  }
+
+  /**
+   * Create an ingestion API key
+   *
+   * Create an ingestion API key for a project, the credential an application sends traces with. The caller's key must carry `project.ingestion_api_key.post` for the project. Only an organization-rooted data plane key created in the organization's **Settings → API Keys**, on the **Data Plane** tab, can carry it. An ingestion key has no permissions of its own and cannot create keys. The project must already exist on this data plane: a project created on the control plane reaches it asynchronously, and the operation answers 404 until it does. `key_value` is returned once and cannot be retrieved again.
+   */
+  public create(
+    request: CreateIngestionApiKeyRequest,
+    options?: FetchOptions,
+  ): Promise<CreateIngestionApiKeyResponse> {
+    const { project_id, ...body } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.POST('/v1/projects/{project_id}/ingestion_api_keys', {
+        params: { path: { project_id } },
+        body,
+        ...options,
+      }),
     );
   }
 }
@@ -986,6 +1156,8 @@ export class Client {
   readonly sessions: SessionsNamespace;
   readonly events: EventsNamespace;
   readonly charts: ChartsNamespace;
+  readonly dataPlaneApiKeys: DataPlaneApiKeysNamespace;
+  readonly ingestionApiKeys: IngestionApiKeysNamespace;
   readonly metrics: MetricsNamespace;
   readonly metricVersions: MetricVersionsNamespace;
   readonly datapoints: DatapointsNamespace;
@@ -997,6 +1169,8 @@ export class Client {
     this.sessions = new SessionsNamespace(this.#clients);
     this.events = new EventsNamespace(this.#clients);
     this.charts = new ChartsNamespace(this.#clients);
+    this.dataPlaneApiKeys = new DataPlaneApiKeysNamespace(this.#clients);
+    this.ingestionApiKeys = new IngestionApiKeysNamespace(this.#clients);
     this.metrics = new MetricsNamespace(this.#clients);
     this.metricVersions = new MetricVersionsNamespace(this.#clients);
     this.datapoints = new DatapointsNamespace(this.#clients);

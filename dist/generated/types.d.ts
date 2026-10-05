@@ -381,13 +381,18 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * List charts
-         * @description Retrieve all charts in the current scope.
+         * List charts (deprecated)
+         * @deprecated
+         * @description Deprecated. Use `GET /v1/projects/{project_id}/charts` with a data plane API key instead. Retrieves all charts in the current scope.
          */
-        get: operations['getCharts'];
+        get: operations['getChartsLegacy'];
         put?: never;
-        /** Create a new chart */
-        post: operations['createChart'];
+        /**
+         * Create a new chart (deprecated)
+         * @deprecated
+         * @description Deprecated. Use `POST /v1/projects/{project_id}/charts` with a data plane API key instead.
+         */
+        post: operations['createChartLegacy'];
         delete?: never;
         options?: never;
         head?: never;
@@ -402,18 +407,116 @@ export interface paths {
             cookie?: never;
         };
         /**
+         * Get a chart (deprecated)
+         * @deprecated
+         * @description Deprecated. Use `GET /v1/projects/{project_id}/charts/{chart_id}` with a data plane API key instead. Retrieves a single chart by id.
+         */
+        get: operations['getChartLegacy'];
+        /**
+         * Update a chart (deprecated)
+         * @deprecated
+         * @description Deprecated. Use `PATCH /v1/projects/{project_id}/charts/{chart_id}` with a data plane API key instead. Updates a chart's editable fields. Only fields included in the request body are modified.
+         */
+        put: operations['updateChartLegacy'];
+        post?: never;
+        /**
+         * Delete a chart (deprecated)
+         * @deprecated
+         * @description Deprecated. Use `DELETE /v1/projects/{project_id}/charts/{chart_id}` with a data plane API key instead.
+         */
+        delete: operations['deleteChartLegacy'];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/v1/projects/{project_id}/charts': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List charts
+         * @description Retrieve all charts in a project.
+         */
+        get: operations['getCharts'];
+        put?: never;
+        /**
+         * Create a new chart
+         * @description Create a chart in a project.
+         */
+        post: operations['createChart'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/v1/projects/{project_id}/charts/{chart_id}': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
          * Get a chart
          * @description Retrieve a single chart by id.
          */
         get: operations['getChart'];
+        put?: never;
+        post?: never;
+        /**
+         * Delete a chart
+         * @description Delete a chart from a project, removing it from the project's dashboards.
+         */
+        delete: operations['deleteChart'];
+        options?: never;
+        head?: never;
         /**
          * Update a chart
          * @description Update a chart's editable fields. Only fields included in the request body are modified.
          */
-        put: operations['updateChart'];
-        post?: never;
-        /** Delete a chart */
-        delete: operations['deleteChart'];
+        patch: operations['updateChart'];
+        trace?: never;
+    };
+    '/v1/projects/{project_id}/fine_grained_api_keys': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a data plane API key
+         * @description Create a fine-grained data plane API key rooted at a project. The caller's key must carry `project.fine_grained_api_key_dp.post` for the project. Only an organization-rooted key created in the organization's **Settings → API Keys**, on the **Data Plane** tab, can carry it, and a key created through this operation never can, so a provisioned key cannot create keys. The permissions requested are limited to the organization's data plane key policy, and `expires_at` to the system's maximum lifetime. The project must already exist on this data plane: a project created on the control plane reaches it asynchronously, and the operation answers 404 until it does. `key_value` is returned once and cannot be retrieved again.
+         */
+        post: operations['createDataPlaneApiKey'];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    '/v1/projects/{project_id}/ingestion_api_keys': {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an ingestion API key
+         * @description Create an ingestion API key for a project, the credential an application sends traces with. The caller's key must carry `project.ingestion_api_key.post` for the project. Only an organization-rooted data plane key created in the organization's **Settings → API Keys**, on the **Data Plane** tab, can carry it. An ingestion key has no permissions of its own and cannot create keys. The project must already exist on this data plane: a project created on the control plane reaches it asynchronously, and the operation answers 404 until it does. `key_value` is returned once and cannot be retrieved again.
+         */
+        post: operations['createIngestionApiKey'];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1125,6 +1228,35 @@ export interface components {
             has_next: boolean;
             has_prev: boolean;
         };
+        CreateDataPlaneApiKeyRequest: {
+            /** @description A name for the key, shown in the key list. */
+            name: string;
+            /** @description What the key is for. */
+            description?: string;
+            /** @description The permissions the key carries, such as `project.chart.get`. Each must be one the key's root scope can carry and one the organization's data plane key policy allows; the key creation screen under the project's Settings → API Keys lists them. */
+            permissions: string[];
+            /**
+             * Format: date-time
+             * @description When the key expires, as an ISO 8601 timestamp. It must be in the future and within the maximum key lifetime; a later value is refused with the limit named.
+             */
+            expires_at: string;
+        };
+        CreateDataPlaneApiKeyResponse: {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['CreateDataPlaneApiKeyResponseData'];
+        };
+        CreateIngestionApiKeyRequest: {
+            /** @description A name for the key, shown in the key list. */
+            name: string;
+            /** @description What the key is for. */
+            description?: string;
+        };
+        CreateIngestionApiKeyResponse: {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['CreateIngestionApiKeyResponseData'];
+        };
         CreateChartRequest: {
             /** @description Display name for the chart */
             name: string;
@@ -1141,7 +1273,7 @@ export interface components {
              * @default day
              * @enum {string}
              */
-            bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+            bucketing?: 'minute' | 'five_minute' | 'hour' | 'day' | 'week' | 'month' | 'auto';
             /** @description Time range to query */
             dateRange?: components['schemas']['RelativeDateRange'] | components['schemas']['AbsoluteDateRange'];
             /** @description Filters to apply to the chart data */
@@ -1197,7 +1329,7 @@ export interface components {
              * @description Time bucket granularity for aggregation
              * @enum {string}
              */
-            bucketing?: 'minute' | 'hour' | 'day' | 'week' | 'month';
+            bucketing?: 'minute' | 'five_minute' | 'hour' | 'day' | 'week' | 'month' | 'auto';
             /** @description Time range to query */
             dateRange?: components['schemas']['RelativeDateRange'] | components['schemas']['AbsoluteDateRange'];
             /** @description Filters to apply to the chart data */
@@ -2904,6 +3036,25 @@ export interface components {
             /** @description Placeholder - Zod schema not yet implemented */
             message: string;
         };
+        CreateDataPlaneApiKeyResponseData: {
+            key_value: string;
+            key_id: string;
+            permissions: string[];
+            /** @enum {string} */
+            root_scope_type: 'project';
+            root_scope_id: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        CreateIngestionApiKeyResponseData: {
+            key_value: string;
+            key_id: string;
+            name: string;
+            description: string | null;
+            /** @enum {string} */
+            root_scope_type: 'project';
+            root_scope_id: string;
+        };
         CreateChartResponseData: {
             id: string;
             name: string;
@@ -4107,7 +4258,7 @@ export interface operations {
             };
         };
     };
-    getCharts: {
+    getChartsLegacy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4127,7 +4278,7 @@ export interface operations {
             };
         };
     };
-    createChart: {
+    createChartLegacy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4151,7 +4302,7 @@ export interface operations {
             };
         };
     };
-    getChart: {
+    getChartLegacy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4174,7 +4325,7 @@ export interface operations {
             };
         };
     };
-    updateChart: {
+    updateChartLegacy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4201,7 +4352,7 @@ export interface operations {
             };
         };
     };
-    deleteChart: {
+    deleteChartLegacy: {
         parameters: {
             query?: never;
             header?: never;
@@ -4220,6 +4371,189 @@ export interface operations {
                 };
                 content: {
                     'application/json': components['schemas']['DeleteChartResponse'];
+                };
+            };
+        };
+    };
+    getCharts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the project whose charts are listed */
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Charts retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['GetChartsResponse'];
+                };
+            };
+        };
+    };
+    createChart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the project the chart is created in */
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['CreateChartRequest'];
+            };
+        };
+        responses: {
+            /** @description Chart created successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['CreateChartResponse'];
+                };
+            };
+        };
+    };
+    getChart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the project that owns the chart */
+                project_id: string;
+                /** @description The unique identifier of the chart to retrieve */
+                chart_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Chart retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['GetChartResponse'];
+                };
+            };
+        };
+    };
+    deleteChart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the project that owns the chart */
+                project_id: string;
+                /** @description The unique identifier of the chart to delete */
+                chart_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Chart deleted successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['DeleteChartResponse'];
+                };
+            };
+        };
+    };
+    updateChart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the project that owns the chart */
+                project_id: string;
+                /** @description The unique identifier of the chart to update */
+                chart_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['UpdateChartRequest'];
+            };
+        };
+        responses: {
+            /** @description Chart updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['UpdateChartResponse'];
+                };
+            };
+        };
+    };
+    createDataPlaneApiKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the project the key is rooted at */
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['CreateDataPlaneApiKeyRequest'];
+            };
+        };
+        responses: {
+            /** @description Data plane API key created successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['CreateDataPlaneApiKeyResponse'];
+                };
+            };
+        };
+    };
+    createIngestionApiKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The unique identifier of the project the key belongs to */
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                'application/json': components['schemas']['CreateIngestionApiKeyRequest'];
+            };
+        };
+        responses: {
+            /** @description Ingestion API key created successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    'application/json': components['schemas']['CreateIngestionApiKeyResponse'];
                 };
             };
         };

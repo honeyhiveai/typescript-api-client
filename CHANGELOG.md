@@ -1,5 +1,26 @@
 # TypeScript API SDK Changelog
 
+## [1.6.0] - 2026-10-05
+
+### What's New
+- New `dataPlaneApiKey` client option and `HH_DATA_PLANE_API_KEY` environment variable for a fine-grained data plane API key (a value beginning with `hh_fgdp_`). The client sends this key on operations that are scoped to a project, which today are the chart operations.
+- Every `client.charts` method (`list`, `create`, `get`, `update`, `delete`) now accepts an optional `project_id`. With `project_id`, the call goes to the project-scoped chart endpoints and authenticates with the data plane API key. `client.charts.list()` now takes an optional request argument, a new `GetChartsRequest` type.
+- New `client.dataPlaneApiKeys.create()` creates a fine-grained data plane API key rooted at a project. New `client.ingestionApiKeys.create()` creates an ingestion API key for a project. Both return `key_value` once, and you cannot get it again.
+- New exported request and response types: `CreateDataPlaneApiKeyRequest`/`Response` and `CreateIngestionApiKeyRequest`/`Response`.
+- New exported error classes `MissingApiKeyError` and `MalformedApiKeyError`, both subclasses of `HoneyHiveError`, and the `ApiKeyKind` type. Each error has a `keyKind` property (`'project'`, `'ingestion'` or `'dataPlane'`). `MalformedApiKeyError` also has a `source` property that names the option or environment variable the bad value came from.
+- The chart `bucketing` option now accepts `five_minute` and `auto`.
+- Verbose logging now prints a `Data plane API key:` line. The line shows `hh_fgdp_`, the key id and none of the secret, and shows `(none)` when no key is set.
+
+### Fixes & Improvements
+- An operation whose required key is not configured now throws a `MissingApiKeyError` before it sends a request. The error names the key that the operation needs. Previously, some operations sent the request without a key and failed with a `401`.
+- An `ingestionApiKey`, `HH_INGESTION_API_KEY`, `dataPlaneApiKey` or `HH_DATA_PLANE_API_KEY` value that is not a well-formed key of that kind now throws a `MalformedApiKeyError` when the client is constructed. The error never echoes the value.
+
+### Compatibility & Deprecations
+- Calling a `client.charts` method without `project_id` is deprecated. It becomes required in the next major version. These calls still use the legacy route and the project API key. Each method logs a one-time deprecation warning to stderr. To migrate, pass `project_id` and configure a data plane API key.
+- A call with `project_id` needs a data plane API key and never falls back to the project API key. A data plane API key cannot send traces, so keep an ingestion key or a project key for ingestion.
+- A client with no API key configured now constructs successfully. The first operation that needs a key throws a `MissingApiKeyError`. Previously, the constructor threw a `Missing API key` error. If your code catches the missing-key error at construction, also handle it at the first call.
+- A client that has custom middleware or its own `Authorization` header never throws `MissingApiKeyError`. Authentication is left to the middleware or the header.
+
 ## [1.5.0] - 2026-09-22
 
 ### What's New

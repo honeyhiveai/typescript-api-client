@@ -211,11 +211,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get an event by ID
-     * @description Retrieve a single event by its unique identifier. The event is fetched
-     *     directly from S3/MinIO storage.
+     * Get an event by ID (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/events/{event_id}` with a data plane API key instead. Retrieves a single event by its unique identifier. The event is fetched directly from S3/MinIO storage.
      */
-    get: operations['getEvent'];
+    get: operations['getEventLegacy'];
     /**
      * Update an event
      * @description Update fields on an existing event. Only the provided fields are
@@ -223,6 +223,27 @@ export interface paths {
      *     below are accepted by the server but silently ignored.
      */
     put: operations['updateEvent'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/events/{event_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get an event by ID
+     * @description Retrieve a single event by its unique identifier. The event is fetched
+     *     directly from S3/MinIO storage.
+     */
+    get: operations['getEvent'];
+    put?: never;
     post?: never;
     delete?: never;
     options?: never;
@@ -240,7 +261,7 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Retrieve events based on filters (deprecated)
+     * Export events based on filters (deprecated)
      * @deprecated
      * @description Deprecated. Use `POST /v1/events/search` instead.
      */
@@ -252,6 +273,27 @@ export interface paths {
     trace?: never;
   };
   '/v1/events/search': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Retrieve events based on filters (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/projects/{project_id}/events/search` with a data plane API key instead. Searches events via POST with filtering and pagination. This is the primary method for retrieving events from HoneyHive.
+     */
+    post: operations['searchEventsLegacy'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/events/search': {
     parameters: {
       query?: never;
       header?: never;
@@ -448,6 +490,26 @@ export interface paths {
      * @description Create a chart in a project.
      */
     post: operations['createChart'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/charts/query': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Run a chart query
+     * @description Aggregate the project's events into one chart result. `query.kind` selects the result shape: time series, categorical, scalar, histogram, or table. Every query must include an `event_type is <type>` or `event_type is not <type>` filter; an `event_type is session` filter queries sessions instead of events. The `scatter` kind and a categorical `split_by` / `split_ranking` are accepted by the schema but not served yet, and answer 501.
+     */
+    post: operations['queryChart'];
     delete?: never;
     options?: never;
     head?: never;
@@ -664,16 +726,18 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Retrieve a list of datapoints
-     * @description Retrieve datapoints, optionally filtered by a list of datapoint IDs or dataset name.
+     * Retrieve a list of datapoints (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/datapoints` with a data plane API key instead. Retrieves datapoints, optionally filtered by a list of datapoint IDs or dataset name.
      */
-    get: operations['getDatapoints'];
+    get: operations['getDatapointsLegacy'];
     put?: never;
     /**
-     * Create a new datapoint
-     * @description Create a single datapoint with inputs, history, ground truth, and metadata.
+     * Create a new datapoint (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/projects/{project_id}/datapoints` with a data plane API key instead. Creates a single datapoint with inputs, history, ground truth, and metadata.
      */
-    post: operations['createDatapoint'];
+    post: operations['createDatapointLegacy'];
     delete?: never;
     options?: never;
     head?: never;
@@ -690,10 +754,11 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Create multiple datapoints in batch
-     * @description Create multiple datapoints from events using field mappings and optional filters.
+     * Create multiple datapoints in batch (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/projects/{project_id}/datapoints/batch` with a data plane API key instead. Creates multiple datapoints from events using field mappings and optional filters.
      */
-    post: operations['batchCreateDatapoints'];
+    post: operations['batchCreateDatapointsLegacy'];
     delete?: never;
     options?: never;
     head?: never;
@@ -708,24 +773,99 @@ export interface paths {
       cookie?: never;
     };
     /**
+     * Retrieve a specific datapoint (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/datapoints/{datapoint_id}` with a data plane API key instead. Gets a single datapoint by its unique identifier.
+     */
+    get: operations['getDatapointLegacy'];
+    /**
+     * Update a specific datapoint (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `PATCH /v1/projects/{project_id}/datapoints/{datapoint_id}` with a data plane API key instead. Updates fields on an existing datapoint. Only the provided fields are modified.
+     */
+    put: operations['updateDatapointLegacy'];
+    post?: never;
+    /**
+     * Delete a specific datapoint (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/projects/{project_id}/datapoints/{datapoint_id}` with a data plane API key instead. Permanently deletes a datapoint by its unique identifier.
+     */
+    delete: operations['deleteDatapointLegacy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datapoints': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve a list of datapoints
+     * @description Retrieve datapoints, optionally filtered by a list of datapoint IDs or dataset name.
+     */
+    get: operations['getDatapoints'];
+    put?: never;
+    /**
+     * Create a new datapoint
+     * @description Create a single datapoint with inputs, history, ground truth, and metadata. The `linked_datasets` array accepts at most one dataset ID. Requests with more than one entry return 400. A request with a non-empty `linked_datasets` also requires the `project.dataset.post` permission.
+     */
+    post: operations['createDatapoint'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datapoints/batch': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create multiple datapoints in batch
+     * @description Create multiple datapoints from events using field mappings and optional filters. A data plane API key needs both `project.datapoint.post` and `project.event.get` for the project, and also `project.dataset.post` when the body names a `dataset_id`.
+     */
+    post: operations['batchCreateDatapoints'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datapoints/{datapoint_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
      * Retrieve a specific datapoint
      * @description Get a single datapoint by its unique identifier.
      */
     get: operations['getDatapoint'];
-    /**
-     * Update a specific datapoint
-     * @description Update fields on an existing datapoint. Only the provided fields are modified.
-     */
-    put: operations['updateDatapoint'];
+    put?: never;
     post?: never;
     /**
      * Delete a specific datapoint
-     * @description Permanently delete a datapoint by its unique identifier.
+     * @description Permanently delete a datapoint by its unique identifier, and remove it from every dataset that holds it. Answers 404 when the project holds no such datapoint. Requires only the `project.datapoint.delete` permission.
      */
     delete: operations['deleteDatapoint'];
     options?: never;
     head?: never;
-    patch?: never;
+    /**
+     * Update a specific datapoint
+     * @description Update fields on an existing datapoint. Only the provided fields are modified. A request that includes `linked_datasets` also requires the `project.dataset.post` and `project.dataset.delete` permissions.
+     */
+    patch: operations['updateDatapoint'];
     trace?: never;
   };
   '/v1/datasets': {
@@ -736,27 +876,29 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get datasets
-     * @description Retrieve datasets, optionally filtered by dataset ID or name.
-     */
-    get: operations['getDatasets'];
-    /**
-     * Update a dataset (deprecated)
+     * Get datasets (deprecated)
      * @deprecated
-     * @description Deprecated. Use `PUT /v1/datasets/{dataset_id}` instead.
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/datasets` with a data plane API key instead. Retrieves datasets, optionally filtered by dataset ID or name.
      */
-    put: operations['updateDatasetLegacy'];
+    get: operations['getDatasetsLegacy'];
     /**
-     * Create a dataset
-     * @description Create a new dataset with an optional name, description, and initial set of datapoint IDs.
-     */
-    post: operations['createDataset'];
-    /**
-     * Delete a dataset (deprecated)
+     * Update a dataset by body ID (deprecated)
      * @deprecated
-     * @description Deprecated. Use `DELETE /v1/datasets/{dataset_id}` instead.
+     * @description Deprecated. Use `PATCH /v1/projects/{project_id}/datasets/{dataset_id}` with a data plane API key instead.
      */
-    delete: operations['deleteDatasetLegacy'];
+    put: operations['updateDatasetBodyIdLegacy'];
+    /**
+     * Create a dataset (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/projects/{project_id}/datasets` with a data plane API key instead. Creates a new dataset with an optional name, description, and initial set of datapoint IDs.
+     */
+    post: operations['createDatasetLegacy'];
+    /**
+     * Delete a dataset by query ID (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/projects/{project_id}/datasets/{dataset_id}` with a data plane API key instead.
+     */
+    delete: operations['deleteDatasetQueryIdLegacy'];
     options?: never;
     head?: never;
     patch?: never;
@@ -771,10 +913,119 @@ export interface paths {
     };
     get?: never;
     /**
-     * Update a dataset
-     * @description Update a dataset's name, description, or list of datapoint IDs.
+     * Update a dataset (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `PATCH /v1/projects/{project_id}/datasets/{dataset_id}` with a data plane API key instead. Updates a dataset's name, description, or list of datapoint IDs.
      */
-    put: operations['updateDataset'];
+    put: operations['updateDatasetLegacy'];
+    post?: never;
+    /**
+     * Delete a dataset (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/projects/{project_id}/datasets/{dataset_id}` with a data plane API key instead. Permanently deletes a dataset by its unique identifier.
+     */
+    delete: operations['deleteDatasetLegacy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/datasets/{dataset_id}/datapoints': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add datapoints to a dataset (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/projects/{project_id}/datasets/{dataset_id}/datapoints` with a data plane API key instead. Adds new datapoints to an existing dataset. Provide raw data objects and a field mapping that specifies which fields map to inputs, ground truth, and history.
+     */
+    post: operations['addDatapointsLegacy'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/datasets/{dataset_id}/datapoints/{datapoint_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove a datapoint from a dataset (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/projects/{project_id}/datasets/{dataset_id}/datapoints/{datapoint_id}` with a data plane API key instead. Removes a specific datapoint from a dataset. The datapoint itself is not deleted, only dereferenced from the dataset.
+     */
+    delete: operations['removeDatapointLegacy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/datasets/{dataset_id}/{datapoint_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Remove a datapoint from a dataset by short path (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/projects/{project_id}/datasets/{dataset_id}/datapoints/{datapoint_id}` with a data plane API key instead.
+     */
+    delete: operations['removeDatapointShortPathLegacy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datasets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get datasets
+     * @description Retrieve datasets, optionally filtered by dataset ID or name.
+     */
+    get: operations['getDatasets'];
+    put?: never;
+    /**
+     * Create a dataset
+     * @description Create a new dataset with an optional name, description, and initial set of datapoint IDs.
+     */
+    post: operations['createDataset'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/datasets/{dataset_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
     post?: never;
     /**
      * Delete a dataset
@@ -783,10 +1034,14 @@ export interface paths {
     delete: operations['deleteDataset'];
     options?: never;
     head?: never;
-    patch?: never;
+    /**
+     * Update a dataset
+     * @description Update a dataset's name, description, or list of datapoint IDs.
+     */
+    patch: operations['updateDataset'];
     trace?: never;
   };
-  '/v1/datasets/{dataset_id}/datapoints': {
+  '/v1/projects/{project_id}/datasets/{dataset_id}/datapoints': {
     parameters: {
       query?: never;
       header?: never;
@@ -806,7 +1061,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/datasets/{dataset_id}/datapoints/{datapoint_id}': {
+  '/v1/projects/{project_id}/datasets/{dataset_id}/datapoints/{datapoint_id}': {
     parameters: {
       query?: never;
       header?: never;
@@ -821,27 +1076,6 @@ export interface paths {
      * @description Remove a specific datapoint from a dataset. The datapoint itself is not deleted, only dereferenced from the dataset.
      */
     delete: operations['removeDatapoint'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/v1/datasets/{dataset_id}/{datapoint_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Remove a datapoint from a dataset (deprecated)
-     * @deprecated
-     * @description Deprecated. Use `DELETE /v1/datasets/{dataset_id}/datapoints/{datapoint_id}` instead.
-     */
-    delete: operations['removeDatapointLegacy'];
     options?: never;
     head?: never;
     patch?: never;
@@ -876,16 +1110,18 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get a list of evaluation runs
-     * @description List experiment runs with optional filtering by dataset, status, name, date range, and specific run IDs. Results are paginated and sortable.
+     * Get a list of evaluation runs (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs` with a data plane API key instead. Lists experiment runs with optional filtering by dataset, status, name, date range, and specific run IDs. Results are paginated and sortable.
      */
-    get: operations['getRuns'];
+    get: operations['getRunsLegacy'];
     put?: never;
     /**
-     * Create a new evaluation run
-     * @description Create a new experiment run to track an evaluation against a dataset.
+     * Create a new evaluation run (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/projects/{project_id}/runs` with a data plane API key instead. Creates a new experiment run to track an evaluation against a dataset.
      */
-    post: operations['createRun'];
+    post: operations['createRunLegacy'];
     delete?: never;
     options?: never;
     head?: never;
@@ -900,10 +1136,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get events schema across all experiment runs in a project
-     * @description Retrieve the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
+     * Get events schema across all experiment runs in a project (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs/schema` with a data plane API key instead. Retrieves the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
      */
-    get: operations['getRunsSchema'];
+    get: operations['getRunsSchemaLegacy'];
     put?: never;
     post?: never;
     delete?: never;
@@ -920,21 +1157,24 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get details of an evaluation run
-     * @description Retrieve the full details of a single experiment run by its run ID.
+     * Get details of an evaluation run (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs/{run_id}` with a data plane API key instead. Retrieves the full details of a single experiment run by its run ID.
      */
-    get: operations['getRun'];
+    get: operations['getRunLegacy'];
     /**
-     * Update an evaluation run
-     * @description Update fields on an existing experiment run such as name, status, metadata, or results.
+     * Update an evaluation run (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `PATCH /v1/projects/{project_id}/runs/{run_id}` with a data plane API key instead. Updates fields on an existing experiment run such as name, status, metadata, or results.
      */
-    put: operations['updateRun'];
+    put: operations['updateRunLegacy'];
     post?: never;
     /**
-     * Delete an evaluation run
-     * @description Permanently delete an experiment run by its run ID.
+     * Delete an evaluation run (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/projects/{project_id}/runs/{run_id}` with a data plane API key instead. Permanently deletes an experiment run by its run ID.
      */
-    delete: operations['deleteRun'];
+    delete: operations['deleteRunLegacy'];
     options?: never;
     head?: never;
     patch?: never;
@@ -948,10 +1188,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get events schema for a single experiment run
-     * @description Retrieve the events schema (fields, datasets, mappings) for a single experiment run.
+     * Get events schema for a single experiment run (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs/{run_id}/schema` with a data plane API key instead. Retrieves the events schema (fields, datasets, mappings) for a single experiment run.
      */
-    get: operations['getRunSchema'];
+    get: operations['getRunSchemaLegacy'];
     put?: never;
     post?: never;
     delete?: never;
@@ -968,10 +1209,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get event metrics for an experiment run
-     * @description Retrieve event metrics from ClickHouse for a specific experiment run
+     * Get event metrics for an experiment run (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs/{run_id}/metrics` with a data plane API key instead. Retrieves event metrics from ClickHouse for a specific experiment run
      */
-    get: operations['getExperimentRunMetrics'];
+    get: operations['getExperimentRunMetricsLegacy'];
     put?: never;
     post?: never;
     delete?: never;
@@ -988,10 +1230,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Retrieve experiment summary
-     * @description Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
+     * Retrieve experiment summary (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs/{run_id}/summary` with a data plane API key instead. Computes evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
      */
-    get: operations['getExperimentSummary'];
+    get: operations['getExperimentSummaryLegacy'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1029,8 +1272,29 @@ export interface paths {
       cookie?: never;
     };
     /**
+     * Retrieve experiment comparison (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs/{new_run_id}/compare/{old_run_id}` with a data plane API key instead. Compares metrics and results between two experiment runs.
+     */
+    get: operations['getExperimentComparisonLegacy'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/runs/{new_run_id}/compare/{old_run_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
      * Retrieve experiment comparison
-     * @description Compare metrics and results between two experiment runs
+     * @description Compare metrics and results between two experiment runs in the project.
      */
     get: operations['getExperimentComparison'];
     put?: never;
@@ -1049,11 +1313,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Retrieve experiment comparison (deprecated)
+     * Retrieve experiment comparison via compare-with (deprecated)
      * @deprecated
-     * @description Deprecated. Use `GET /v1/runs/{new_run_id}/compare/{old_run_id}` instead.
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs/{new_run_id}/compare/{old_run_id}` with a data plane API key instead.
      */
-    get: operations['getExperimentComparisonLegacy'];
+    get: operations['getExperimentComparisonCompareWithLegacy'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1063,6 +1327,180 @@ export interface paths {
     trace?: never;
   };
   '/v1/runs/{new_run_id}/compare/{old_run_id}/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Compare events between two experiment runs (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs/{new_run_id}/compare/{old_run_id}/events` with a data plane API key instead. Retrieves and compares events between two experiment runs for detailed analysis
+     */
+    get: operations['getExperimentCompareEventsLegacy'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/runs/compare/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Compare events between two experiment runs by query IDs (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/runs/{new_run_id}/compare/{old_run_id}/events` with a data plane API key instead.
+     */
+    get: operations['getExperimentCompareEventsQueryIdLegacy'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/runs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a list of evaluation runs
+     * @description List experiment runs with optional filtering by dataset, status, name, date range, and specific run IDs. Results are paginated and sortable.
+     */
+    get: operations['getRuns'];
+    put?: never;
+    /**
+     * Create a new evaluation run
+     * @description Create a new experiment run to track an evaluation against a dataset.
+     */
+    post: operations['createRun'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/runs/schema': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get events schema across all experiment runs in a project
+     * @description Retrieve the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
+     */
+    get: operations['getRunsSchema'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/runs/{run_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get details of an evaluation run
+     * @description Retrieve the full details of a single experiment run by its run ID.
+     */
+    get: operations['getRun'];
+    put?: never;
+    post?: never;
+    /**
+     * Delete an evaluation run
+     * @description Permanently delete an experiment run by its run ID.
+     */
+    delete: operations['deleteRun'];
+    options?: never;
+    head?: never;
+    /**
+     * Update an evaluation run
+     * @description Update fields on an existing experiment run such as name, status, metadata, or results.
+     */
+    patch: operations['updateRun'];
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/runs/{run_id}/schema': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get events schema for a single experiment run
+     * @description Retrieve the events schema (fields, datasets, mappings) for a single experiment run.
+     */
+    get: operations['getRunSchema'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/runs/{run_id}/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve experiment summary
+     * @description Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
+     */
+    get: operations['getExperimentSummary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/runs/{run_id}/metrics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get event metrics for an experiment run
+     * @description Retrieve event metrics from ClickHouse for a specific experiment run
+     */
+    get: operations['getExperimentRunMetrics'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/runs/{new_run_id}/compare/{old_run_id}/events': {
     parameters: {
       query?: never;
       header?: never;
@@ -1082,27 +1520,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/v1/runs/compare/events': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Compare events between two experiment runs (deprecated)
-     * @deprecated
-     * @description Deprecated. Use `GET /v1/runs/{new_run_id}/compare/{old_run_id}/events` instead.
-     */
-    get: operations['getExperimentCompareEventsLegacy'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/v1/queues': {
     parameters: {
       query?: never;
@@ -1111,8 +1528,34 @@ export interface paths {
       cookie?: never;
     };
     /**
+     * List annotation queues (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/queues` with a data plane API key instead. Lists annotation queues for the current project scope, optionally filtered by enabled status.
+     */
+    get: operations['getQueuesLegacy'];
+    put?: never;
+    /**
+     * Create an annotation queue (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `POST /v1/projects/{project_id}/queues` with a data plane API key instead. Creates a new annotation queue with a name, optional description, filters, and an initial set of event IDs to add.
+     */
+    post: operations['createQueueLegacy'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/queues': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
      * List annotation queues
-     * @description List annotation queues for the current project scope, optionally filtered by enabled status.
+     * @description List the annotation queues in the project that `project_id` names, optionally filtered by enabled status.
      */
     get: operations['getQueues'];
     put?: never;
@@ -1135,15 +1578,42 @@ export interface paths {
       cookie?: never;
     };
     /**
+     * Get an annotation queue (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/queues/{queue_id}` with a data plane API key instead. Retrieves a single annotation queue by its unique identifier.
+     */
+    get: operations['getQueueLegacy'];
+    /**
+     * Update an annotation queue (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `PATCH /v1/projects/{project_id}/queues/{queue_id}` with a data plane API key instead. Updates fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
+     */
+    put: operations['updateQueueLegacy'];
+    post?: never;
+    /**
+     * Delete an annotation queue (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `DELETE /v1/projects/{project_id}/queues/{queue_id}` with a data plane API key instead. Soft-deletes an annotation queue by its unique identifier.
+     */
+    delete: operations['deleteQueueLegacy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/queues/{queue_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
      * Get an annotation queue
      * @description Retrieve a single annotation queue by its unique identifier.
      */
     get: operations['getQueue'];
-    /**
-     * Update an annotation queue
-     * @description Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
-     */
-    put: operations['updateQueue'];
+    put?: never;
     post?: never;
     /**
      * Delete an annotation queue
@@ -1152,7 +1622,11 @@ export interface paths {
     delete: operations['deleteQueue'];
     options?: never;
     head?: never;
-    patch?: never;
+    /**
+     * Update an annotation queue
+     * @description Update fields on an existing annotation queue. Supports updating name, description, filters, enabled status, and adding/removing events.
+     */
+    patch: operations['updateQueue'];
     trace?: never;
   };
   '/v1/configurations': {
@@ -1266,6 +1740,308 @@ export interface components {
       /** @enum {boolean} */
       success: true;
       data: components['schemas']['CreateIngestionApiKeyResponseData'];
+    };
+    /** @description Request body for POST /v1/charts/query */
+    ChartQueryRequest: {
+      date_range: components['schemas']['ChartQueryDateRange'];
+      /** @description Implicit AND; default none */
+      filters?: components['schemas']['EventSearchFilter'][];
+      product_filters?: components['schemas']['ChartQueryProductFilters'];
+      query: components['schemas']['ChartQuery'];
+    };
+    ChartQueryDateRange: {
+      /**
+       * Format: date-time
+       * @description RFC 3339 start of the range (inclusive); Z or explicit offset
+       */
+      start_time: string;
+      /**
+       * Format: date-time
+       * @description RFC 3339 end of the range (exclusive); Z or explicit offset
+       */
+      end_time: string;
+      /** @description IANA timezone name; defaults to UTC. Affects bucket alignment only. */
+      timezone?: string;
+    };
+    EventSearchFilter: {
+      field: string;
+      /** @enum {string} */
+      operator:
+        | 'exists'
+        | 'not exists'
+        | 'is'
+        | 'is not'
+        | 'contains'
+        | 'not contains'
+        | 'greater than'
+        | 'less than'
+        | 'after'
+        | 'before';
+      value: string | number | boolean | null;
+      /** @enum {string} */
+      type?: 'string' | 'number' | 'boolean' | 'datetime';
+    };
+    ChartQueryProductFilters: {
+      /** @description Restrict to one experiment run */
+      experiment_run_id?: string;
+      /** @description Restrict to events belonging to any experiment run */
+      only_experiments?: boolean;
+    };
+    ChartQuery:
+      | components['schemas']['ChartQueryTimeSeries']
+      | components['schemas']['ChartQueryCategorical']
+      | components['schemas']['ChartQueryScalar']
+      | components['schemas']['ChartQueryHistogram']
+      | components['schemas']['ChartQueryTable']
+      | components['schemas']['ChartQueryScatter'];
+    ChartQueryTimeSeries: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'time_series';
+      bucket?: components['schemas']['ChartQueryBucket'];
+      /** @description Groupable field; one series per value */
+      split_by?: string;
+      /** @description Display-ordered measures, same unit; exactly one when split_by is set */
+      measures: components['schemas']['ChartQueryMeasure'][];
+      split_ranking?: components['schemas']['ChartQueryRanking'];
+    };
+    ChartQueryBucket: {
+      /**
+       * @description Bucket width; default auto
+       * @enum {string}
+       */
+      interval?: 'auto' | '1m' | '5m' | '1h' | '1d' | '1w' | '1M';
+      /** @description Ceiling on bucket count when interval is auto; widens the resolved interval, never narrows it. Default 200, max 1000 */
+      max_points?: number;
+    };
+    ChartQueryMeasure: {
+      /** @description Response handle for this measure; defaults to the metric name */
+      id?: string;
+      /** @description Field name or intrinsic metric id */
+      metric: string;
+      aggregation?: components['schemas']['ChartQueryAggregation'];
+    };
+    /**
+     * @description Omit for a registry default; must be omitted for intrinsic metrics
+     * @enum {string}
+     */
+    ChartQueryAggregation:
+      | 'count'
+      | 'avg'
+      | 'sum'
+      | 'min'
+      | 'max'
+      | 'median'
+      | 'p50'
+      | 'p75'
+      | 'p90'
+      | 'p95'
+      | 'p99'
+      | 'percentage_true'
+      | 'percentage_false'
+      | 'percentage_null';
+    /** @description Caps the split_by dimension */
+    ChartQueryRanking: {
+      /** @description Cap on ranked items; default 10, at most 50 */
+      limit?: number;
+      /**
+       * @description Rank order; default desc
+       * @enum {string}
+       */
+      direction?: 'asc' | 'desc';
+      /** @description Roll everything below the cap into an "Other" item; additive measures only */
+      include_other?: boolean;
+    };
+    ChartQueryCategorical: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'categorical';
+      /** @description Groupable field forming the axis */
+      group_by: string;
+      /** @description Groupable field forming stacks/groups */
+      split_by?: string;
+      /** @description Display-ordered measures, same unit; exactly one when split_by is set */
+      measures: components['schemas']['ChartQueryMeasure'][];
+      /** @description Caps the group_by dimension */
+      ranking?: components['schemas']['ChartQueryRanking'];
+      /** @description Caps the split_by dimension; default limit 10 even when omitted */
+      split_ranking?: components['schemas']['ChartQueryRanking'];
+    };
+    ChartQueryScalar: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'scalar';
+      measure: components['schemas']['ChartQueryMeasure'];
+      comparison?: components['schemas']['ChartQueryScalarComparison'];
+      sparkline?: components['schemas']['ChartQueryScalarSparkline'];
+    };
+    ChartQueryHistogram: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'histogram';
+      /** @description Numeric field name; no aggregation */
+      metric: string;
+      bins?: components['schemas']['ChartQueryHistogramBins'];
+      /** @description Percentile lines to compute on the same scan; default none */
+      markers?: ('p50' | 'p75' | 'p90' | 'p95' | 'p99')[];
+    };
+    ChartQueryTable: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'table';
+      /** @description Groupable fields forming row identity */
+      group_by: string[];
+      /** @description Columns, in display order; units may differ */
+      measures: components['schemas']['ChartQueryMeasure'][];
+      order_by?: components['schemas']['ChartQueryTableOrderBy'];
+      /** @description Default 50, at most 100 */
+      limit?: number;
+    };
+    ChartQueryScatter: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'scatter';
+      /** @description One groupable field forming point identity */
+      group_by: string;
+      x: components['schemas']['ChartQueryMeasure'];
+      y: components['schemas']['ChartQueryMeasure'];
+      /** @description Default 100, clamped to 500 */
+      limit?: number;
+    };
+    /** @description Response body for POST /v1/charts/query */
+    ChartQueryResponse: {
+      success: boolean;
+      data: components['schemas']['ChartResult'];
+    };
+    ChartResult:
+      | components['schemas']['ChartResultTimeSeries']
+      | components['schemas']['ChartResultCategorical']
+      | components['schemas']['ChartResultScalar']
+      | components['schemas']['ChartResultHistogram']
+      | components['schemas']['ChartResultTable']
+      | components['schemas']['ChartResultScatter'];
+    ChartResultTimeSeries: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'time_series';
+      meta: components['schemas']['ChartResultTimeSeriesMeta'];
+      measures: components['schemas']['ChartResultMeasure'][];
+      data: components['schemas']['ChartResultTimeSeriesData'];
+    };
+    ChartResultWarning: {
+      /** @description Stable machine key; well-known values in CHART_RESULT_WARNING_CODES */
+      code: string;
+      /** @description Human-readable; UI affordances key off `code`, never this */
+      message: string;
+      /** @description Context the server already had, e.g. { field: "metadata.cost" } or a count */
+      details?: {
+        [key: string]: string | number;
+      };
+    };
+    ChartResultMeasure: {
+      id: string;
+      label: string;
+      /** @enum {string} */
+      unit: 'ms' | 'usd' | 'tokens' | 'events' | 'sessions' | '%' | 'number';
+      /** @enum {string} */
+      format: 'number' | 'duration_ms' | 'currency_usd' | 'percent';
+    };
+    ChartResultSeries: {
+      /** @description Stable within a response; safe as a React key */
+      key: string;
+      /** @description Display string; "(empty)" for a stored empty string */
+      label: string;
+      /** @description Machine-readable identity, e.g. { "config.model": "gpt-4o" } */
+      dimensions: {
+        [key: string]: string;
+      };
+      /** @description Positional, aligned to the kind’s axis array */
+      values: (number | null)[];
+    };
+    ChartResultCategorical: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'categorical';
+      meta: components['schemas']['ChartResultCategoricalMeta'];
+      /** @enum {string} */
+      unit: 'ms' | 'usd' | 'tokens' | 'events' | 'sessions' | '%' | 'number';
+      /** @enum {string} */
+      format: 'number' | 'duration_ms' | 'currency_usd' | 'percent';
+      data: components['schemas']['ChartResultCategoricalData'];
+    };
+    ChartResultCategory: {
+      /** @description Stable within a response; safe as a React key */
+      key: string;
+      /** @description Display string; "(empty)" for a stored empty string */
+      label: string;
+      /** @description Machine-readable identity, e.g. { "config.model": "gpt-4o" } */
+      dimensions: {
+        [key: string]: string;
+      };
+      /**
+       * @description Present only on the "Other" rollup
+       * @enum {boolean}
+       */
+      is_other?: true;
+    };
+    ChartResultScalar: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'scalar';
+      meta: components['schemas']['ChartResultScalarMeta'];
+      measures: components['schemas']['ChartResultMeasure'][];
+      data: components['schemas']['ChartResultScalarData'];
+    };
+    ChartResultHistogram: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'histogram';
+      meta: components['schemas']['ChartResultHistogramMeta'];
+      /** @enum {string} */
+      unit: 'ms' | 'usd' | 'tokens' | 'events' | 'sessions' | '%' | 'number';
+      /** @enum {string} */
+      format: 'number' | 'duration_ms' | 'currency_usd' | 'percent';
+      data: components['schemas']['ChartResultHistogramData'];
+    };
+    ChartResultTable: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'table';
+      meta: components['schemas']['ChartResultTableMeta'];
+      measures: components['schemas']['ChartResultMeasure'][];
+      data: components['schemas']['ChartResultTableData'];
+    };
+    ChartResultScatter: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'scatter';
+      meta: components['schemas']['ChartResultScatterMeta'];
+      measures: components['schemas']['ChartResultMeasure'][];
+      data: components['schemas']['ChartResultScatterData'];
     };
     CreateChartRequest: {
       /** @description Display name for the chart */
@@ -1545,6 +2321,10 @@ export interface components {
       metadata?: {
         [key: string]: unknown;
       };
+      /**
+       * @deprecated
+       * @description Deprecated: Ignored on updates. Set linked_event when creating a datapoint.
+       */
       linked_event?: string;
       linked_datasets?: string[];
     };
@@ -1654,7 +2434,7 @@ export interface components {
     };
     /**
      * @deprecated
-     * @description Query parameters for DELETE /datasets (deprecated — use DELETE /datasets/{dataset_id})
+     * @description Query parameters for the deprecated DELETE /datasets. Use DELETE /projects/{project_id}/datasets/{dataset_id} instead.
      */
     LegacyDeleteDatasetQuery: {
       /** @description Unique identifier of the dataset to delete */
@@ -1713,24 +2493,6 @@ export interface components {
       message: string;
     };
     FiltersArray: components['schemas']['SingleFilter'][];
-    EventSearchFilter: {
-      field: string;
-      /** @enum {string} */
-      operator:
-        | 'exists'
-        | 'not exists'
-        | 'is'
-        | 'is not'
-        | 'contains'
-        | 'not contains'
-        | 'greater than'
-        | 'less than'
-        | 'after'
-        | 'before';
-      value: string | number | boolean | null;
-      /** @enum {string} */
-      type?: 'string' | 'number' | 'boolean' | 'datetime';
-    };
     EventSearchFiltersArray: components['schemas']['EventSearchFilter'][];
     /** @description Minimal event object used by evaluation and session endpoints; permissive (passthrough) */
     Event: {
@@ -2341,6 +3103,7 @@ export interface components {
     };
     /** @description Request body for POST /runs */
     PostExperimentRunRequest: {
+      /** @description Optional client-generated UUID. A value that is not a valid UUID is replaced by a generated one; the response's run_id is authoritative. */
       run_id?: string;
       /** @description Experiment run display name */
       name?: string;
@@ -2914,7 +3677,11 @@ export interface components {
       description?: string;
       filters?: components['schemas']['UpdateAnnotationQueueRequestFilters'];
       enabled?: boolean;
-      id: string;
+      /**
+       * @deprecated
+       * @description Deprecated: the queue id comes from the path, which overrides any value sent here.
+       */
+      id?: string;
       add_event_ids?: string[];
       remove_event_ids?: string[];
     };
@@ -3081,6 +3848,155 @@ export interface components {
       /** @enum {string} */
       root_scope_type: 'project';
       root_scope_id: string;
+    };
+    /** @description Delta baseline; default none */
+    ChartQueryScalarComparison: {
+      /** @enum {string} */
+      mode: 'previous_period' | 'none';
+    };
+    /** @description Omit for no sparkline — it is a second query, so it is opt-in */
+    ChartQueryScalarSparkline: {
+      /** @enum {string} */
+      interval?: 'auto';
+      /** @description Default 50; sparklines are small */
+      max_points?: number;
+    };
+    ChartQueryHistogramBins: {
+      /** @enum {string} */
+      mode: 'count';
+      /** @description Default 20, at most 200 */
+      count?: number;
+      /** @description Lower edge; discovered from the data when omitted */
+      min?: number;
+      /** @description Upper edge; the p99 of the data when omitted, so one outlier cannot flatten the chart */
+      max?: number;
+    };
+    /** @description Default: first measure, descending */
+    ChartQueryTableOrderBy: {
+      /** @description A measure id or a group field; a measure wins if a name is both */
+      field: string;
+      /** @enum {string} */
+      direction?: 'asc' | 'desc';
+    };
+    /** @description What the server resolved; the UI cannot label the x-axis without it */
+    ChartResultTimeSeriesMetaEffectiveBucket: {
+      interval: string;
+      /** @enum {string} */
+      fill: 'zero' | 'null';
+    };
+    ChartResultTimeSeriesMetaRanking: {
+      limit: number;
+      total_series: number;
+    };
+    ChartResultTimeSeriesMeta: {
+      /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+      matched_event_count: number;
+      warnings: components['schemas']['ChartResultWarning'][];
+      effective_bucket: components['schemas']['ChartResultTimeSeriesMetaEffectiveBucket'];
+      ranking?: components['schemas']['ChartResultTimeSeriesMetaRanking'];
+    };
+    ChartResultTimeSeriesData: {
+      /** @description Full axis, no gaps; UTC instants of timezone-local bucket starts */
+      buckets: string[];
+      series: components['schemas']['ChartResultSeries'][];
+    };
+    ChartResultCategoricalMeta: {
+      warnings: components['schemas']['ChartResultWarning'][];
+    };
+    ChartResultCategoricalData: {
+      categories: components['schemas']['ChartResultCategory'][];
+      series: components['schemas']['ChartResultSeries'][];
+    };
+    ChartResultScalarMeta: {
+      /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+      matched_event_count: number;
+      warnings: components['schemas']['ChartResultWarning'][];
+    };
+    ChartResultScalarDataComparisonSparkline: {
+      interval: string;
+      buckets: string[];
+      values: (number | null)[];
+    };
+    ChartResultScalarDataComparison: {
+      value: number | null;
+      /** @description Server-derived; the UI labels the delta with this rather than re-deriving it */
+      date_range: components['schemas']['ChartQueryDateRange'];
+      sparkline?: components['schemas']['ChartResultScalarDataComparisonSparkline'];
+    };
+    ChartResultScalarDataSparkline: {
+      interval: string;
+      buckets: string[];
+      values: (number | null)[];
+    };
+    ChartResultScalarData: {
+      value: number | null;
+      comparison?: components['schemas']['ChartResultScalarDataComparison'];
+      sparkline?: components['schemas']['ChartResultScalarDataSparkline'];
+    };
+    ChartResultHistogramMeta: {
+      /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+      matched_event_count: number;
+      warnings: components['schemas']['ChartResultWarning'][];
+    };
+    ChartResultHistogramDataBinsItem: {
+      start: number;
+      end: number | null;
+      count: number;
+    };
+    ChartResultHistogramData: {
+      bins: components['schemas']['ChartResultHistogramDataBinsItem'][];
+      markers: {
+        [key: string]: number | null;
+      };
+    };
+    ChartResultTableMetaRanking: {
+      limit: number;
+      total_categories: number;
+    };
+    ChartResultTableMeta: {
+      /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+      matched_event_count: number;
+      warnings: components['schemas']['ChartResultWarning'][];
+      ranking: components['schemas']['ChartResultTableMetaRanking'];
+    };
+    ChartResultTableDataRowsItem: {
+      /** @description Stable within a response; safe as a React key */
+      key: string;
+      /** @description Display string; "(empty)" for a stored empty string */
+      label: string;
+      /** @description Machine-readable identity, e.g. { "config.model": "gpt-4o" } */
+      dimensions: {
+        [key: string]: string;
+      };
+      values: {
+        [key: string]: number | null;
+      };
+    };
+    ChartResultTableData: {
+      rows: components['schemas']['ChartResultTableDataRowsItem'][];
+    };
+    ChartResultScatterMeta: {
+      /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+      matched_event_count: number;
+      warnings: components['schemas']['ChartResultWarning'][];
+      /** @description True when the group count exceeded the limit */
+      truncated: boolean;
+    };
+    ChartResultScatterDataPointsItem: {
+      /** @description Stable within a response; safe as a React key */
+      key: string;
+      /** @description Display string; "(empty)" for a stored empty string */
+      label: string;
+      /** @description Machine-readable identity, e.g. { "config.model": "gpt-4o" } */
+      dimensions: {
+        [key: string]: string;
+      };
+      x: number;
+      y: number;
+      weight: number;
+    };
+    ChartResultScatterData: {
+      points: components['schemas']['ChartResultScatterDataPointsItem'][];
     };
     CreateChartResponseData: {
       id: string;
@@ -3978,7 +4894,7 @@ export interface operations {
       };
     };
   };
-  getEvent: {
+  getEventLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -4079,6 +4995,45 @@ export interface operations {
       };
     };
   };
+  getEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the event */
+        project_id: string;
+        /** @description The unique identifier of the event to retrieve */
+        event_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Event retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetEventResponse'];
+        };
+      };
+      /** @description Bad request (invalid event_id) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Event not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
   exportEventsLegacy: {
     parameters: {
       query?: never;
@@ -4103,11 +5058,38 @@ export interface operations {
       };
     };
   };
-  searchEvents: {
+  searchEventsLegacy: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SearchEventsRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ExportEventsResponse'];
+        };
+      };
+    };
+  };
+  searchEvents: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project whose events to search */
+        project_id: string;
+      };
       cookie?: never;
     };
     requestBody: {
@@ -4450,6 +5432,54 @@ export interface operations {
         content: {
           'application/json': components['schemas']['CreateChartResponse'];
         };
+      };
+    };
+  };
+  queryChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project whose events are queried */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChartQueryRequest'];
+      };
+    };
+    responses: {
+      /** @description Chart query result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ChartQueryResponse'];
+        };
+      };
+      /** @description The request is invalid or the query cannot be planned */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The query exceeded its time or memory budget (`errorCode` `query_timeout` or `query_too_large`). Narrow the date range or add filters. */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The query uses a shape that is not served yet (`scatter`, or a categorical `split_by` / `split_ranking`) */
+      501: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -4924,7 +5954,7 @@ export interface operations {
       };
     };
   };
-  getDatapoints: {
+  getDatapointsLegacy: {
     parameters: {
       query?: {
         /** @description List of datapoint ids to fetch */
@@ -4949,7 +5979,7 @@ export interface operations {
       };
     };
   };
-  createDatapoint: {
+  createDatapointLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -4973,7 +6003,7 @@ export interface operations {
       };
     };
   };
-  batchCreateDatapoints: {
+  batchCreateDatapointsLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -4997,7 +6027,7 @@ export interface operations {
       };
     };
   };
-  getDatapoint: {
+  getDatapointLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5020,7 +6050,7 @@ export interface operations {
       };
     };
   };
-  updateDatapoint: {
+  updateDatapointLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5054,7 +6084,7 @@ export interface operations {
       };
     };
   };
-  deleteDatapoint: {
+  deleteDatapointLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5077,7 +6107,175 @@ export interface operations {
       };
     };
   };
-  getDatasets: {
+  getDatapoints: {
+    parameters: {
+      query?: {
+        /** @description List of datapoint ids to fetch */
+        datapoint_ids?: string[];
+        /** @description Name of the dataset to get datapoints from */
+        dataset_name?: string;
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project whose datapoints are listed */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetDatapointsResponse'];
+        };
+      };
+    };
+  };
+  createDatapoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the datapoint */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateDatapointRequest'];
+      };
+    };
+    responses: {
+      /** @description Datapoint successfully created */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreateDatapointResponse'];
+        };
+      };
+    };
+  };
+  batchCreateDatapoints: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the datapoints */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BatchCreateDatapointsRequest'];
+      };
+    };
+    responses: {
+      /** @description Datapoints successfully created in batch */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BatchCreateDatapointsResponse'];
+        };
+      };
+    };
+  };
+  getDatapoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the datapoint */
+        project_id: string;
+        /** @description Datapoint ID like `65c13dbbd65fb876b7886cdb` */
+        datapoint_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetDatapointResponse'];
+        };
+      };
+    };
+  };
+  deleteDatapoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the datapoint */
+        project_id: string;
+        /** @description Datapoint ID like `65c13dbbd65fb876b7886cdb` */
+        datapoint_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Datapoint successfully deleted */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeleteDatapointResponse'];
+        };
+      };
+    };
+  };
+  updateDatapoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the datapoint */
+        project_id: string;
+        /** @description ID of datapoint to update */
+        datapoint_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateDatapointRequest'];
+      };
+    };
+    responses: {
+      /** @description Datapoint successfully updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UpdateDatapointResponse'];
+        };
+      };
+      /** @description Error updating datapoint */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getDatasetsLegacy: {
     parameters: {
       query?: {
         /** @description Unique dataset ID for filtering specific dataset */
@@ -5102,7 +6300,7 @@ export interface operations {
       };
     };
   };
-  updateDatasetLegacy: {
+  updateDatasetBodyIdLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5126,7 +6324,7 @@ export interface operations {
       };
     };
   };
-  createDataset: {
+  createDatasetLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5150,7 +6348,7 @@ export interface operations {
       };
     };
   };
-  deleteDatasetLegacy: {
+  deleteDatasetQueryIdLegacy: {
     parameters: {
       query: {
         /** @description The unique identifier of the dataset to be deleted like `663876ec4611c47f4970f0c3` */
@@ -5173,7 +6371,7 @@ export interface operations {
       };
     };
   };
-  updateDataset: {
+  updateDatasetLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5200,7 +6398,7 @@ export interface operations {
       };
     };
   };
-  deleteDataset: {
+  deleteDatasetLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5223,11 +6421,199 @@ export interface operations {
       };
     };
   };
+  addDatapointsLegacy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the dataset to add datapoints to like  `663876ec4611c47f4970f0c3` */
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AddDatapointsToDatasetRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful addition */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AddDatapointsResponse'];
+        };
+      };
+    };
+  };
+  removeDatapointLegacy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the dataset */
+        dataset_id: string;
+        /** @description The unique identifier of the datapoint to remove */
+        datapoint_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Datapoint successfully removed from dataset */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemoveDatapointResponse'];
+        };
+      };
+    };
+  };
+  removeDatapointShortPathLegacy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the dataset */
+        dataset_id: string;
+        /** @description The unique identifier of the datapoint to remove */
+        datapoint_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Datapoint successfully removed from dataset */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RemoveDatapointResponse'];
+        };
+      };
+    };
+  };
+  getDatasets: {
+    parameters: {
+      query?: {
+        /** @description Unique dataset ID for filtering specific dataset */
+        dataset_id?: string;
+        /** @description Dataset name to filter by */
+        name?: string;
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project whose datasets are listed */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetDatasetsResponse'];
+        };
+      };
+    };
+  };
+  createDataset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the dataset */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateDatasetRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful creation */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreateDatasetResponse'];
+        };
+      };
+    };
+  };
+  deleteDataset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the dataset */
+        project_id: string;
+        /** @description The unique identifier of the dataset to be deleted like `663876ec4611c47f4970f0c3` */
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful delete */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeleteDatasetResponse'];
+        };
+      };
+    };
+  };
+  updateDataset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the dataset */
+        project_id: string;
+        /** @description The unique identifier of the dataset to update like `663876ec4611c47f4970f0c3` */
+        dataset_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateDatasetRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful update */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UpdateDatasetResponse'];
+        };
+      };
+    };
+  };
   addDatapoints: {
     parameters: {
       query?: never;
       header?: never;
       path: {
+        /** @description The unique identifier of the project that owns the dataset */
+        project_id: string;
         /** @description The unique identifier of the dataset to add datapoints to like  `663876ec4611c47f4970f0c3` */
         dataset_id: string;
       };
@@ -5255,31 +6641,8 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        /** @description The unique identifier of the dataset */
-        dataset_id: string;
-        /** @description The unique identifier of the datapoint to remove */
-        datapoint_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Datapoint successfully removed from dataset */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['RemoveDatapointResponse'];
-        };
-      };
-    };
-  };
-  removeDatapointLegacy: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
+        /** @description The unique identifier of the project that owns the dataset */
+        project_id: string;
         /** @description The unique identifier of the dataset */
         dataset_id: string;
         /** @description The unique identifier of the datapoint to remove */
@@ -5325,7 +6688,7 @@ export interface operations {
       };
     };
   };
-  getRuns: {
+  getRunsLegacy: {
     parameters: {
       query?: {
         /** @description Filter by dataset ID */
@@ -5371,7 +6734,7 @@ export interface operations {
       };
     };
   };
-  createRun: {
+  createRunLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5402,7 +6765,7 @@ export interface operations {
       };
     };
   };
-  getRunsSchema: {
+  getRunsSchemaLegacy: {
     parameters: {
       query?: {
         /** @description Filter by date range */
@@ -5432,7 +6795,7 @@ export interface operations {
       };
     };
   };
-  getRun: {
+  getRunLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5461,7 +6824,7 @@ export interface operations {
       };
     };
   };
-  updateRun: {
+  updateRunLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5494,7 +6857,7 @@ export interface operations {
       };
     };
   };
-  deleteRun: {
+  deleteRunLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5523,7 +6886,7 @@ export interface operations {
       };
     };
   };
-  getRunSchema: {
+  getRunSchemaLegacy: {
     parameters: {
       query?: {
         /** @description Filter by date range */
@@ -5556,7 +6919,7 @@ export interface operations {
       };
     };
   };
-  getExperimentRunMetrics: {
+  getExperimentRunMetricsLegacy: {
     parameters: {
       query?: {
         /** @description Date range filter as JSON string */
@@ -5591,7 +6954,7 @@ export interface operations {
       };
     };
   };
-  getExperimentSummary: {
+  getExperimentSummaryLegacy: {
     parameters: {
       query?: {
         /** @description Aggregation function to apply to metrics */
@@ -5663,7 +7026,7 @@ export interface operations {
       };
     };
   };
-  getExperimentComparison: {
+  getExperimentComparisonLegacy: {
     parameters: {
       query?: {
         /** @description Aggregation function to apply to metrics */
@@ -5701,7 +7064,47 @@ export interface operations {
       };
     };
   };
-  getExperimentComparisonLegacy: {
+  getExperimentComparison: {
+    parameters: {
+      query?: {
+        /** @description Aggregation function to apply to metrics */
+        aggregate_function?:
+          'average' | 'min' | 'max' | 'median' | 'p95' | 'p99' | 'p90' | 'sum' | 'count';
+        /** @description Optional filters to apply (JSON string or array of filter objects) */
+        filters?: string | Record<string, never>[];
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that holds both runs */
+        project_id: string;
+        /** @description New experiment run ID to compare (UUIDv4) */
+        new_run_id: string;
+        /** @description Old experiment run ID to compare against (UUIDv4) */
+        old_run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Experiment comparison retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetExperimentRunCompareResponse'];
+        };
+      };
+      /** @description Error processing experiment comparison */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getExperimentComparisonCompareWithLegacy: {
     parameters: {
       query?: {
         /** @description Aggregation function to apply to metrics */
@@ -5738,7 +7141,7 @@ export interface operations {
       };
     };
   };
-  getExperimentCompareEvents: {
+  getExperimentCompareEventsLegacy: {
     parameters: {
       query?: {
         /** @description Filter by event name */
@@ -5781,7 +7184,7 @@ export interface operations {
       };
     };
   };
-  getExperimentCompareEventsLegacy: {
+  getExperimentCompareEventsQueryIdLegacy: {
     parameters: {
       query: {
         /** @description First experiment run ID (UUIDv4) */
@@ -5823,7 +7226,375 @@ export interface operations {
       };
     };
   };
-  getQueues: {
+  getRuns: {
+    parameters: {
+      query?: {
+        /** @description Filter by dataset ID */
+        dataset_id?: string;
+        /** @description Page number for pagination */
+        page?: number;
+        /** @description Number of results per page */
+        limit?: number;
+        /** @description List of specific run IDs to fetch */
+        run_ids?: string[];
+        /** @description Filter by run name */
+        name?: string;
+        /** @description Filter by run status */
+        status?: 'pending' | 'completed' | 'failed' | 'cancelled' | 'running';
+        /** @description Filter by date range */
+        dateRange?: string | components['schemas']['GetRunsDateRangeOneOf1'];
+        /** @description Field to sort by */
+        sort_by?: 'created_at' | 'updated_at' | 'name' | 'status';
+        /** @description Sort order */
+        sort_order?: 'asc' | 'desc';
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project whose runs are listed */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetExperimentRunsResponse'];
+        };
+      };
+      /** @description Error fetching evaluations */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  createRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the run */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PostExperimentRunRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PostExperimentRunResponse'];
+        };
+      };
+      /** @description Invalid input */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getRunsSchema: {
+    parameters: {
+      query?: {
+        /** @description Filter by date range */
+        dateRange?: string | components['schemas']['GetRunsSchemaDateRangeOneOf1'];
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project whose runs the schema covers */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Events schema retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetEventsSchemaResponse'];
+        };
+      };
+      /** @description Error fetching events schema */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the run */
+        project_id: string;
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetExperimentRunResponse'];
+        };
+      };
+      /** @description Error fetching evaluation */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  deleteRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the run */
+        project_id: string;
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeleteExperimentRunResponse'];
+        };
+      };
+      /** @description Error deleting evaluation */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  updateRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that owns the run */
+        project_id: string;
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PutExperimentRunRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PutExperimentRunResponse'];
+        };
+      };
+      /** @description Invalid input */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getRunSchema: {
+    parameters: {
+      query?: {
+        /** @description Filter by date range */
+        dateRange?: string | components['schemas']['GetRunSchemaDateRangeOneOf1'];
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that holds the run */
+        project_id: string;
+        /** @description Experiment run ID (UUIDv4) */
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Events schema retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetEventsSchemaResponse'];
+        };
+      };
+      /** @description Error fetching events schema */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getExperimentSummary: {
+    parameters: {
+      query?: {
+        /** @description Aggregation function to apply to metrics */
+        aggregate_function?:
+          'average' | 'min' | 'max' | 'median' | 'p95' | 'p99' | 'p90' | 'sum' | 'count';
+        /** @description Optional filters to apply (JSON string or array of filter objects) */
+        filters?: string | Record<string, never>[];
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that holds the experiment run */
+        project_id: string;
+        /** @description Experiment run ID (UUIDv4) */
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Experiment summary retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetExperimentRunResultResponse'];
+        };
+      };
+      /** @description Error processing experiment summary */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getExperimentRunMetrics: {
+    parameters: {
+      query?: {
+        /** @description Date range filter as JSON string */
+        dateRange?: string;
+        /** @description Optional filters to apply (JSON string or array of filter objects) */
+        filters?: string | Record<string, never>[];
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that holds the run */
+        project_id: string;
+        /** @description Experiment run ID (UUIDv4) */
+        run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Event metrics retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetExperimentRunMetricsResponse'];
+        };
+      };
+      /** @description Error fetching event metrics */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getExperimentCompareEvents: {
+    parameters: {
+      query?: {
+        /** @description Filter by event name */
+        event_name?: string;
+        /** @description Filter by event type */
+        event_type?: string;
+        /** @description Additional filter criteria (JSON string or object) */
+        filter?: string | Record<string, never>;
+        /** @description Maximum number of results */
+        limit?: number;
+        /** @description Page number for pagination */
+        page?: number;
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that holds both runs */
+        project_id: string;
+        /** @description New experiment run ID (UUIDv4) */
+        new_run_id: string;
+        /** @description Old experiment run ID to compare against (UUIDv4) */
+        old_run_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Event comparison retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetExperimentCompareEventsResponse'];
+        };
+      };
+      /** @description Error fetching event comparison */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getQueuesLegacy: {
     parameters: {
       query?: {
         /** @description Filter by enabled status */
@@ -5846,7 +7617,7 @@ export interface operations {
       };
     };
   };
-  createQueue: {
+  createQueueLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5877,7 +7648,67 @@ export interface operations {
       };
     };
   };
-  getQueue: {
+  getQueues: {
+    parameters: {
+      query?: {
+        /** @description Filter by enabled status */
+        enabled?: boolean;
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project whose annotation queues are listed */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Queues retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetAnnotationQueuesResponse'];
+        };
+      };
+    };
+  };
+  createQueue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project the annotation queue is created in */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateAnnotationQueueRequest'];
+      };
+    };
+    responses: {
+      /** @description Queue created successfully */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreateAnnotationQueueResponse'];
+        };
+      };
+      /** @description Bad request (invalid queue data or missing required fields) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getQueueLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5907,7 +7738,7 @@ export interface operations {
       };
     };
   };
-  updateQueue: {
+  updateQueueLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5941,7 +7772,7 @@ export interface operations {
       };
     };
   };
-  deleteQueue: {
+  deleteQueueLegacy: {
     parameters: {
       query?: never;
       header?: never;
@@ -5960,6 +7791,106 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['DeleteAnnotationQueueResponse'];
+        };
+      };
+      /** @description Queue not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getQueue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that holds the annotation queue */
+        project_id: string;
+        /** @description Annotation queue ID */
+        queue_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Queue retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetAnnotationQueueByIdResponse'];
+        };
+      };
+      /** @description Queue not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  deleteQueue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that holds the annotation queue */
+        project_id: string;
+        /** @description Annotation queue ID */
+        queue_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Queue deleted successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeleteAnnotationQueueResponse'];
+        };
+      };
+      /** @description Queue not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  updateQueue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project that holds the annotation queue */
+        project_id: string;
+        /** @description Annotation queue ID */
+        queue_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateAnnotationQueueRequest'];
+      };
+    };
+    responses: {
+      /** @description Queue updated successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UpdateAnnotationQueueResponse'];
         };
       };
       /** @description Queue not found */

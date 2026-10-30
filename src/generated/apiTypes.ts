@@ -107,6 +107,10 @@ export interface CreateEventRequest {
 }
 
 export interface GetEventRequest {
+  /**
+   * @description The unique identifier of the project that owns the event. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description The unique identifier of the event to retrieve */
   event_id: string;
 }
@@ -147,6 +151,10 @@ export interface UpdateEventRequest {
 }
 
 export interface SearchEventsRequest {
+  /**
+   * @description The unique identifier of the project whose events to search. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Array of filter criteria to apply */
   filters?: EventSearchFiltersArray;
   dateRange?: SearchEventsRequestDateRange;
@@ -250,6 +258,16 @@ export interface DeleteChartRequest {
   project_id?: string;
   /** @description The unique identifier of the chart to delete */
   chart_id: string;
+}
+
+export interface QueryChartRequest {
+  /** @description The unique identifier of the project whose events are queried */
+  project_id: string;
+  date_range: ChartQueryDateRange;
+  /** @description Implicit AND; default none */
+  filters?: EventSearchFilter[];
+  product_filters?: ChartQueryProductFilters;
+  query: ChartQuery;
 }
 
 export interface CreateDataPlaneApiKeyRequest {
@@ -384,6 +402,10 @@ export interface DeployMetricVersionRequest {
 }
 
 export interface GetDatapointsRequest {
+  /**
+   * @description The unique identifier of the project whose datapoints are listed. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description List of datapoint ids to fetch */
   datapoint_ids?: string[];
   /** @description Name of the dataset to get datapoints from */
@@ -391,6 +413,10 @@ export interface GetDatapointsRequest {
 }
 
 export interface CreateDatapointRequest {
+  /**
+   * @description The unique identifier of the project that owns the datapoint. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @default {} */
   inputs?: {
     [key: string]: unknown;
@@ -411,6 +437,10 @@ export interface CreateDatapointRequest {
 }
 
 export interface BatchCreateDatapointsRequest {
+  /**
+   * @description The unique identifier of the project that owns the datapoints. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @deprecated */
   events?: string[];
   /** @deprecated */
@@ -429,11 +459,19 @@ export interface BatchCreateDatapointsRequest {
 }
 
 export interface GetDatapointRequest {
+  /**
+   * @description The unique identifier of the project that owns the datapoint. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Datapoint ID like `65c13dbbd65fb876b7886cdb` */
   datapoint_id: string;
 }
 
 export interface UpdateDatapointRequest {
+  /**
+   * @description The unique identifier of the project that owns the datapoint. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description ID of datapoint to update */
   datapoint_id: string;
   inputs?: {
@@ -448,16 +486,28 @@ export interface UpdateDatapointRequest {
   metadata?: {
     [key: string]: unknown;
   };
+  /**
+   * @deprecated
+   * @description Deprecated: Ignored on updates. Set linked_event when creating a datapoint.
+   */
   linked_event?: string;
   linked_datasets?: string[];
 }
 
 export interface DeleteDatapointRequest {
+  /**
+   * @description The unique identifier of the project that owns the datapoint. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Datapoint ID like `65c13dbbd65fb876b7886cdb` */
   datapoint_id: string;
 }
 
 export interface GetDatasetsRequest {
+  /**
+   * @description The unique identifier of the project whose datasets are listed. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Unique dataset ID for filtering specific dataset */
   dataset_id?: string;
   /** @description Dataset name to filter by */
@@ -465,6 +515,10 @@ export interface GetDatasetsRequest {
 }
 
 export interface CreateDatasetRequest {
+  /**
+   * @description The unique identifier of the project that owns the dataset. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /**
    * @description Name of the dataset
    * @default Untitled Dataset
@@ -480,6 +534,10 @@ export interface CreateDatasetRequest {
 }
 
 export interface UpdateDatasetRequest {
+  /**
+   * @description The unique identifier of the project that owns the dataset. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description The unique identifier of the dataset to update like `663876ec4611c47f4970f0c3` */
   dataset_id: string;
   /** @description New dataset name */
@@ -491,11 +549,19 @@ export interface UpdateDatasetRequest {
 }
 
 export interface DeleteDatasetRequest {
+  /**
+   * @description The unique identifier of the project that owns the dataset. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description The unique identifier of the dataset to be deleted like `663876ec4611c47f4970f0c3` */
   dataset_id: string;
 }
 
 export interface AddDatapointsRequest {
+  /**
+   * @description The unique identifier of the project that owns the dataset. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description The unique identifier of the dataset to add datapoints to like  `663876ec4611c47f4970f0c3` */
   dataset_id: string;
   /** @description Array of datapoint data objects to add */
@@ -507,6 +573,10 @@ export interface AddDatapointsRequest {
 }
 
 export interface RemoveDatapointRequest {
+  /**
+   * @description The unique identifier of the project that owns the dataset. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description The unique identifier of the dataset */
   dataset_id: string;
   /** @description The unique identifier of the datapoint to remove */
@@ -514,6 +584,10 @@ export interface RemoveDatapointRequest {
 }
 
 export interface GetRunsRequest {
+  /**
+   * @description The unique identifier of the project whose runs are listed. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Filter by dataset ID */
   dataset_id?: string;
   /** @description Page number for pagination */
@@ -535,6 +609,11 @@ export interface GetRunsRequest {
 }
 
 export interface CreateRunRequest {
+  /**
+   * @description The unique identifier of the project that owns the run. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
+  /** @description Optional client-generated UUID. A value that is not a valid UUID is replaced by a generated one; the response's run_id is authoritative. */
   run_id?: string;
   /** @description Experiment run display name */
   name?: string;
@@ -568,15 +647,27 @@ export interface CreateRunRequest {
 }
 
 export interface GetRunsSchemaRequest {
+  /**
+   * @description The unique identifier of the project whose runs the schema covers. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Filter by date range */
   dateRange?: string | GetRunsSchemaDateRangeOneOf1;
 }
 
 export interface GetRunRequest {
+  /**
+   * @description The unique identifier of the project that owns the run. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   run_id: string;
 }
 
 export interface UpdateRunRequest {
+  /**
+   * @description The unique identifier of the project that owns the run. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   run_id: string;
   /** @description Experiment run display name */
   name?: string;
@@ -602,10 +693,18 @@ export interface UpdateRunRequest {
 }
 
 export interface DeleteRunRequest {
+  /**
+   * @description The unique identifier of the project that owns the run. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   run_id: string;
 }
 
 export interface GetRunSchemaRequest {
+  /**
+   * @description The unique identifier of the project that holds the run. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Experiment run ID (UUIDv4) */
   run_id: string;
   /** @description Filter by date range */
@@ -613,6 +712,10 @@ export interface GetRunSchemaRequest {
 }
 
 export interface GetExperimentRunMetricsRequest {
+  /**
+   * @description The unique identifier of the project that holds the run. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Experiment run ID (UUIDv4) */
   run_id: string;
   /** @description Date range filter as JSON string */
@@ -622,6 +725,10 @@ export interface GetExperimentRunMetricsRequest {
 }
 
 export interface GetExperimentSummaryRequest {
+  /**
+   * @description The unique identifier of the project that holds the experiment run. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Experiment run ID (UUIDv4) */
   run_id: string;
   /** @description Aggregation function to apply to metrics */
@@ -632,6 +739,10 @@ export interface GetExperimentSummaryRequest {
 }
 
 export interface GetExperimentComparisonRequest {
+  /**
+   * @description The unique identifier of the project that holds both runs. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description New experiment run ID to compare (UUIDv4) */
   new_run_id: string;
   /** @description Old experiment run ID to compare against (UUIDv4) */
@@ -644,6 +755,10 @@ export interface GetExperimentComparisonRequest {
 }
 
 export interface GetExperimentCompareEventsRequest {
+  /**
+   * @description The unique identifier of the project that holds both runs. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description New experiment run ID (UUIDv4) */
   new_run_id: string;
   /** @description Old experiment run ID to compare against (UUIDv4) */
@@ -753,6 +868,14 @@ export type UpdateChartResponse = {
 export type DeleteChartResponse = {
   success: boolean;
   message: string;
+};
+
+/**
+ * @description Response body for POST /v1/charts/query
+ */
+export type QueryChartResponse = {
+  success: boolean;
+  data: ChartResult;
 };
 
 export type CreateDataPlaneApiKeyResponse = {
@@ -1073,6 +1196,393 @@ export type Pagination = {
 /**
  * @inline
  */
+export type ChartQueryDateRange = {
+  /**
+   * Format: date-time
+   * @description RFC 3339 start of the range (inclusive); Z or explicit offset
+   */
+  start_time: string;
+  /**
+   * Format: date-time
+   * @description RFC 3339 end of the range (exclusive); Z or explicit offset
+   */
+  end_time: string;
+  /** @description IANA timezone name; defaults to UTC. Affects bucket alignment only. */
+  timezone?: string;
+};
+
+/**
+ * @inline
+ */
+export type EventSearchFilter = {
+  field: string;
+  /** @enum {string} */
+  operator:
+    | 'exists'
+    | 'not exists'
+    | 'is'
+    | 'is not'
+    | 'contains'
+    | 'not contains'
+    | 'greater than'
+    | 'less than'
+    | 'after'
+    | 'before';
+  value: string | number | boolean | null;
+  /** @enum {string} */
+  type?: 'string' | 'number' | 'boolean' | 'datetime';
+};
+
+/**
+ * @inline
+ */
+export type ChartQueryProductFilters = {
+  /** @description Restrict to one experiment run */
+  experiment_run_id?: string;
+  /** @description Restrict to events belonging to any experiment run */
+  only_experiments?: boolean;
+};
+
+/**
+ * @inline
+ */
+export type ChartQuery =
+  | ChartQueryTimeSeries
+  | ChartQueryCategorical
+  | ChartQueryScalar
+  | ChartQueryHistogram
+  | ChartQueryTable
+  | ChartQueryScatter;
+
+/**
+ * @inline
+ */
+export type ChartQueryTimeSeries = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'time_series';
+  bucket?: ChartQueryBucket;
+  /** @description Groupable field; one series per value */
+  split_by?: string;
+  /** @description Display-ordered measures, same unit; exactly one when split_by is set */
+  measures: ChartQueryMeasure[];
+  split_ranking?: ChartQueryRanking;
+};
+
+/**
+ * @inline
+ */
+export type ChartQueryBucket = {
+  /**
+   * @description Bucket width; default auto
+   * @enum {string}
+   */
+  interval?: 'auto' | '1m' | '5m' | '1h' | '1d' | '1w' | '1M';
+  /** @description Ceiling on bucket count when interval is auto; widens the resolved interval, never narrows it. Default 200, max 1000 */
+  max_points?: number;
+};
+
+/**
+ * @inline
+ */
+export type ChartQueryMeasure = {
+  /** @description Response handle for this measure; defaults to the metric name */
+  id?: string;
+  /** @description Field name or intrinsic metric id */
+  metric: string;
+  aggregation?: ChartQueryAggregation;
+};
+
+/**
+ * @description Omit for a registry default; must be omitted for intrinsic metrics
+ * @enum {string}
+ * @inline
+ */
+export type ChartQueryAggregation =
+  | 'count'
+  | 'avg'
+  | 'sum'
+  | 'min'
+  | 'max'
+  | 'median'
+  | 'p50'
+  | 'p75'
+  | 'p90'
+  | 'p95'
+  | 'p99'
+  | 'percentage_true'
+  | 'percentage_false'
+  | 'percentage_null';
+
+/**
+ * @description Caps the split_by dimension
+ * @inline
+ */
+export type ChartQueryRanking = {
+  /** @description Cap on ranked items; default 10, at most 50 */
+  limit?: number;
+  /**
+   * @description Rank order; default desc
+   * @enum {string}
+   */
+  direction?: 'asc' | 'desc';
+  /** @description Roll everything below the cap into an "Other" item; additive measures only */
+  include_other?: boolean;
+};
+
+/**
+ * @inline
+ */
+export type ChartQueryCategorical = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'categorical';
+  /** @description Groupable field forming the axis */
+  group_by: string;
+  /** @description Groupable field forming stacks/groups */
+  split_by?: string;
+  /** @description Display-ordered measures, same unit; exactly one when split_by is set */
+  measures: ChartQueryMeasure[];
+  /** @description Caps the group_by dimension */
+  ranking?: ChartQueryRanking;
+  /** @description Caps the split_by dimension; default limit 10 even when omitted */
+  split_ranking?: ChartQueryRanking;
+};
+
+/**
+ * @inline
+ */
+export type ChartQueryScalar = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'scalar';
+  measure: ChartQueryMeasure;
+  comparison?: ChartQueryScalarComparison;
+  sparkline?: ChartQueryScalarSparkline;
+};
+
+/**
+ * @inline
+ */
+export type ChartQueryHistogram = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'histogram';
+  /** @description Numeric field name; no aggregation */
+  metric: string;
+  bins?: ChartQueryHistogramBins;
+  /** @description Percentile lines to compute on the same scan; default none */
+  markers?: ('p50' | 'p75' | 'p90' | 'p95' | 'p99')[];
+};
+
+/**
+ * @inline
+ */
+export type ChartQueryTable = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'table';
+  /** @description Groupable fields forming row identity */
+  group_by: string[];
+  /** @description Columns, in display order; units may differ */
+  measures: ChartQueryMeasure[];
+  order_by?: ChartQueryTableOrderBy;
+  /** @description Default 50, at most 100 */
+  limit?: number;
+};
+
+/**
+ * @inline
+ */
+export type ChartQueryScatter = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'scatter';
+  /** @description One groupable field forming point identity */
+  group_by: string;
+  x: ChartQueryMeasure;
+  y: ChartQueryMeasure;
+  /** @description Default 100, clamped to 500 */
+  limit?: number;
+};
+
+/**
+ * @inline
+ */
+export type ChartResult =
+  | ChartResultTimeSeries
+  | ChartResultCategorical
+  | ChartResultScalar
+  | ChartResultHistogram
+  | ChartResultTable
+  | ChartResultScatter;
+
+/**
+ * @inline
+ */
+export type ChartResultTimeSeries = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'time_series';
+  meta: ChartResultTimeSeriesMeta;
+  measures: ChartResultMeasure[];
+  data: ChartResultTimeSeriesData;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultWarning = {
+  /** @description Stable machine key; well-known values in CHART_RESULT_WARNING_CODES */
+  code: string;
+  /** @description Human-readable; UI affordances key off `code`, never this */
+  message: string;
+  /** @description Context the server already had, e.g. { field: "metadata.cost" } or a count */
+  details?: {
+    [key: string]: string | number;
+  };
+};
+
+/**
+ * @inline
+ */
+export type ChartResultMeasure = {
+  id: string;
+  label: string;
+  /** @enum {string} */
+  unit: 'ms' | 'usd' | 'tokens' | 'events' | 'sessions' | '%' | 'number';
+  /** @enum {string} */
+  format: 'number' | 'duration_ms' | 'currency_usd' | 'percent';
+};
+
+/**
+ * @inline
+ */
+export type ChartResultSeries = {
+  /** @description Stable within a response; safe as a React key */
+  key: string;
+  /** @description Display string; "(empty)" for a stored empty string */
+  label: string;
+  /** @description Machine-readable identity, e.g. { "config.model": "gpt-4o" } */
+  dimensions: {
+    [key: string]: string;
+  };
+  /** @description Positional, aligned to the kind’s axis array */
+  values: (number | null)[];
+};
+
+/**
+ * @inline
+ */
+export type ChartResultCategorical = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'categorical';
+  meta: ChartResultCategoricalMeta;
+  /** @enum {string} */
+  unit: 'ms' | 'usd' | 'tokens' | 'events' | 'sessions' | '%' | 'number';
+  /** @enum {string} */
+  format: 'number' | 'duration_ms' | 'currency_usd' | 'percent';
+  data: ChartResultCategoricalData;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultCategory = {
+  /** @description Stable within a response; safe as a React key */
+  key: string;
+  /** @description Display string; "(empty)" for a stored empty string */
+  label: string;
+  /** @description Machine-readable identity, e.g. { "config.model": "gpt-4o" } */
+  dimensions: {
+    [key: string]: string;
+  };
+  /**
+   * @description Present only on the "Other" rollup
+   * @enum {boolean}
+   */
+  is_other?: true;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScalar = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'scalar';
+  meta: ChartResultScalarMeta;
+  measures: ChartResultMeasure[];
+  data: ChartResultScalarData;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultHistogram = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'histogram';
+  meta: ChartResultHistogramMeta;
+  /** @enum {string} */
+  unit: 'ms' | 'usd' | 'tokens' | 'events' | 'sessions' | '%' | 'number';
+  /** @enum {string} */
+  format: 'number' | 'duration_ms' | 'currency_usd' | 'percent';
+  data: ChartResultHistogramData;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultTable = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'table';
+  meta: ChartResultTableMeta;
+  measures: ChartResultMeasure[];
+  data: ChartResultTableData;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScatter = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  kind: 'scatter';
+  meta: ChartResultScatterMeta;
+  measures: ChartResultMeasure[];
+  data: ChartResultScatterData;
+};
+
+/**
+ * @inline
+ */
 export type RelativeDateRange = {
   relative: string;
 };
@@ -1384,7 +1894,7 @@ export type DeleteDatasetParams = {
 
 /**
  * @deprecated
- * @description Query parameters for DELETE /datasets (deprecated — use DELETE /datasets/{dataset_id})
+ * @description Query parameters for the deprecated DELETE /datasets. Use DELETE /projects/{project_id}/datasets/{dataset_id} instead.
  * @inline
  */
 export type LegacyDeleteDatasetQuery = {
@@ -1422,28 +1932,6 @@ export type DeleteResult = {
  * @inline
  */
 export type FiltersArray = SingleFilter[];
-
-/**
- * @inline
- */
-export type EventSearchFilter = {
-  field: string;
-  /** @enum {string} */
-  operator:
-    | 'exists'
-    | 'not exists'
-    | 'is'
-    | 'is not'
-    | 'contains'
-    | 'not contains'
-    | 'greater than'
-    | 'less than'
-    | 'after'
-    | 'before';
-  value: string | number | boolean | null;
-  /** @enum {string} */
-  type?: 'string' | 'number' | 'boolean' | 'datetime';
-};
 
 /**
  * @inline
@@ -2467,7 +2955,11 @@ export type UpdateAnnotationQueueRequest = {
   description?: string;
   filters?: UpdateAnnotationQueueRequestFilters;
   enabled?: boolean;
-  id: string;
+  /**
+   * @deprecated
+   * @description Deprecated: the queue id comes from the path, which overrides any value sent here.
+   */
+  id?: string;
   add_event_ids?: string[];
   remove_event_ids?: string[];
 };
@@ -2600,6 +3092,255 @@ export type CreateIngestionApiKeyResponseData = {
   /** @enum {string} */
   root_scope_type: 'project';
   root_scope_id: string;
+};
+
+/**
+ * @description Delta baseline; default none
+ * @inline
+ */
+export type ChartQueryScalarComparison = {
+  /** @enum {string} */
+  mode: 'previous_period' | 'none';
+};
+
+/**
+ * @description Omit for no sparkline — it is a second query, so it is opt-in
+ * @inline
+ */
+export type ChartQueryScalarSparkline = {
+  /** @enum {string} */
+  interval?: 'auto';
+  /** @description Default 50; sparklines are small */
+  max_points?: number;
+};
+
+/**
+ * @inline
+ */
+export type ChartQueryHistogramBins = {
+  /** @enum {string} */
+  mode: 'count';
+  /** @description Default 20, at most 200 */
+  count?: number;
+  /** @description Lower edge; discovered from the data when omitted */
+  min?: number;
+  /** @description Upper edge; the p99 of the data when omitted, so one outlier cannot flatten the chart */
+  max?: number;
+};
+
+/**
+ * @description Default: first measure, descending
+ * @inline
+ */
+export type ChartQueryTableOrderBy = {
+  /** @description A measure id or a group field; a measure wins if a name is both */
+  field: string;
+  /** @enum {string} */
+  direction?: 'asc' | 'desc';
+};
+
+/**
+ * @description What the server resolved; the UI cannot label the x-axis without it
+ * @inline
+ */
+export type ChartResultTimeSeriesMetaEffectiveBucket = {
+  interval: string;
+  /** @enum {string} */
+  fill: 'zero' | 'null';
+};
+
+/**
+ * @inline
+ */
+export type ChartResultTimeSeriesMetaRanking = {
+  limit: number;
+  total_series: number;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultTimeSeriesMeta = {
+  /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+  matched_event_count: number;
+  warnings: ChartResultWarning[];
+  effective_bucket: ChartResultTimeSeriesMetaEffectiveBucket;
+  ranking?: ChartResultTimeSeriesMetaRanking;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultTimeSeriesData = {
+  /** @description Full axis, no gaps; UTC instants of timezone-local bucket starts */
+  buckets: string[];
+  series: ChartResultSeries[];
+};
+
+/**
+ * @inline
+ */
+export type ChartResultCategoricalMeta = {
+  warnings: ChartResultWarning[];
+};
+
+/**
+ * @inline
+ */
+export type ChartResultCategoricalData = {
+  categories: ChartResultCategory[];
+  series: ChartResultSeries[];
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScalarMeta = {
+  /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+  matched_event_count: number;
+  warnings: ChartResultWarning[];
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScalarDataComparisonSparkline = {
+  interval: string;
+  buckets: string[];
+  values: (number | null)[];
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScalarDataComparison = {
+  value: number | null;
+  /** @description Server-derived; the UI labels the delta with this rather than re-deriving it */
+  date_range: ChartQueryDateRange;
+  sparkline?: ChartResultScalarDataComparisonSparkline;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScalarDataSparkline = {
+  interval: string;
+  buckets: string[];
+  values: (number | null)[];
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScalarData = {
+  value: number | null;
+  comparison?: ChartResultScalarDataComparison;
+  sparkline?: ChartResultScalarDataSparkline;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultHistogramMeta = {
+  /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+  matched_event_count: number;
+  warnings: ChartResultWarning[];
+};
+
+/**
+ * @inline
+ */
+export type ChartResultHistogramDataBinsItem = {
+  start: number;
+  end: number | null;
+  count: number;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultHistogramData = {
+  bins: ChartResultHistogramDataBinsItem[];
+  markers: {
+    [key: string]: number | null;
+  };
+};
+
+/**
+ * @inline
+ */
+export type ChartResultTableMetaRanking = {
+  limit: number;
+  total_categories: number;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultTableMeta = {
+  /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+  matched_event_count: number;
+  warnings: ChartResultWarning[];
+  ranking: ChartResultTableMetaRanking;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultTableDataRowsItem = {
+  /** @description Stable within a response; safe as a React key */
+  key: string;
+  /** @description Display string; "(empty)" for a stored empty string */
+  label: string;
+  /** @description Machine-readable identity, e.g. { "config.model": "gpt-4o" } */
+  dimensions: {
+    [key: string]: string;
+  };
+  values: {
+    [key: string]: number | null;
+  };
+};
+
+/**
+ * @inline
+ */
+export type ChartResultTableData = {
+  rows: ChartResultTableDataRowsItem[];
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScatterMeta = {
+  /** @description Rows in scope after filters and dedup; powers empty-state vs error-state UI */
+  matched_event_count: number;
+  warnings: ChartResultWarning[];
+  /** @description True when the group count exceeded the limit */
+  truncated: boolean;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScatterDataPointsItem = {
+  /** @description Stable within a response; safe as a React key */
+  key: string;
+  /** @description Display string; "(empty)" for a stored empty string */
+  label: string;
+  /** @description Machine-readable identity, e.g. { "config.model": "gpt-4o" } */
+  dimensions: {
+    [key: string]: string;
+  };
+  x: number;
+  y: number;
+  weight: number;
+};
+
+/**
+ * @inline
+ */
+export type ChartResultScatterData = {
+  points: ChartResultScatterDataPointsItem[];
 };
 
 /**

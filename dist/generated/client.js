@@ -84,6 +84,7 @@ class SessionsNamespace {
 /** @inline */
 class EventsNamespace {
     #clients;
+    #deprecationWarned = new Set();
     constructor(clients) {
         this.#clients = clients;
     }
@@ -143,9 +144,20 @@ class EventsNamespace {
      * directly from S3/MinIO storage.
      */
     get(request, options) {
-        const { event_id } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/events/{event_id}', { params: { path: { event_id } }, ...options }));
+        const { project_id, event_id } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getEvent')) {
+                this.#deprecationWarned.add('getEvent');
+                console.warn('[@honeyhive/api-client] Calling events.get without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/events/{event_id}', { params: { path: { event_id } }, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/events/{event_id}', {
+            params: { path: { project_id, event_id } },
+            ...options,
+        }));
     }
     /**
      * Update an event
@@ -199,8 +211,21 @@ class EventsNamespace {
      * Search events via POST with filtering and pagination. This is the primary method for retrieving events from HoneyHive.
      */
     search(request, options) {
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.POST('/v1/events/search', { body: request, ...options }));
+        const { project_id, ...body } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('searchEvents')) {
+                this.#deprecationWarned.add('searchEvents');
+                console.warn('[@honeyhive/api-client] Calling events.search without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.POST('/v1/events/search', { body, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.POST('/v1/projects/{project_id}/events/search', {
+            params: { path: { project_id } },
+            body,
+            ...options,
+        }));
     }
     /**
      * Create a batch of events
@@ -360,6 +385,20 @@ class ChartsNamespace {
             ...options,
         }));
     }
+    /**
+     * Run a chart query
+     *
+     * Aggregate the project's events into one chart result. `query.kind` selects the result shape: time series, categorical, scalar, histogram, or table. Every query must include an `event_type is <type>` or `event_type is not <type>` filter; an `event_type is session` filter queries sessions instead of events. The `scatter` kind and a categorical `split_by` / `split_ranking` are accepted by the schema but not served yet, and answer 501.
+     */
+    query(request, options) {
+        const { project_id, ...body } = request;
+        const httpClient = this.#clients.DataPlaneApiKey;
+        return unwrap(httpClient.POST('/v1/projects/{project_id}/charts/query', {
+            params: { path: { project_id } },
+            body,
+            ...options,
+        }));
+    }
 }
 /** @inline */
 class DataPlaneApiKeysNamespace {
@@ -500,6 +539,7 @@ class MetricVersionsNamespace {
 /** @inline */
 class DatapointsNamespace {
     #clients;
+    #deprecationWarned = new Set();
     constructor(clients) {
         this.#clients = clients;
     }
@@ -509,30 +549,67 @@ class DatapointsNamespace {
      * Retrieve datapoints, optionally filtered by a list of datapoint IDs or dataset name.
      */
     list(request, options) {
-        const { datapoint_ids, dataset_name } = request ?? {};
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/datapoints', {
-            params: { query: { datapoint_ids, dataset_name } },
+        const { project_id, datapoint_ids, dataset_name } = request ?? {};
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getDatapoints')) {
+                this.#deprecationWarned.add('getDatapoints');
+                console.warn('[@honeyhive/api-client] Calling datapoints.list without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/datapoints', {
+                params: { query: { datapoint_ids, dataset_name } },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/datapoints', {
+            params: { path: { project_id }, query: { datapoint_ids, dataset_name } },
             ...options,
         }));
     }
     /**
      * Create a new datapoint
      *
-     * Create a single datapoint with inputs, history, ground truth, and metadata.
+     * Create a single datapoint with inputs, history, ground truth, and metadata. The `linked_datasets` array accepts at most one dataset ID. Requests with more than one entry return 400. A request with a non-empty `linked_datasets` also requires the `project.dataset.post` permission.
      */
     create(request, options) {
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.POST('/v1/datapoints', { body: request, ...options }));
+        const { project_id, ...body } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('createDatapoint')) {
+                this.#deprecationWarned.add('createDatapoint');
+                console.warn('[@honeyhive/api-client] Calling datapoints.create without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.POST('/v1/datapoints', { body, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.POST('/v1/projects/{project_id}/datapoints', {
+            params: { path: { project_id } },
+            body,
+            ...options,
+        }));
     }
     /**
      * Create multiple datapoints in batch
      *
-     * Create multiple datapoints from events using field mappings and optional filters.
+     * Create multiple datapoints from events using field mappings and optional filters. A data plane API key needs both `project.datapoint.post` and `project.event.get` for the project, and also `project.dataset.post` when the body names a `dataset_id`.
      */
     createBatch(request, options) {
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.POST('/v1/datapoints/batch', { body: request, ...options }));
+        const { project_id, ...body } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('batchCreateDatapoints')) {
+                this.#deprecationWarned.add('batchCreateDatapoints');
+                console.warn('[@honeyhive/api-client] Calling datapoints.createBatch without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.POST('/v1/datapoints/batch', { body, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.POST('/v1/projects/{project_id}/datapoints/batch', {
+            params: { path: { project_id } },
+            body,
+            ...options,
+        }));
     }
     /**
      * Retrieve a specific datapoint
@@ -540,23 +617,46 @@ class DatapointsNamespace {
      * Get a single datapoint by its unique identifier.
      */
     get(request, options) {
-        const { datapoint_id } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/datapoints/{datapoint_id}', {
-            params: { path: { datapoint_id } },
+        const { project_id, datapoint_id } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getDatapoint')) {
+                this.#deprecationWarned.add('getDatapoint');
+                console.warn('[@honeyhive/api-client] Calling datapoints.get without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/datapoints/{datapoint_id}', {
+                params: { path: { datapoint_id } },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/datapoints/{datapoint_id}', {
+            params: { path: { project_id, datapoint_id } },
             ...options,
         }));
     }
     /**
      * Update a specific datapoint
      *
-     * Update fields on an existing datapoint. Only the provided fields are modified.
+     * Update fields on an existing datapoint. Only the provided fields are modified. A request that includes `linked_datasets` also requires the `project.dataset.post` and `project.dataset.delete` permissions.
      */
     update(request, options) {
-        const { datapoint_id, ...body } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.PUT('/v1/datapoints/{datapoint_id}', {
-            params: { path: { datapoint_id } },
+        const { project_id, datapoint_id, ...body } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('updateDatapoint')) {
+                this.#deprecationWarned.add('updateDatapoint');
+                console.warn('[@honeyhive/api-client] Calling datapoints.update without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.PUT('/v1/datapoints/{datapoint_id}', {
+                params: { path: { datapoint_id } },
+                body,
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.PATCH('/v1/projects/{project_id}/datapoints/{datapoint_id}', {
+            params: { path: { project_id, datapoint_id } },
             body,
             ...options,
         }));
@@ -564,13 +664,24 @@ class DatapointsNamespace {
     /**
      * Delete a specific datapoint
      *
-     * Permanently delete a datapoint by its unique identifier.
+     * Permanently delete a datapoint by its unique identifier, and remove it from every dataset that holds it. Answers 404 when the project holds no such datapoint. Requires only the `project.datapoint.delete` permission.
      */
     delete(request, options) {
-        const { datapoint_id } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.DELETE('/v1/datapoints/{datapoint_id}', {
-            params: { path: { datapoint_id } },
+        const { project_id, datapoint_id } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('deleteDatapoint')) {
+                this.#deprecationWarned.add('deleteDatapoint');
+                console.warn('[@honeyhive/api-client] Calling datapoints.delete without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.DELETE('/v1/datapoints/{datapoint_id}', {
+                params: { path: { datapoint_id } },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.DELETE('/v1/projects/{project_id}/datapoints/{datapoint_id}', {
+            params: { path: { project_id, datapoint_id } },
             ...options,
         }));
     }
@@ -578,6 +689,7 @@ class DatapointsNamespace {
 /** @inline */
 class DatasetsNamespace {
     #clients;
+    #deprecationWarned = new Set();
     constructor(clients) {
         this.#clients = clients;
     }
@@ -587,9 +699,20 @@ class DatasetsNamespace {
      * Retrieve datasets, optionally filtered by dataset ID or name.
      */
     list(request, options) {
-        const { dataset_id, name } = request ?? {};
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/datasets', { params: { query: { dataset_id, name } }, ...options }));
+        const { project_id, dataset_id, name } = request ?? {};
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getDatasets')) {
+                this.#deprecationWarned.add('getDatasets');
+                console.warn('[@honeyhive/api-client] Calling datasets.list without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/datasets', { params: { query: { dataset_id, name } }, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/datasets', {
+            params: { path: { project_id }, query: { dataset_id, name } },
+            ...options,
+        }));
     }
     /**
      * Create a dataset
@@ -597,8 +720,21 @@ class DatasetsNamespace {
      * Create a new dataset with an optional name, description, and initial set of datapoint IDs.
      */
     create(request, options) {
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.POST('/v1/datasets', { body: request, ...options }));
+        const { project_id, ...body } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('createDataset')) {
+                this.#deprecationWarned.add('createDataset');
+                console.warn('[@honeyhive/api-client] Calling datasets.create without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.POST('/v1/datasets', { body, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.POST('/v1/projects/{project_id}/datasets', {
+            params: { path: { project_id } },
+            body,
+            ...options,
+        }));
     }
     /**
      * Update a dataset
@@ -606,10 +742,22 @@ class DatasetsNamespace {
      * Update a dataset's name, description, or list of datapoint IDs.
      */
     update(request, options) {
-        const { dataset_id, ...body } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.PUT('/v1/datasets/{dataset_id}', {
-            params: { path: { dataset_id } },
+        const { project_id, dataset_id, ...body } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('updateDataset')) {
+                this.#deprecationWarned.add('updateDataset');
+                console.warn('[@honeyhive/api-client] Calling datasets.update without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.PUT('/v1/datasets/{dataset_id}', {
+                params: { path: { dataset_id } },
+                body,
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.PATCH('/v1/projects/{project_id}/datasets/{dataset_id}', {
+            params: { path: { project_id, dataset_id } },
             body,
             ...options,
         }));
@@ -620,10 +768,21 @@ class DatasetsNamespace {
      * Permanently delete a dataset by its unique identifier.
      */
     delete(request, options) {
-        const { dataset_id } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.DELETE('/v1/datasets/{dataset_id}', {
-            params: { path: { dataset_id } },
+        const { project_id, dataset_id } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('deleteDataset')) {
+                this.#deprecationWarned.add('deleteDataset');
+                console.warn('[@honeyhive/api-client] Calling datasets.delete without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.DELETE('/v1/datasets/{dataset_id}', {
+                params: { path: { dataset_id } },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.DELETE('/v1/projects/{project_id}/datasets/{dataset_id}', {
+            params: { path: { project_id, dataset_id } },
             ...options,
         }));
     }
@@ -633,10 +792,22 @@ class DatasetsNamespace {
      * Add new datapoints to an existing dataset. Provide raw data objects and a field mapping that specifies which fields map to inputs, ground truth, and history.
      */
     addDatapoints(request, options) {
-        const { dataset_id, ...body } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.POST('/v1/datasets/{dataset_id}/datapoints', {
-            params: { path: { dataset_id } },
+        const { project_id, dataset_id, ...body } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('addDatapoints')) {
+                this.#deprecationWarned.add('addDatapoints');
+                console.warn('[@honeyhive/api-client] Calling datasets.addDatapoints without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.POST('/v1/datasets/{dataset_id}/datapoints', {
+                params: { path: { dataset_id } },
+                body,
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.POST('/v1/projects/{project_id}/datasets/{dataset_id}/datapoints', {
+            params: { path: { project_id, dataset_id } },
             body,
             ...options,
         }));
@@ -647,17 +818,26 @@ class DatasetsNamespace {
      * Remove a specific datapoint from a dataset. The datapoint itself is not deleted, only dereferenced from the dataset.
      */
     removeDatapoint(request, options) {
-        const { dataset_id, datapoint_id } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.DELETE('/v1/datasets/{dataset_id}/datapoints/{datapoint_id}', {
-            params: { path: { dataset_id, datapoint_id } },
-            ...options,
-        }));
+        const { project_id, dataset_id, datapoint_id } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('removeDatapoint')) {
+                this.#deprecationWarned.add('removeDatapoint');
+                console.warn('[@honeyhive/api-client] Calling datasets.removeDatapoint without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.DELETE('/v1/datasets/{dataset_id}/datapoints/{datapoint_id}', {
+                params: { path: { dataset_id, datapoint_id } },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.DELETE('/v1/projects/{project_id}/datasets/{dataset_id}/datapoints/{datapoint_id}', { params: { path: { project_id, dataset_id, datapoint_id } }, ...options }));
     }
 }
 /** @inline */
 class ExperimentsNamespace {
     #clients;
+    #deprecationWarned = new Set();
     constructor(clients) {
         this.#clients = clients;
     }
@@ -667,10 +847,34 @@ class ExperimentsNamespace {
      * List experiment runs with optional filtering by dataset, status, name, date range, and specific run IDs. Results are paginated and sortable.
      */
     listRuns(request, options) {
-        const { dataset_id, page, limit, run_ids, name, status, dateRange, sort_by, sort_order } = request ?? {};
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/runs', {
+        const { project_id, dataset_id, page, limit, run_ids, name, status, dateRange, sort_by, sort_order, } = request ?? {};
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getRuns')) {
+                this.#deprecationWarned.add('getRuns');
+                console.warn('[@honeyhive/api-client] Calling experiments.listRuns without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/runs', {
+                params: {
+                    query: {
+                        dataset_id,
+                        page,
+                        limit,
+                        run_ids,
+                        name,
+                        status,
+                        dateRange,
+                        sort_by,
+                        sort_order,
+                    },
+                },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/runs', {
             params: {
+                path: { project_id },
                 query: { dataset_id, page, limit, run_ids, name, status, dateRange, sort_by, sort_order },
             },
             ...options,
@@ -682,8 +886,21 @@ class ExperimentsNamespace {
      * Create a new experiment run to track an evaluation against a dataset.
      */
     createRun(request, options) {
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.POST('/v1/runs', { body: request, ...options }));
+        const { project_id, ...body } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('createRun')) {
+                this.#deprecationWarned.add('createRun');
+                console.warn('[@honeyhive/api-client] Calling experiments.createRun without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.POST('/v1/runs', { body, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.POST('/v1/projects/{project_id}/runs', {
+            params: { path: { project_id } },
+            body,
+            ...options,
+        }));
     }
     /**
      * Get events schema across all experiment runs in a project
@@ -691,9 +908,20 @@ class ExperimentsNamespace {
      * Retrieve the aggregated events schema (fields, datasets, mappings) across all experiment runs in the project.
      */
     getRunsSchema(request, options) {
-        const { dateRange } = request ?? {};
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/runs/schema', { params: { query: { dateRange } }, ...options }));
+        const { project_id, dateRange } = request ?? {};
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getRunsSchema')) {
+                this.#deprecationWarned.add('getRunsSchema');
+                console.warn('[@honeyhive/api-client] Calling experiments.getRunsSchema without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/runs/schema', { params: { query: { dateRange } }, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/runs/schema', {
+            params: { path: { project_id }, query: { dateRange } },
+            ...options,
+        }));
     }
     /**
      * Get details of an evaluation run
@@ -701,9 +929,20 @@ class ExperimentsNamespace {
      * Retrieve the full details of a single experiment run by its run ID.
      */
     getRun(request, options) {
-        const { run_id } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }));
+        const { project_id, run_id } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getRun')) {
+                this.#deprecationWarned.add('getRun');
+                console.warn('[@honeyhive/api-client] Calling experiments.getRun without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/runs/{run_id}', {
+            params: { path: { project_id, run_id } },
+            ...options,
+        }));
     }
     /**
      * Update an evaluation run
@@ -711,9 +950,21 @@ class ExperimentsNamespace {
      * Update fields on an existing experiment run such as name, status, metadata, or results.
      */
     updateRun(request, options) {
-        const { run_id, ...body } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.PUT('/v1/runs/{run_id}', { params: { path: { run_id } }, body, ...options }));
+        const { project_id, run_id, ...body } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('updateRun')) {
+                this.#deprecationWarned.add('updateRun');
+                console.warn('[@honeyhive/api-client] Calling experiments.updateRun without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.PUT('/v1/runs/{run_id}', { params: { path: { run_id } }, body, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.PATCH('/v1/projects/{project_id}/runs/{run_id}', {
+            params: { path: { project_id, run_id } },
+            body,
+            ...options,
+        }));
     }
     /**
      * Delete an evaluation run
@@ -721,9 +972,20 @@ class ExperimentsNamespace {
      * Permanently delete an experiment run by its run ID.
      */
     deleteRun(request, options) {
-        const { run_id } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.DELETE('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }));
+        const { project_id, run_id } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('deleteRun')) {
+                this.#deprecationWarned.add('deleteRun');
+                console.warn('[@honeyhive/api-client] Calling experiments.deleteRun without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.DELETE('/v1/runs/{run_id}', { params: { path: { run_id } }, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.DELETE('/v1/projects/{project_id}/runs/{run_id}', {
+            params: { path: { project_id, run_id } },
+            ...options,
+        }));
     }
     /**
      * Get events schema for a single experiment run
@@ -731,10 +993,21 @@ class ExperimentsNamespace {
      * Retrieve the events schema (fields, datasets, mappings) for a single experiment run.
      */
     getRunSchema(request, options) {
-        const { run_id, dateRange } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/runs/{run_id}/schema', {
-            params: { path: { run_id }, query: { dateRange } },
+        const { project_id, run_id, dateRange } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getRunSchema')) {
+                this.#deprecationWarned.add('getRunSchema');
+                console.warn('[@honeyhive/api-client] Calling experiments.getRunSchema without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/runs/{run_id}/schema', {
+                params: { path: { run_id }, query: { dateRange } },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/runs/{run_id}/schema', {
+            params: { path: { project_id, run_id }, query: { dateRange } },
             ...options,
         }));
     }
@@ -744,10 +1017,21 @@ class ExperimentsNamespace {
      * Retrieve event metrics from ClickHouse for a specific experiment run
      */
     getRunMetrics(request, options) {
-        const { run_id, dateRange, filters } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/runs/{run_id}/metrics', {
-            params: { path: { run_id }, query: { dateRange, filters } },
+        const { project_id, run_id, dateRange, filters } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getExperimentRunMetrics')) {
+                this.#deprecationWarned.add('getExperimentRunMetrics');
+                console.warn('[@honeyhive/api-client] Calling experiments.getRunMetrics without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/runs/{run_id}/metrics', {
+                params: { path: { run_id }, query: { dateRange, filters } },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/runs/{run_id}/metrics', {
+            params: { path: { project_id, run_id }, query: { dateRange, filters } },
             ...options,
         }));
     }
@@ -757,23 +1041,48 @@ class ExperimentsNamespace {
      * Compute evaluation summary for an experiment run: pass/fail results, metric aggregations, per-datapoint results, event details, and the experiment run object.
      */
     getSummary(request, options) {
-        const { run_id, aggregate_function, filters } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/runs/{run_id}/summary', {
-            params: { path: { run_id }, query: { aggregate_function, filters } },
+        const { project_id, run_id, aggregate_function, filters } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getExperimentSummary')) {
+                this.#deprecationWarned.add('getExperimentSummary');
+                console.warn('[@honeyhive/api-client] Calling experiments.getSummary without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/runs/{run_id}/summary', {
+                params: { path: { run_id }, query: { aggregate_function, filters } },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/runs/{run_id}/summary', {
+            params: { path: { project_id, run_id }, query: { aggregate_function, filters } },
             ...options,
         }));
     }
     /**
      * Retrieve experiment comparison
      *
-     * Compare metrics and results between two experiment runs
+     * Compare metrics and results between two experiment runs in the project.
      */
     compareRuns(request, options) {
-        const { new_run_id, old_run_id, aggregate_function, filters } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/runs/{new_run_id}/compare/{old_run_id}', {
-            params: { path: { new_run_id, old_run_id }, query: { aggregate_function, filters } },
+        const { project_id, new_run_id, old_run_id, aggregate_function, filters } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getExperimentComparison')) {
+                this.#deprecationWarned.add('getExperimentComparison');
+                console.warn('[@honeyhive/api-client] Calling experiments.compareRuns without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/runs/{new_run_id}/compare/{old_run_id}', {
+                params: { path: { new_run_id, old_run_id }, query: { aggregate_function, filters } },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/runs/{new_run_id}/compare/{old_run_id}', {
+            params: {
+                path: { project_id, new_run_id, old_run_id },
+                query: { aggregate_function, filters },
+            },
             ...options,
         }));
     }
@@ -783,11 +1092,25 @@ class ExperimentsNamespace {
      * Retrieve and compare events between two experiment runs for detailed analysis
      */
     compareRunEvents(request, options) {
-        const { new_run_id, old_run_id, event_name, event_type, filter, limit, page } = request;
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/runs/{new_run_id}/compare/{old_run_id}/events', {
+        const { project_id, new_run_id, old_run_id, event_name, event_type, filter, limit, page } = request;
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getExperimentCompareEvents')) {
+                this.#deprecationWarned.add('getExperimentCompareEvents');
+                console.warn('[@honeyhive/api-client] Calling experiments.compareRunEvents without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/runs/{new_run_id}/compare/{old_run_id}/events', {
+                params: {
+                    path: { new_run_id, old_run_id },
+                    query: { event_name, event_type, filter, limit, page },
+                },
+                ...options,
+            }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/runs/{new_run_id}/compare/{old_run_id}/events', {
             params: {
-                path: { new_run_id, old_run_id },
+                path: { project_id, new_run_id, old_run_id },
                 query: { event_name, event_type, filter, limit, page },
             },
             ...options,

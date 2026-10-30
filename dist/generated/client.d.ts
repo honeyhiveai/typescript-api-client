@@ -1,6 +1,6 @@
 import { type Client as OpenapiFetchClient } from 'openapi-fetch';
 import { type paths } from './types.js';
-import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type GetEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type GetChartsRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type CreateDataPlaneApiKeyRequest, type CreateIngestionApiKeyRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetMetricVersionsRequest, type CreateMetricVersionRequest, type DeployMetricVersionRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type GetEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type CreateDataPlaneApiKeyResponse, type CreateIngestionApiKeyResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetMetricVersionsResponse, type CreateMetricVersionResponse, type DeployMetricVersionResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
+import { type CreateSessionRequest, type CreateSessionEventBatchRequest, type CreateEventRequest, type GetEventRequest, type UpdateEventRequest, type SearchEventsRequest, type CreateEventBatchRequest, type GetChartsRequest, type CreateChartRequest, type GetChartRequest, type UpdateChartRequest, type DeleteChartRequest, type QueryChartRequest, type CreateDataPlaneApiKeyRequest, type CreateIngestionApiKeyRequest, type GetMetricsRequest, type CreateMetricRequest, type UpdateMetricRequest, type DeleteMetricRequest, type RunMetricRequest, type GetMetricVersionsRequest, type CreateMetricVersionRequest, type DeployMetricVersionRequest, type GetDatapointsRequest, type CreateDatapointRequest, type BatchCreateDatapointsRequest, type GetDatapointRequest, type UpdateDatapointRequest, type DeleteDatapointRequest, type GetDatasetsRequest, type CreateDatasetRequest, type UpdateDatasetRequest, type DeleteDatasetRequest, type AddDatapointsRequest, type RemoveDatapointRequest, type GetRunsRequest, type CreateRunRequest, type GetRunsSchemaRequest, type GetRunRequest, type UpdateRunRequest, type DeleteRunRequest, type GetRunSchemaRequest, type GetExperimentRunMetricsRequest, type GetExperimentSummaryRequest, type GetExperimentComparisonRequest, type GetExperimentCompareEventsRequest, type CreateSessionResponse, type CreateSessionEventBatchResponse, type CreateEventResponse, type GetEventResponse, type SearchEventsResponse, type CreateEventBatchResponse, type GetChartsResponse, type CreateChartResponse, type GetChartResponse, type UpdateChartResponse, type DeleteChartResponse, type QueryChartResponse, type CreateDataPlaneApiKeyResponse, type CreateIngestionApiKeyResponse, type GetMetricsResponse, type CreateMetricResponse, type UpdateMetricResponse, type DeleteMetricResponse, type RunMetricResponse, type GetMetricVersionsResponse, type CreateMetricVersionResponse, type DeployMetricVersionResponse, type GetDatapointsResponse, type CreateDatapointResponse, type BatchCreateDatapointsResponse, type GetDatapointResponse, type UpdateDatapointResponse, type DeleteDatapointResponse, type GetDatasetsResponse, type CreateDatasetResponse, type UpdateDatasetResponse, type DeleteDatasetResponse, type AddDatapointsResponse, type RemoveDatapointResponse, type GetRunsResponse, type CreateRunResponse, type GetRunsSchemaResponse, type GetRunResponse, type UpdateRunResponse, type DeleteRunResponse, type GetRunSchemaResponse, type GetExperimentRunMetricsResponse, type GetExperimentSummaryResponse, type GetExperimentComparisonResponse, type GetExperimentCompareEventsResponse } from './apiTypes.js';
 import { type ClientConfig, type FetchOptions } from '../util.js';
 /** Every security scheme the API's OpenAPI spec defines. */
 export type SecurityScheme = 'BearerAuth' | 'IngestionApiKey' | 'DataPlaneApiKey';
@@ -262,6 +262,12 @@ declare class ChartsNamespace {
      * Delete a chart from a project, removing it from the project's dashboards.
      */
     delete(request: DeleteChartRequest, options?: FetchOptions): Promise<DeleteChartResponse>;
+    /**
+     * Run a chart query
+     *
+     * Aggregate the project's events into one chart result. `query.kind` selects the result shape: time series, categorical, scalar, histogram, or table. Every query must include an `event_type is <type>` or `event_type is not <type>` filter; an `event_type is session` filter queries sessions instead of events. The `scatter` kind and a categorical `split_by` / `split_ranking` are accepted by the schema but not served yet, and answer 501.
+     */
+    query(request: QueryChartRequest, options?: FetchOptions): Promise<QueryChartResponse>;
 }
 /** @inline */
 declare class DataPlaneApiKeysNamespace {
@@ -344,13 +350,13 @@ declare class DatapointsNamespace {
     /**
      * Create a new datapoint
      *
-     * Create a single datapoint with inputs, history, ground truth, and metadata.
+     * Create a single datapoint with inputs, history, ground truth, and metadata. The `linked_datasets` array accepts at most one dataset ID. Requests with more than one entry return 400. A request with a non-empty `linked_datasets` also requires the `project.dataset.post` permission.
      */
     create(request: CreateDatapointRequest, options?: FetchOptions): Promise<CreateDatapointResponse>;
     /**
      * Create multiple datapoints in batch
      *
-     * Create multiple datapoints from events using field mappings and optional filters.
+     * Create multiple datapoints from events using field mappings and optional filters. A data plane API key needs both `project.datapoint.post` and `project.event.get` for the project, and also `project.dataset.post` when the body names a `dataset_id`.
      */
     createBatch(request: BatchCreateDatapointsRequest, options?: FetchOptions): Promise<BatchCreateDatapointsResponse>;
     /**
@@ -362,13 +368,13 @@ declare class DatapointsNamespace {
     /**
      * Update a specific datapoint
      *
-     * Update fields on an existing datapoint. Only the provided fields are modified.
+     * Update fields on an existing datapoint. Only the provided fields are modified. A request that includes `linked_datasets` also requires the `project.dataset.post` and `project.dataset.delete` permissions.
      */
     update(request: UpdateDatapointRequest, options?: FetchOptions): Promise<UpdateDatapointResponse>;
     /**
      * Delete a specific datapoint
      *
-     * Permanently delete a datapoint by its unique identifier.
+     * Permanently delete a datapoint by its unique identifier, and remove it from every dataset that holds it. Answers 404 when the project holds no such datapoint. Requires only the `project.datapoint.delete` permission.
      */
     delete(request: DeleteDatapointRequest, options?: FetchOptions): Promise<DeleteDatapointResponse>;
 }
@@ -474,7 +480,7 @@ declare class ExperimentsNamespace {
     /**
      * Retrieve experiment comparison
      *
-     * Compare metrics and results between two experiment runs
+     * Compare metrics and results between two experiment runs in the project.
      */
     compareRuns(request: GetExperimentComparisonRequest, options?: FetchOptions): Promise<GetExperimentComparisonResponse>;
     /**

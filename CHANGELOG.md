@@ -1,5 +1,23 @@
 # TypeScript API SDK Changelog
 
+## [1.7.0] - 2026-10-30
+
+### What's New
+- New `client.charts.query()` method runs a chart query on a project and returns one aggregated result. `query.kind` selects time series, categorical, scalar, histogram, or table. It needs `project_id` and a data plane API key. New exported `QueryChartRequest` and `QueryChartResponse` types.
+- More methods now accept an optional `project_id`. With `project_id`, the call uses the project-scoped route and authenticates with the data plane API key (`dataPlaneApiKey` / `HH_DATA_PLANE_API_KEY`):
+  - `client.events`: `get` and `search`.
+  - `client.datasets`: `list`, `create`, `update`, `delete`, `addDatapoints`, and `removeDatapoint`.
+  - `client.datapoints`: `list`, `get`, `create`, `createBatch`, `update`, and `delete`.
+  - `client.experiments`: `listRuns`, `createRun`, `getRun`, `updateRun`, `deleteRun`, `getRunsSchema`, `getRunSchema`, `getSummary`, `getRunMetrics`, `compareRuns`, and `compareRunEvents`.
+
+### Fixes & Improvements
+- `client.datapoints.create()` now rejects a `linked_datasets` array with more than one dataset ID and returns a `400`.
+
+### Compatibility & Deprecations
+- Calling any of the methods listed above without `project_id` is deprecated. It becomes required in the next major version. These calls still use the legacy route and the project API key, and each method logs a one-time deprecation warning to stderr. To migrate, pass `project_id` and configure a data plane API key.
+- A call with `project_id` needs a data plane API key and never falls back to the project API key.
+- `linked_event` is deprecated and ignored on `client.datapoints.update()`. Set `linked_event` when you create the datapoint. The property stays in the type definitions, so existing code keeps compiling.
+
 ## [1.6.0] - 2026-10-05
 
 ### What's New

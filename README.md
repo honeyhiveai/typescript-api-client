@@ -106,7 +106,7 @@ The HoneyHive API authenticates requests using an API key sent as a Bearer token
 
 | Key | Environment variable | Constructor option | Used for |
 | --- | --- | --- | --- |
-| Data plane fine-grained (`hh_fgdp_`) | `HH_DATA_PLANE_API_KEY` | `dataPlaneApiKey` | Supported project-scoped operations, currently charts |
+| Data plane fine-grained (`hh_fgdp_`) | `HH_DATA_PLANE_API_KEY` | `dataPlaneApiKey` | Operations on a project-scoped route (`/v1/projects/{project_id}/...`). On a method with legacy and scoped routes, passing `project_id` selects the scoped route |
 | Ingestion (`hh_ingst_`) | `HH_INGESTION_API_KEY` | `ingestionApiKey` | Creating sessions and writing events |
 | Classic project (`hh_`, or `hh_ro_` for reads) | `HH_PROJECT_API_KEY` | `projectApiKey` | Other operations, and ingestion when no ingestion key is set |
 
@@ -131,7 +131,7 @@ console.log(charts.data);
 
 This example requires `project.chart.list`. Copy the project ID and data plane URL from **Settings > Project > API Keys > Data Plane**. Configure a non-default URL with `HH_DATA_PLANE_URL` or `dataPlaneUrl`.
 
-For a method with both legacy and scoped routes, omitting `project_id` selects the legacy route and project key, even if a data plane key is configured. Legacy chart calls are deprecated. Passing `project_id` selects the scoped route and requires a data plane key; there is no project-key fallback. See the [credential matrix](https://docs.honeyhive.ai/v2/workspace/api-keys#using-a-data-plane-key).
+For a method with both legacy and scoped routes, omitting `project_id` selects the legacy route and project key, even if a data plane key is configured. Omitting `project_id` from such a method is deprecated. Passing `project_id` selects the scoped route and requires a data plane key; there is no project-key fallback. See the [credential matrix](https://docs.honeyhive.ai/v2/workspace/api-keys#using-a-data-plane-key).
 
 Data plane keys cannot send traces. Keep an ingestion key for telemetry and a project key for operations that still require it. A wrong key type or incomplete value in `dataPlaneApiKey` or `HH_DATA_PLANE_API_KEY` throws a `MalformedApiKeyError` at client construction, even if no operation uses that key. Without [custom authentication](#custom-middleware), an operation whose required key is absent throws a `MissingApiKeyError` before sending a request.
 
@@ -190,7 +190,7 @@ const client = new Client({
 
 #### Using multiple keys
 
-A process that sends traces, manages datasets, and calls scoped chart methods can hold all three credentials. Configure each key in its own variable or option; the client selects the credential for each operation:
+A process that sends traces, calls classic-key operations, and calls scoped methods can hold all three credentials. Configure each key in its own variable or option; the client selects the credential for each operation:
 
 ```sh
 export HH_PROJECT_API_KEY=...

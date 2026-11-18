@@ -48,6 +48,20 @@ export interface CreateSessionEventBatchRequest {
   events: PostEventRequestBody[];
 }
 
+export interface CreateSessionDeletionRequestRequest {
+  /** @description The unique identifier of the project the sessions belong to */
+  project_id: string;
+  /** @description The sessions to delete, by session id. Up to 1000. A session id that does not exist completes as a no-op, and a repeated id counts once. */
+  session_ids: string[];
+}
+
+export interface GetSessionDeletionRequestRequest {
+  /** @description The unique identifier of the project the request belongs to */
+  project_id: string;
+  /** @description The unique identifier of the deletion request */
+  deletion_request_id: string;
+}
+
 export interface CreateEventRequest {
   /** @description Project ID */
   project_id?: string;
@@ -162,7 +176,7 @@ export interface SearchEventsRequest {
   limit?: number;
   /** @description Page number of results (default 1) */
   page?: number;
-  /** @description Deprecated: accepted but ignored. Results are always ordered by start_time descending. */
+  /** @description If true, skip result ordering for faster queries. Results are otherwise ordered by start_time descending. */
   ignore_order?: boolean;
   /** @description Filter by evaluation/experiment run ID */
   evaluation_id?: string;
@@ -293,6 +307,98 @@ export interface CreateIngestionApiKeyRequest {
   name: string;
   /** @description What the key is for. */
   description?: string;
+}
+
+export interface ListEvaluatorsRequest {
+  /** @description Project that owns the evaluator; must be within the API key root scope. */
+  project_id: string;
+  /** @description One-based page number. (page - 1) × limit must not exceed 2147483647. */
+  page?: number;
+  /** @description Maximum number of evaluators or versions per page. */
+  limit?: number;
+}
+
+export interface CreateEvaluatorRequest {
+  /** @description Project that owns the evaluator; must be within the API key root scope. */
+  project_id: string;
+  /** @description Immutable, case-sensitive project-unique slug containing 1–64 ASCII letters, digits, underscores or hyphens. Must not be a valid ULID, regardless of case. Cannot change after creation. */
+  slug: string;
+  definition: EvaluatorDefinition;
+  /**
+   * @description Message for the initial version; defaults to an empty string.
+   * @default
+   */
+  message?: string;
+  /**
+   * @description Publish the saved version atomically. Requires project.evaluator.publish in addition to the operation permission.
+   * @default false
+   */
+  publish?: boolean;
+}
+
+export interface GetEvaluatorRequest {
+  /** @description Project that owns the evaluator; must be within the API key root scope. */
+  project_id: string;
+  /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+  evaluator_id_or_slug: string;
+}
+
+export interface ReplaceEvaluatorRequest {
+  /** @description Project that owns the evaluator; must be within the API key root scope. */
+  project_id: string;
+  /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+  evaluator_id_or_slug: string;
+  definition: EvaluatorDefinition;
+  /** @description Message for a new version; defaults to an empty string. An unchanged definition retains its existing message. */
+  message?: string;
+  /**
+   * @description Publish the saved version atomically. Requires project.evaluator.publish in addition to the operation permission.
+   * @default false
+   */
+  publish?: boolean;
+}
+
+export interface ArchiveEvaluatorRequest {
+  /** @description Project that owns the evaluator; must be within the API key root scope. */
+  project_id: string;
+  /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+  evaluator_id_or_slug: string;
+}
+
+export interface ListEvaluatorVersionsRequest {
+  /** @description Project that owns the evaluator; must be within the API key root scope. */
+  project_id: string;
+  /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+  evaluator_id_or_slug: string;
+  /** @description One-based page number. (page - 1) × limit must not exceed 2147483647. */
+  page?: number;
+  /** @description Maximum number of evaluators or versions per page. */
+  limit?: number;
+}
+
+export interface GetEvaluatorVersionRequest {
+  /** @description Project that owns the evaluator; must be within the API key root scope. */
+  project_id: string;
+  /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+  evaluator_id_or_slug: string;
+  /** @description Server-assigned evaluator version. */
+  version: number;
+}
+
+export interface PublishEvaluatorRequest {
+  /** @description Project that owns the evaluator; must be within the API key root scope. */
+  project_id: string;
+  /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+  evaluator_id_or_slug: string;
+  /** @description Server-assigned evaluator version. */
+  version: number;
+}
+
+export interface UnpublishEvaluatorRequest {
+  /** @description Project that owns the evaluator; must be within the API key root scope. */
+  project_id: string;
+  /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+  evaluator_id_or_slug: string;
 }
 
 export interface GetMetricsRequest {
@@ -813,6 +919,18 @@ export type CreateSessionEventBatchResponse = {
   success: boolean;
 };
 
+export type CreateSessionDeletionRequestResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: SessionDeletionRequest;
+};
+
+export type GetSessionDeletionRequestResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: SessionDeletionRequest;
+};
+
 /**
  * @description Response after creating an event
  */
@@ -888,6 +1006,62 @@ export type CreateIngestionApiKeyResponse = {
   /** @enum {boolean} */
   success: true;
   data: CreateIngestionApiKeyResponseData;
+};
+
+export type ListEvaluatorsResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: Evaluator[];
+  pagination: Pagination;
+};
+
+export type CreateEvaluatorResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: Evaluator;
+};
+
+export type GetEvaluatorResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: Evaluator;
+};
+
+export type ReplaceEvaluatorResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: Evaluator;
+};
+
+export type ArchiveEvaluatorResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: Evaluator;
+};
+
+export type ListEvaluatorVersionsResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: Evaluator[];
+  pagination: Pagination;
+};
+
+export type GetEvaluatorVersionResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: Evaluator;
+};
+
+export type PublishEvaluatorResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: Evaluator;
+};
+
+export type UnpublishEvaluatorResponse = {
+  /** @enum {boolean} */
+  success: true;
+  data: Evaluator;
 };
 
 /**
@@ -3014,6 +3188,49 @@ export type DeleteAnnotationQueueResponse = {
 };
 
 /**
+ * @inline
+ */
+export type SessionDeletionRequest = {
+  /** @description The unique identifier of the deletion request. */
+  id: string;
+  status: SessionDeletionRequestStatus;
+  session_counts: SessionDeletionRequestSessionCounts;
+  /**
+   * Format: date-time
+   * @description When the request was created.
+   */
+  created_at: string;
+  /**
+   * Format: date-time
+   * @description When the request reached a final status. Null until then.
+   */
+  completed_at: string | null;
+};
+
+/**
+ * @description Status of the request. `pending` and `processing` mean work remains. Every other status is final. `completed` means every session was deleted. `failed` means at least one session failed, and other sessions in the request can be completed. `session_counts` gives the number of sessions in each state. `partially_failed` is reserved and is not returned. Treat it as a final status.
+ * @enum {string}
+ * @inline
+ */
+export type SessionDeletionRequestStatus =
+  'pending' | 'processing' | 'completed' | 'failed' | 'partially_failed';
+
+/**
+ * @description How many of the sessions in the request are in each status. The counts sum to the number of distinct session ids in the request.
+ * @inline
+ */
+export type SessionDeletionRequestSessionCounts = {
+  /** @description Sessions not yet picked up for deletion. */
+  pending: number;
+  /** @description Sessions being deleted. */
+  processing: number;
+  /** @description Sessions deleted. */
+  completed: number;
+  /** @description Sessions whose deletion failed. */
+  failed: number;
+};
+
+/**
  * @description Minimal event object used by evaluation and session endpoints; permissive (passthrough)
  * @inline
  */
@@ -3056,6 +3273,559 @@ export type AddSessionTracesRequest = {
   logs?: LegacyEvent[];
   /** @description Traces to add as raw event objects. Replaces `logs`. */
   events?: LegacyEvent[];
+};
+
+/**
+ * @description A Draft 2020-12 schema document. Further safety restrictions will apply.
+ * @inline
+ */
+export type ScoreSchema = {
+  [key: string]: unknown;
+};
+
+/**
+ * @description Passes when the selected number is greater than value.
+ * @inline
+ */
+export type NumericGtTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'gt';
+  value: number;
+};
+
+/**
+ * @description Passes when the selected number is greater than or equal to value.
+ * @inline
+ */
+export type NumericGteTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'gte';
+  value: number;
+};
+
+/**
+ * @description Passes when the selected number is less than value.
+ * @inline
+ */
+export type NumericLtTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'lt';
+  value: number;
+};
+
+/**
+ * @description Passes when the selected number is less than or equal to value.
+ * @inline
+ */
+export type NumericLteTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'lte';
+  value: number;
+};
+
+/**
+ * @description Passes when the selected number equals value.
+ * @inline
+ */
+export type NumericEqTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'eq';
+  value: number;
+};
+
+/**
+ * @description Passes when the selected number differs from value.
+ * @inline
+ */
+export type NumericNeqTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'neq';
+  value: number;
+};
+
+/**
+ * @description Passes when the selected number is between min and max, including both endpoints.
+ * @inline
+ */
+export type NumericBetweenTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'between';
+  min: number;
+  max: number;
+};
+
+/**
+ * @description Passes when the selected number is less than min or greater than max.
+ * @inline
+ */
+export type NumericNotBetweenTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'not_between';
+  min: number;
+  max: number;
+};
+
+/**
+ * @description Passes when the selected number equals one of values.
+ * @inline
+ */
+export type NumericOneOfTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'one_of';
+  values: number[];
+};
+
+/**
+ * @description Passes when the selected number equals none of values.
+ * @inline
+ */
+export type NumericNotOneOfTestCriteria = {
+  /** @enum {string} */
+  type: 'numeric';
+  /** @enum {string} */
+  operator: 'not_one_of';
+  values: number[];
+};
+
+/**
+ * @description Passes when the selected boolean is true.
+ * @inline
+ */
+export type BooleanIsTrueTestCriteria = {
+  /** @enum {string} */
+  type: 'boolean';
+  /** @enum {string} */
+  operator: 'is_true';
+};
+
+/**
+ * @description Passes when the selected boolean is false.
+ * @inline
+ */
+export type BooleanIsFalseTestCriteria = {
+  /** @enum {string} */
+  type: 'boolean';
+  /** @enum {string} */
+  operator: 'is_false';
+};
+
+/**
+ * @description Passes when the selected string equals value; case_sensitive controls case matching.
+ * @inline
+ */
+export type StringEqTestCriteria = {
+  /** @enum {string} */
+  type: 'string';
+  /** @enum {string} */
+  operator: 'eq';
+  value: string;
+  case_sensitive: boolean;
+};
+
+/**
+ * @description Passes when the selected string differs from value; case_sensitive controls case matching.
+ * @inline
+ */
+export type StringNeqTestCriteria = {
+  /** @enum {string} */
+  type: 'string';
+  /** @enum {string} */
+  operator: 'neq';
+  value: string;
+  case_sensitive: boolean;
+};
+
+/**
+ * @description Passes when the selected string contains the literal value; case_sensitive controls case matching and whole_word requires Unicode word boundaries.
+ * @inline
+ */
+export type StringContainsTestCriteria = {
+  /** @enum {string} */
+  type: 'string';
+  /** @enum {string} */
+  operator: 'contains';
+  value: string;
+  case_sensitive: boolean;
+  whole_word: boolean;
+};
+
+/**
+ * @description Passes when the selected string equals one of values; case_sensitive controls case matching.
+ * @inline
+ */
+export type StringOneOfTestCriteria = {
+  /** @enum {string} */
+  type: 'string';
+  /** @enum {string} */
+  operator: 'one_of';
+  values: string[];
+  case_sensitive: boolean;
+};
+
+/**
+ * @description Passes when the selected string equals none of values; case_sensitive controls case matching.
+ * @inline
+ */
+export type StringNotOneOfTestCriteria = {
+  /** @enum {string} */
+  type: 'string';
+  /** @enum {string} */
+  operator: 'not_one_of';
+  values: string[];
+  case_sensitive: boolean;
+};
+
+/**
+ * @description Passes when the numeric score mapped to the category is greater than value. A null mapping always fails this rule.
+ * @inline
+ */
+export type CategoricalNumericGtTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'gt';
+  value: number;
+};
+
+/**
+ * @description Passes when the numeric score mapped to the category is greater than or equal to value. A null mapping always fails this rule.
+ * @inline
+ */
+export type CategoricalNumericGteTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'gte';
+  value: number;
+};
+
+/**
+ * @description Passes when the numeric score mapped to the category is less than value. A null mapping always fails this rule.
+ * @inline
+ */
+export type CategoricalNumericLtTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'lt';
+  value: number;
+};
+
+/**
+ * @description Passes when the numeric score mapped to the category is less than or equal to value. A null mapping always fails this rule.
+ * @inline
+ */
+export type CategoricalNumericLteTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'lte';
+  value: number;
+};
+
+/**
+ * @description Passes when the numeric score mapped to the category equals value. A null mapping always fails this rule.
+ * @inline
+ */
+export type CategoricalNumericEqTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'eq';
+  value: number;
+};
+
+/**
+ * @description Passes when the numeric score mapped to the category does not equal value. A null mapping always fails this rule.
+ * @inline
+ */
+export type CategoricalNumericNeqTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'neq';
+  value: number;
+};
+
+/**
+ * @description Passes when the numeric score mapped to the category is between min and max, inclusive. A null mapping always fails this rule.
+ * @inline
+ */
+export type CategoricalNumericBetweenTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'between';
+  min: number;
+  max: number;
+};
+
+/**
+ * @description Passes when the numeric score mapped to the category is outside the inclusive min-to-max range. A null mapping always fails this rule.
+ * @inline
+ */
+export type CategoricalNumericNotBetweenTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'not_between';
+  min: number;
+  max: number;
+};
+
+/**
+ * @description Passes when the category label equals value. The numeric mapping is not used.
+ * @inline
+ */
+export type CategoricalCategoryEqTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'category_eq';
+  value: string;
+};
+
+/**
+ * @description Passes when the category label does not equal value. The numeric mapping is not used.
+ * @inline
+ */
+export type CategoricalCategoryNeqTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'category_neq';
+  value: string;
+};
+
+/**
+ * @description Passes when the category label is in values. The numeric mapping is not used.
+ * @inline
+ */
+export type CategoricalCategoryOneOfTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'category_one_of';
+  values: string[];
+};
+
+/**
+ * @description Passes when the category label is not in values. The numeric mapping is not used.
+ * @inline
+ */
+export type CategoricalCategoryNotOneOfTestCriteria = {
+  /** @enum {string} */
+  type: 'categorical';
+  /** @enum {string} */
+  operator: 'category_not_one_of';
+  values: string[];
+};
+
+/**
+ * @inline
+ */
+export type EvaluatorTestCriteria = {
+  field: string;
+  criteria:
+    | NumericGtTestCriteria
+    | NumericGteTestCriteria
+    | NumericLtTestCriteria
+    | NumericLteTestCriteria
+    | NumericEqTestCriteria
+    | NumericNeqTestCriteria
+    | NumericBetweenTestCriteria
+    | NumericNotBetweenTestCriteria
+    | NumericOneOfTestCriteria
+    | NumericNotOneOfTestCriteria
+    | BooleanIsTrueTestCriteria
+    | BooleanIsFalseTestCriteria
+    | StringEqTestCriteria
+    | StringNeqTestCriteria
+    | StringContainsTestCriteria
+    | StringOneOfTestCriteria
+    | StringNotOneOfTestCriteria
+    | CategoricalNumericGtTestCriteria
+    | CategoricalNumericGteTestCriteria
+    | CategoricalNumericLtTestCriteria
+    | CategoricalNumericLteTestCriteria
+    | CategoricalNumericEqTestCriteria
+    | CategoricalNumericNeqTestCriteria
+    | CategoricalNumericBetweenTestCriteria
+    | CategoricalNumericNotBetweenTestCriteria
+    | CategoricalCategoryEqTestCriteria
+    | CategoricalCategoryNeqTestCriteria
+    | CategoricalCategoryOneOfTestCriteria
+    | CategoricalCategoryNotOneOfTestCriteria;
+};
+
+/**
+ * @inline
+ */
+export type EvaluatorMetadata = {
+  description?: string;
+};
+
+/**
+ * @inline
+ */
+export type EvaluatorSampling = {
+  sampling_percentage: number;
+};
+
+/**
+ * @inline
+ */
+export type EvaluatorFiltersArray = SingleFilter[];
+
+/**
+ * @inline
+ */
+export type EvaluatorFilters = {
+  filterArray: EvaluatorFiltersArray;
+};
+
+/**
+ * @inline
+ */
+export type EvaluatorCodeExecution = {
+  code_snippet: string;
+};
+
+/**
+ * @inline
+ */
+export type EvaluatorModel = {
+  model_provider: string;
+  model_name: string;
+};
+
+/**
+ * @inline
+ */
+export type EvaluatorLLMExecution = {
+  system_prompt: string;
+};
+
+/**
+ * @inline
+ */
+export type PythonEvaluatorConfig = {
+  /** @description Evaluator display name, independent of its immutable slug. */
+  name: string;
+  metadata: EvaluatorMetadata;
+  sampling: EvaluatorSampling;
+  filters: EvaluatorFilters;
+  score_schema: ScoreSchema;
+  test_criteria?: EvaluatorTestCriteria;
+  code_execution: EvaluatorCodeExecution;
+};
+
+/**
+ * @inline
+ */
+export type PythonEvaluatorDefinition = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  type: 'python';
+  python: PythonEvaluatorConfig;
+};
+
+/**
+ * @inline
+ */
+export type LLMEvaluatorConfig = {
+  /** @description Evaluator display name, independent of its immutable slug. */
+  name: string;
+  metadata: EvaluatorMetadata;
+  sampling: EvaluatorSampling;
+  filters: EvaluatorFilters;
+  score_schema: ScoreSchema;
+  test_criteria?: EvaluatorTestCriteria;
+  model: EvaluatorModel;
+  llm_execution: EvaluatorLLMExecution;
+};
+
+/**
+ * @inline
+ */
+export type LLMEvaluatorDefinition = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  type: 'llm';
+  llm: LLMEvaluatorConfig;
+};
+
+/**
+ * @inline
+ */
+export type HumanEvaluatorConfig = {
+  /** @description Evaluator display name, independent of its immutable slug. */
+  name: string;
+  metadata: EvaluatorMetadata;
+  score_schema: ScoreSchema;
+  test_criteria?: EvaluatorTestCriteria;
+};
+
+/**
+ * @inline
+ */
+export type HumanEvaluatorDefinition = {
+  /**
+   * @description discriminator enum property added by openapi-typescript
+   * @enum {string}
+   */
+  type: 'human';
+  human: HumanEvaluatorConfig;
+};
+
+/**
+ * @description Evaluator definition with type python, llm, or human and the matching configuration object under that key.
+ * @inline
+ */
+export type EvaluatorDefinition =
+  PythonEvaluatorDefinition | LLMEvaluatorDefinition | HumanEvaluatorDefinition;
+
+/**
+ * @inline
+ */
+export type Evaluator = {
+  id: string;
+  /** @description Immutable, case-sensitive project-unique slug containing 1–64 ASCII letters, digits, underscores or hyphens. Must not be a valid ULID, regardless of case. Cannot change after creation. */
+  slug: string;
+  is_active: boolean;
+  latest_version: number;
+  published_version: number | null;
+  version: number;
+  definition: EvaluatorDefinition;
+  message: string;
+  /** Format: date-time */
+  evaluator_created_at: string;
+  /** Format: date-time */
+  evaluator_updated_at: string;
+  /** Format: date-time */
+  version_created_at: string;
 };
 
 /**

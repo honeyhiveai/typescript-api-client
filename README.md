@@ -135,6 +135,20 @@ For a method with both legacy and scoped routes, omitting `project_id` selects t
 
 Data plane keys cannot send traces. Keep an ingestion key for telemetry and a project key for operations that still require it. A wrong key type or incomplete value in `dataPlaneApiKey` or `HH_DATA_PLANE_API_KEY` throws a `MalformedApiKeyError` at client construction, even if no operation uses that key. Without [custom authentication](#custom-middleware), an operation whose required key is absent throws a `MissingApiKeyError` before sending a request.
 
+### Evaluator management
+
+Evaluator methods always require a data plane fine-grained key and `project_id`:
+
+```typescript
+const evaluators = await client.evaluators.list({ project_id: projectId, page: 1, limit: 20 });
+const evaluator = await client.evaluators.get({
+  project_id: projectId,
+  evaluator_id_or_slug: 'example-evaluator',
+});
+```
+
+The `evaluators` namespace provides `create`, `list`, `get`, `replace`, `listVersions`, `getVersion`, `publish`, `unpublish`, and `archive`. PUT uses `replace` to save the complete definition. Grant the matching `project.evaluator.*` permissions; create/replace with `publish: true` also requires `project.evaluator.publish`.
+
 ### Project API key
 
 #### Environment variable (recommended)

@@ -584,6 +584,178 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/projects/{project_id}/sessions/deletion_requests': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Request deletion of sessions
+     * @description Request deletion of up to 1000 sessions in a project, by session id. The call records the request and returns at once with a request id. A scheduled job then deletes the sessions, so read the request to follow its progress. A session id that does not exist completes as a no-op. A session is `completed` when its data is deleted from object storage and the session is hidden from every query. The physical removal from the query store follows in a daily purge. The caller's key must carry `project.session.delete` for the project. Session deletion is opt-in on a self-hosted data plane: on a data plane where the session deletion job is not enabled, this operation answers 501.
+     */
+    post: operations['createSessionDeletionRequest'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/sessions/deletion_requests/{deletion_request_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a session deletion request
+     * @description Retrieve the status of a session deletion request and how many of its sessions are pending, processing, completed or failed. `pending` and `processing` mean work remains, and every other status is final. `completed` means every session is deleted from object storage and hidden from every query, before the daily purge removes them from the query store. `failed` means at least one session failed, and other sessions in the request can be completed, so read `session_counts` for the number in each state. The caller's key must carry `project.session.delete` for the project.
+     */
+    get: operations['getSessionDeletionRequest'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/evaluators': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List evaluators
+     * @description List active evaluators using their latest definitions. Archived evaluators are excluded. Requires project.evaluator.list.
+     */
+    get: operations['listEvaluators'];
+    put?: never;
+    /**
+     * Create an evaluator
+     * @description Create a project-scoped evaluator and immutable version 1. Slugs are unique within a project and cannot subsequently be changed. Requires project.evaluator.post; publish=true additionally requires project.evaluator.publish.
+     */
+    post: operations['createEvaluator'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get the latest evaluator version
+     * @description Return the latest definition with current lifecycle state, including archived evaluators. Requires project.evaluator.get.
+     */
+    get: operations['getEvaluator'];
+    /**
+     * Replace an evaluator definition
+     * @description Replace the complete definition of an active evaluator. A changed definition creates the next server-assigned version; an identical definition retains its version and message. Requires project.evaluator.update; publish=true additionally requires project.evaluator.publish. Archived evaluators return 409.
+     */
+    put: operations['replaceEvaluator'];
+    post?: never;
+    /**
+     * Archive an evaluator
+     * @description Archive and unpublish the evaluator, preserving its slug and immutable history. Repeated archival succeeds without changing its timestamps. Requires project.evaluator.delete.
+     */
+    delete: operations['archiveEvaluator'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}/versions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List evaluator versions
+     * @description List immutable definitions in descending version order, including archived evaluators. Each item includes current evaluator lifecycle state. Requires project.evaluator.list.
+     */
+    get: operations['listEvaluatorVersions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}/versions/{version}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a specific evaluator version
+     * @description Return the requested immutable definition with current evaluator lifecycle state. The selected version may differ from latest_version and published_version. Requires project.evaluator.get.
+     */
+    get: operations['getEvaluatorVersion'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}/versions/{version}/publish': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Publish an evaluator version
+     * @description Select an existing version for automatic evaluation. Repeated publication of the same version is a no-op. Archived evaluators return 409. Requires project.evaluator.publish.
+     */
+    post: operations['publishEvaluator'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}/unpublish': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Unpublish an evaluator
+     * @description Clear the publication pointer without changing definitions or history. Already-unpublished and archived evaluators succeed. Requires project.evaluator.publish.
+     */
+    post: operations['unpublishEvaluator'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/metrics': {
     parameters: {
       query?: never;
@@ -1637,11 +1809,11 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Retrieve a list of configurations
+     * Retrieve a list of configurations (deprecated)
      * @deprecated
-     * @description List configurations with optional filtering by name, environment, and tags.
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/configurations` with a data plane API key instead. List configurations with optional filtering by name, environment, and tags.
      */
-    get: operations['getConfigurations'];
+    get: operations['getConfigurationsLegacy'];
     put?: never;
     /**
      * Create a new configuration
@@ -1649,6 +1821,26 @@ export interface paths {
      * @description Create a new LLM or pipeline configuration with provider, parameters, and environment settings.
      */
     post: operations['createConfiguration'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/configurations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Retrieve a list of configurations
+     * @description List the configurations in the project that `project_id` names, with optional filtering by name, environment, and tags.
+     */
+    get: operations['getConfigurations'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -2874,7 +3066,7 @@ export interface components {
       limit?: number;
       /** @description Page number of results (default 1) */
       page?: number;
-      /** @description Deprecated: accepted but ignored. Results are always ordered by start_time descending. */
+      /** @description If true, skip result ordering for faster queries. Results are otherwise ordered by start_time descending. */
       ignore_order?: boolean;
       /** @description Filter by evaluation/experiment run ID */
       evaluation_id?: string;
@@ -3714,6 +3906,53 @@ export interface components {
     DeleteAnnotationQueueResponse: {
       message: string;
     };
+    CreateSessionDeletionRequestRequest: {
+      /** @description The sessions to delete, by session id. Up to 1000. A session id that does not exist completes as a no-op, and a repeated id counts once. */
+      session_ids: string[];
+    };
+    CreateSessionDeletionRequestResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['SessionDeletionRequest'];
+    };
+    SessionDeletionRequest: {
+      /** @description The unique identifier of the deletion request. */
+      id: string;
+      status: components['schemas']['SessionDeletionRequestStatus'];
+      session_counts: components['schemas']['SessionDeletionRequestSessionCounts'];
+      /**
+       * Format: date-time
+       * @description When the request was created.
+       */
+      created_at: string;
+      /**
+       * Format: date-time
+       * @description When the request reached a final status. Null until then.
+       */
+      completed_at: string | null;
+    };
+    /**
+     * @description Status of the request. `pending` and `processing` mean work remains. Every other status is final. `completed` means every session was deleted. `failed` means at least one session failed, and other sessions in the request can be completed. `session_counts` gives the number of sessions in each state. `partially_failed` is reserved and is not returned. Treat it as a final status.
+     * @enum {string}
+     */
+    SessionDeletionRequestStatus:
+      'pending' | 'processing' | 'completed' | 'failed' | 'partially_failed';
+    /** @description How many of the sessions in the request are in each status. The counts sum to the number of distinct session ids in the request. */
+    SessionDeletionRequestSessionCounts: {
+      /** @description Sessions not yet picked up for deletion. */
+      pending: number;
+      /** @description Sessions being deleted. */
+      processing: number;
+      /** @description Sessions deleted. */
+      completed: number;
+      /** @description Sessions whose deletion failed. */
+      failed: number;
+    };
+    GetSessionDeletionRequestResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['SessionDeletionRequest'];
+    };
     /** @description Minimal event object used by evaluation and session endpoints; permissive (passthrough) */
     PostSessionRequest: {
       event_id: string;
@@ -3824,6 +4063,444 @@ export interface components {
     /** @description Response from adding traces to a session */
     SessionTracesResponse: {
       success: boolean;
+    };
+    /** @description A Draft 2020-12 schema document. Further safety restrictions will apply. */
+    ScoreSchema: {
+      [key: string]: unknown;
+    };
+    /** @description Passes when the selected number is greater than value. */
+    NumericGtTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'gt';
+      value: number;
+    };
+    /** @description Passes when the selected number is greater than or equal to value. */
+    NumericGteTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'gte';
+      value: number;
+    };
+    /** @description Passes when the selected number is less than value. */
+    NumericLtTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'lt';
+      value: number;
+    };
+    /** @description Passes when the selected number is less than or equal to value. */
+    NumericLteTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'lte';
+      value: number;
+    };
+    /** @description Passes when the selected number equals value. */
+    NumericEqTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'eq';
+      value: number;
+    };
+    /** @description Passes when the selected number differs from value. */
+    NumericNeqTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'neq';
+      value: number;
+    };
+    /** @description Passes when the selected number is between min and max, including both endpoints. */
+    NumericBetweenTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'between';
+      min: number;
+      max: number;
+    };
+    /** @description Passes when the selected number is less than min or greater than max. */
+    NumericNotBetweenTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'not_between';
+      min: number;
+      max: number;
+    };
+    /** @description Passes when the selected number equals one of values. */
+    NumericOneOfTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'one_of';
+      values: number[];
+    };
+    /** @description Passes when the selected number equals none of values. */
+    NumericNotOneOfTestCriteria: {
+      /** @enum {string} */
+      type: 'numeric';
+      /** @enum {string} */
+      operator: 'not_one_of';
+      values: number[];
+    };
+    /** @description Passes when the selected boolean is true. */
+    BooleanIsTrueTestCriteria: {
+      /** @enum {string} */
+      type: 'boolean';
+      /** @enum {string} */
+      operator: 'is_true';
+    };
+    /** @description Passes when the selected boolean is false. */
+    BooleanIsFalseTestCriteria: {
+      /** @enum {string} */
+      type: 'boolean';
+      /** @enum {string} */
+      operator: 'is_false';
+    };
+    /** @description Passes when the selected string equals value; case_sensitive controls case matching. */
+    StringEqTestCriteria: {
+      /** @enum {string} */
+      type: 'string';
+      /** @enum {string} */
+      operator: 'eq';
+      value: string;
+      case_sensitive: boolean;
+    };
+    /** @description Passes when the selected string differs from value; case_sensitive controls case matching. */
+    StringNeqTestCriteria: {
+      /** @enum {string} */
+      type: 'string';
+      /** @enum {string} */
+      operator: 'neq';
+      value: string;
+      case_sensitive: boolean;
+    };
+    /** @description Passes when the selected string contains the literal value; case_sensitive controls case matching and whole_word requires Unicode word boundaries. */
+    StringContainsTestCriteria: {
+      /** @enum {string} */
+      type: 'string';
+      /** @enum {string} */
+      operator: 'contains';
+      value: string;
+      case_sensitive: boolean;
+      whole_word: boolean;
+    };
+    /** @description Passes when the selected string equals one of values; case_sensitive controls case matching. */
+    StringOneOfTestCriteria: {
+      /** @enum {string} */
+      type: 'string';
+      /** @enum {string} */
+      operator: 'one_of';
+      values: string[];
+      case_sensitive: boolean;
+    };
+    /** @description Passes when the selected string equals none of values; case_sensitive controls case matching. */
+    StringNotOneOfTestCriteria: {
+      /** @enum {string} */
+      type: 'string';
+      /** @enum {string} */
+      operator: 'not_one_of';
+      values: string[];
+      case_sensitive: boolean;
+    };
+    /** @description Passes when the numeric score mapped to the category is greater than value. A null mapping always fails this rule. */
+    CategoricalNumericGtTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'gt';
+      value: number;
+    };
+    /** @description Passes when the numeric score mapped to the category is greater than or equal to value. A null mapping always fails this rule. */
+    CategoricalNumericGteTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'gte';
+      value: number;
+    };
+    /** @description Passes when the numeric score mapped to the category is less than value. A null mapping always fails this rule. */
+    CategoricalNumericLtTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'lt';
+      value: number;
+    };
+    /** @description Passes when the numeric score mapped to the category is less than or equal to value. A null mapping always fails this rule. */
+    CategoricalNumericLteTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'lte';
+      value: number;
+    };
+    /** @description Passes when the numeric score mapped to the category equals value. A null mapping always fails this rule. */
+    CategoricalNumericEqTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'eq';
+      value: number;
+    };
+    /** @description Passes when the numeric score mapped to the category does not equal value. A null mapping always fails this rule. */
+    CategoricalNumericNeqTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'neq';
+      value: number;
+    };
+    /** @description Passes when the numeric score mapped to the category is between min and max, inclusive. A null mapping always fails this rule. */
+    CategoricalNumericBetweenTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'between';
+      min: number;
+      max: number;
+    };
+    /** @description Passes when the numeric score mapped to the category is outside the inclusive min-to-max range. A null mapping always fails this rule. */
+    CategoricalNumericNotBetweenTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'not_between';
+      min: number;
+      max: number;
+    };
+    /** @description Passes when the category label equals value. The numeric mapping is not used. */
+    CategoricalCategoryEqTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'category_eq';
+      value: string;
+    };
+    /** @description Passes when the category label does not equal value. The numeric mapping is not used. */
+    CategoricalCategoryNeqTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'category_neq';
+      value: string;
+    };
+    /** @description Passes when the category label is in values. The numeric mapping is not used. */
+    CategoricalCategoryOneOfTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'category_one_of';
+      values: string[];
+    };
+    /** @description Passes when the category label is not in values. The numeric mapping is not used. */
+    CategoricalCategoryNotOneOfTestCriteria: {
+      /** @enum {string} */
+      type: 'categorical';
+      /** @enum {string} */
+      operator: 'category_not_one_of';
+      values: string[];
+    };
+    EvaluatorTestCriteria: {
+      field: string;
+      criteria:
+        | components['schemas']['NumericGtTestCriteria']
+        | components['schemas']['NumericGteTestCriteria']
+        | components['schemas']['NumericLtTestCriteria']
+        | components['schemas']['NumericLteTestCriteria']
+        | components['schemas']['NumericEqTestCriteria']
+        | components['schemas']['NumericNeqTestCriteria']
+        | components['schemas']['NumericBetweenTestCriteria']
+        | components['schemas']['NumericNotBetweenTestCriteria']
+        | components['schemas']['NumericOneOfTestCriteria']
+        | components['schemas']['NumericNotOneOfTestCriteria']
+        | components['schemas']['BooleanIsTrueTestCriteria']
+        | components['schemas']['BooleanIsFalseTestCriteria']
+        | components['schemas']['StringEqTestCriteria']
+        | components['schemas']['StringNeqTestCriteria']
+        | components['schemas']['StringContainsTestCriteria']
+        | components['schemas']['StringOneOfTestCriteria']
+        | components['schemas']['StringNotOneOfTestCriteria']
+        | components['schemas']['CategoricalNumericGtTestCriteria']
+        | components['schemas']['CategoricalNumericGteTestCriteria']
+        | components['schemas']['CategoricalNumericLtTestCriteria']
+        | components['schemas']['CategoricalNumericLteTestCriteria']
+        | components['schemas']['CategoricalNumericEqTestCriteria']
+        | components['schemas']['CategoricalNumericNeqTestCriteria']
+        | components['schemas']['CategoricalNumericBetweenTestCriteria']
+        | components['schemas']['CategoricalNumericNotBetweenTestCriteria']
+        | components['schemas']['CategoricalCategoryEqTestCriteria']
+        | components['schemas']['CategoricalCategoryNeqTestCriteria']
+        | components['schemas']['CategoricalCategoryOneOfTestCriteria']
+        | components['schemas']['CategoricalCategoryNotOneOfTestCriteria'];
+    };
+    EvaluatorMetadata: {
+      description?: string;
+    };
+    EvaluatorSampling: {
+      sampling_percentage: number;
+    };
+    EvaluatorFiltersArray: components['schemas']['SingleFilter'][];
+    EvaluatorFilters: {
+      filterArray: components['schemas']['EvaluatorFiltersArray'];
+    };
+    EvaluatorCodeExecution: {
+      code_snippet: string;
+    };
+    EvaluatorModel: {
+      model_provider: string;
+      model_name: string;
+    };
+    EvaluatorLLMExecution: {
+      system_prompt: string;
+    };
+    PythonEvaluatorConfig: {
+      /** @description Evaluator display name, independent of its immutable slug. */
+      name: string;
+      metadata: components['schemas']['EvaluatorMetadata'];
+      sampling: components['schemas']['EvaluatorSampling'];
+      filters: components['schemas']['EvaluatorFilters'];
+      score_schema: components['schemas']['ScoreSchema'];
+      test_criteria?: components['schemas']['EvaluatorTestCriteria'];
+      code_execution: components['schemas']['EvaluatorCodeExecution'];
+    };
+    PythonEvaluatorDefinition: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'python';
+      python: components['schemas']['PythonEvaluatorConfig'];
+    };
+    LLMEvaluatorConfig: {
+      /** @description Evaluator display name, independent of its immutable slug. */
+      name: string;
+      metadata: components['schemas']['EvaluatorMetadata'];
+      sampling: components['schemas']['EvaluatorSampling'];
+      filters: components['schemas']['EvaluatorFilters'];
+      score_schema: components['schemas']['ScoreSchema'];
+      test_criteria?: components['schemas']['EvaluatorTestCriteria'];
+      model: components['schemas']['EvaluatorModel'];
+      llm_execution: components['schemas']['EvaluatorLLMExecution'];
+    };
+    LLMEvaluatorDefinition: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'llm';
+      llm: components['schemas']['LLMEvaluatorConfig'];
+    };
+    HumanEvaluatorConfig: {
+      /** @description Evaluator display name, independent of its immutable slug. */
+      name: string;
+      metadata: components['schemas']['EvaluatorMetadata'];
+      score_schema: components['schemas']['ScoreSchema'];
+      test_criteria?: components['schemas']['EvaluatorTestCriteria'];
+    };
+    HumanEvaluatorDefinition: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'human';
+      human: components['schemas']['HumanEvaluatorConfig'];
+    };
+    /** @description Evaluator definition with type python, llm, or human and the matching configuration object under that key. */
+    EvaluatorDefinition:
+      | components['schemas']['PythonEvaluatorDefinition']
+      | components['schemas']['LLMEvaluatorDefinition']
+      | components['schemas']['HumanEvaluatorDefinition'];
+    Evaluator: {
+      id: string;
+      /** @description Immutable, case-sensitive project-unique slug containing 1–64 ASCII letters, digits, underscores or hyphens. Must not be a valid ULID, regardless of case. Cannot change after creation. */
+      slug: string;
+      is_active: boolean;
+      latest_version: number;
+      published_version: number | null;
+      version: number;
+      definition: components['schemas']['EvaluatorDefinition'];
+      message: string;
+      /** Format: date-time */
+      evaluator_created_at: string;
+      /** Format: date-time */
+      evaluator_updated_at: string;
+      /** Format: date-time */
+      version_created_at: string;
+    };
+    CreateEvaluatorRequest: {
+      /** @description Immutable, case-sensitive project-unique slug containing 1–64 ASCII letters, digits, underscores or hyphens. Must not be a valid ULID, regardless of case. Cannot change after creation. */
+      slug: string;
+      definition: components['schemas']['EvaluatorDefinition'];
+      /**
+       * @description Message for the initial version; defaults to an empty string.
+       * @default
+       */
+      message?: string;
+      /**
+       * @description Publish the saved version atomically. Requires project.evaluator.publish in addition to the operation permission.
+       * @default false
+       */
+      publish?: boolean;
+    };
+    ReplaceUpdateEvaluatorRequest: {
+      definition: components['schemas']['EvaluatorDefinition'];
+      /** @description Message for a new version; defaults to an empty string. An unchanged definition retains its existing message. */
+      message?: string;
+      /**
+       * @description Publish the saved version atomically. Requires project.evaluator.publish in addition to the operation permission.
+       * @default false
+       */
+      publish?: boolean;
+    };
+    CreateEvaluatorResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['Evaluator'];
+    };
+    GetEvaluatorResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['Evaluator'];
+    };
+    ListEvaluatorsResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['Evaluator'][];
+      pagination: components['schemas']['Pagination'];
+    };
+    ListEvaluatorVersionsResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['Evaluator'][];
+      pagination: components['schemas']['Pagination'];
+    };
+    ReplaceUpdateEvaluatorResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['Evaluator'];
+    };
+    PublishEvaluatorResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['Evaluator'];
+    };
+    UnpublishEvaluatorResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['Evaluator'];
+    };
+    DeleteEvaluatorResponse: {
+      /** @enum {boolean} */
+      success: true;
+      data: components['schemas']['Evaluator'];
     };
     /** @description Placeholder schema. The response shape for this endpoint is not yet fully specified; refer to the endpoint documentation for the fields it returns. */
     TODOSchema: {
@@ -5613,6 +6290,602 @@ export interface operations {
         content: {
           'application/json': components['schemas']['CreateIngestionApiKeyResponse'];
         };
+      };
+    };
+  };
+  createSessionDeletionRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project the sessions belong to */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateSessionDeletionRequestRequest'];
+      };
+    };
+    responses: {
+      /** @description Deletion request recorded */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreateSessionDeletionRequestResponse'];
+        };
+      };
+      /** @description The request body is invalid, for example no session ids or more than 1000. */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description No project with the given `project_id` exists in the caller's scope, or the caller's key does not carry `project.session.delete` for it. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The session deletion job is not enabled on this data plane. */
+      501: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getSessionDeletionRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project the request belongs to */
+        project_id: string;
+        /** @description The unique identifier of the deletion request */
+        deletion_request_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Deletion request retrieved */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetSessionDeletionRequestResponse'];
+        };
+      };
+      /** @description No deletion request with the given `deletion_request_id` exists in the project, or the caller's key does not carry `project.session.delete` for the project. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  listEvaluators: {
+    parameters: {
+      query?: {
+        /** @description One-based page number. (page - 1) × limit must not exceed 2147483647. */
+        page?: number;
+        /** @description Maximum number of evaluators or versions per page. */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        /** @description Project that owns the evaluator; must be within the API key root scope. */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ListEvaluatorsResponse'];
+        };
+      };
+      /** @description Invalid request or parameters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid credential */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Actor, scope or permissions denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Project not found or unavailable to the caller. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  createEvaluator: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Project that owns the evaluator; must be within the API key root scope. */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateEvaluatorRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreateEvaluatorResponse'];
+        };
+      };
+      /** @description Invalid request or parameters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid credential */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Actor, scope or permissions denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Project not found or unavailable to the caller. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description An evaluator with this slug already exists in the project. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getEvaluator: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Project that owns the evaluator; must be within the API key root scope. */
+        project_id: string;
+        /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+        evaluator_id_or_slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetEvaluatorResponse'];
+        };
+      };
+      /** @description Invalid request or parameters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid credential */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Actor, scope or permissions denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Project or evaluator not found or unavailable to the caller. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  replaceEvaluator: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Project that owns the evaluator; must be within the API key root scope. */
+        project_id: string;
+        /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+        evaluator_id_or_slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReplaceUpdateEvaluatorRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ReplaceUpdateEvaluatorResponse'];
+        };
+      };
+      /** @description Invalid request or parameters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid credential */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Actor, scope or permissions denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Project or evaluator not found or unavailable to the caller. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The evaluator is archived, or it has reached the version limit. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  archiveEvaluator: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Project that owns the evaluator; must be within the API key root scope. */
+        project_id: string;
+        /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+        evaluator_id_or_slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeleteEvaluatorResponse'];
+        };
+      };
+      /** @description Invalid request or parameters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid credential */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Actor, scope or permissions denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Project or evaluator not found or unavailable to the caller. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  listEvaluatorVersions: {
+    parameters: {
+      query?: {
+        /** @description One-based page number. (page - 1) × limit must not exceed 2147483647. */
+        page?: number;
+        /** @description Maximum number of evaluators or versions per page. */
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        /** @description Project that owns the evaluator; must be within the API key root scope. */
+        project_id: string;
+        /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+        evaluator_id_or_slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ListEvaluatorVersionsResponse'];
+        };
+      };
+      /** @description Invalid request or parameters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid credential */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Actor, scope or permissions denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Project or evaluator not found or unavailable to the caller. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getEvaluatorVersion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Project that owns the evaluator; must be within the API key root scope. */
+        project_id: string;
+        /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+        evaluator_id_or_slug: string;
+        /** @description Server-assigned evaluator version. */
+        version: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetEvaluatorResponse'];
+        };
+      };
+      /** @description Invalid request or parameters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid credential */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Actor, scope or permissions denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Project, evaluator or version not found or unavailable to the caller. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  publishEvaluator: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Project that owns the evaluator; must be within the API key root scope. */
+        project_id: string;
+        /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+        evaluator_id_or_slug: string;
+        /** @description Server-assigned evaluator version. */
+        version: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PublishEvaluatorResponse'];
+        };
+      };
+      /** @description Invalid request or parameters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid credential */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Actor, scope or permissions denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Project, evaluator or version not found or unavailable to the caller. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description The evaluator is archived. */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  unpublishEvaluator: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description Project that owns the evaluator; must be within the API key root scope. */
+        project_id: string;
+        /** @description Evaluator ULID or its immutable, case-sensitive project-unique slug. */
+        evaluator_id_or_slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UnpublishEvaluatorResponse'];
+        };
+      };
+      /** @description Invalid request or parameters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Missing or invalid credential */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Actor, scope or permissions denied */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Project or evaluator not found or unavailable to the caller. */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };
@@ -7902,7 +9175,7 @@ export interface operations {
       };
     };
   };
-  getConfigurations: {
+  getConfigurationsLegacy: {
     parameters: {
       query?: {
         /** @description The name of the configuration like `v0` */
@@ -7949,6 +9222,36 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['CreateConfigurationResponse'];
+        };
+      };
+    };
+  };
+  getConfigurations: {
+    parameters: {
+      query?: {
+        /** @description The name of the configuration like `v0` */
+        name?: string;
+        /** @description Environment - "dev", "staging" or "prod" */
+        env?: string;
+        /** @description Tags to filter configurations */
+        tags?: string;
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project whose configurations are listed */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Configurations retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetConfigurationsResponse'];
         };
       };
     };

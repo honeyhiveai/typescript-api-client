@@ -1,5 +1,19 @@
 # TypeScript API SDK Changelog
 
+## [1.8.0] - 2026-11-18
+
+### What's New
+- New `client.evaluators` namespace for managing evaluators in a project: `list`, `create`, `get`, `replace`, `archive`, `listVersions`, `getVersion`, `publish`, and `unpublish`. Every method needs `project_id` and a data plane API key (`dataPlaneApiKey` / `HH_DATA_PLANE_API_KEY`), and never falls back to the project API key.
+- New exported evaluator types: `ListEvaluatorsRequest`/`Response`, `CreateEvaluatorRequest`/`Response`, `GetEvaluatorRequest`/`Response`, `ReplaceEvaluatorRequest`/`Response`, `ArchiveEvaluatorRequest`/`Response`, `ListEvaluatorVersionsRequest`/`Response`, `GetEvaluatorVersionRequest`/`Response`, `PublishEvaluatorRequest`/`Response`, and `UnpublishEvaluatorRequest`/`Response`.
+- New `client.sessions.createDeletionRequest()` requests deletion of up to 1000 sessions in a project and returns a request id. New `client.sessions.getDeletionRequest()` returns the request status and `session_counts`. Both need `project_id`, a data plane API key, and the `project.session.delete` permission. A self-hosted data plane where session deletion is not enabled returns `501`.
+- New exported types `CreateSessionDeletionRequestRequest`/`Response` and `GetSessionDeletionRequestRequest`/`Response`. The request status `partially_failed` is reserved and is not returned yet. Treat it as a final status.
+
+### Fixes & Improvements
+- `ignore_order: true` on event search and event export now takes effect. Events within a page can return in storage read order rather than by start time, which is faster on large pages. Earlier releases accepted the field and ignored it. Which events a page contains is unchanged.
+
+### Compatibility & Deprecations
+- If you send `ignore_order: true` and depend on the order of returned events, sort them yourself or stop sending the field. If you omit the field or send `false`, events stay ordered by start time, newest first.
+
 ## [1.7.0] - 2026-10-30
 
 ### What's New

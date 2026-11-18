@@ -6,6 +6,8 @@ import { type paths } from './types.js';
 import {
   type CreateSessionRequest,
   type CreateSessionEventBatchRequest,
+  type CreateSessionDeletionRequestRequest,
+  type GetSessionDeletionRequestRequest,
   type CreateEventRequest,
   type GetEventRequest,
   type UpdateEventRequest,
@@ -19,6 +21,15 @@ import {
   type QueryChartRequest,
   type CreateDataPlaneApiKeyRequest,
   type CreateIngestionApiKeyRequest,
+  type ListEvaluatorsRequest,
+  type CreateEvaluatorRequest,
+  type GetEvaluatorRequest,
+  type ReplaceEvaluatorRequest,
+  type ArchiveEvaluatorRequest,
+  type ListEvaluatorVersionsRequest,
+  type GetEvaluatorVersionRequest,
+  type PublishEvaluatorRequest,
+  type UnpublishEvaluatorRequest,
   type GetMetricsRequest,
   type CreateMetricRequest,
   type UpdateMetricRequest,
@@ -52,6 +63,8 @@ import {
   type GetExperimentCompareEventsRequest,
   type CreateSessionResponse,
   type CreateSessionEventBatchResponse,
+  type CreateSessionDeletionRequestResponse,
+  type GetSessionDeletionRequestResponse,
   type CreateEventResponse,
   type GetEventResponse,
   type SearchEventsResponse,
@@ -64,6 +77,15 @@ import {
   type QueryChartResponse,
   type CreateDataPlaneApiKeyResponse,
   type CreateIngestionApiKeyResponse,
+  type ListEvaluatorsResponse,
+  type CreateEvaluatorResponse,
+  type GetEvaluatorResponse,
+  type ReplaceEvaluatorResponse,
+  type ArchiveEvaluatorResponse,
+  type ListEvaluatorVersionsResponse,
+  type GetEvaluatorVersionResponse,
+  type PublishEvaluatorResponse,
+  type UnpublishEvaluatorResponse,
   type GetMetricsResponse,
   type CreateMetricResponse,
   type UpdateMetricResponse,
@@ -196,6 +218,45 @@ class SessionsNamespace {
       httpClient.POST('/v1/sessions/{session_id}/events/batch', {
         params: { path: { session_id } },
         body,
+        ...options,
+      }),
+    );
+  }
+
+  /**
+   * Request deletion of sessions
+   *
+   * Request deletion of up to 1000 sessions in a project, by session id. The call records the request and returns at once with a request id. A scheduled job then deletes the sessions, so read the request to follow its progress. A session id that does not exist completes as a no-op. A session is `completed` when its data is deleted from object storage and the session is hidden from every query. The physical removal from the query store follows in a daily purge. The caller's key must carry `project.session.delete` for the project. Session deletion is opt-in on a self-hosted data plane: on a data plane where the session deletion job is not enabled, this operation answers 501.
+   */
+  public createDeletionRequest(
+    request: CreateSessionDeletionRequestRequest,
+    options?: FetchOptions,
+  ): Promise<CreateSessionDeletionRequestResponse> {
+    const { project_id, ...body } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.POST('/v1/projects/{project_id}/sessions/deletion_requests', {
+        params: { path: { project_id } },
+        body,
+        ...options,
+      }),
+    );
+  }
+
+  /**
+   * Get a session deletion request
+   *
+   * Retrieve the status of a session deletion request and how many of its sessions are pending, processing, completed or failed. `pending` and `processing` mean work remains, and every other status is final. `completed` means every session is deleted from object storage and hidden from every query, before the daily purge removes them from the query store. `failed` means at least one session failed, and other sessions in the request can be completed, so read `session_counts` for the number in each state. The caller's key must carry `project.session.delete` for the project.
+   */
+  public getDeletionRequest(
+    request: GetSessionDeletionRequestRequest,
+    options?: FetchOptions,
+  ): Promise<GetSessionDeletionRequestResponse> {
+    const { project_id, deletion_request_id } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.GET('/v1/projects/{project_id}/sessions/deletion_requests/{deletion_request_id}', {
+        params: { path: { project_id, deletion_request_id } },
         ...options,
       }),
     );
@@ -650,6 +711,185 @@ class IngestionApiKeysNamespace {
       httpClient.POST('/v1/projects/{project_id}/ingestion_api_keys', {
         params: { path: { project_id } },
         body,
+        ...options,
+      }),
+    );
+  }
+}
+
+/** @inline */
+class EvaluatorsNamespace {
+  #clients: ApiClients;
+
+  constructor(clients: ApiClients) {
+    this.#clients = clients;
+  }
+
+  /**
+   * List evaluators
+   *
+   * List active evaluators using their latest definitions. Archived evaluators are excluded. Requires project.evaluator.list.
+   */
+  public list(
+    request: ListEvaluatorsRequest,
+    options?: FetchOptions,
+  ): Promise<ListEvaluatorsResponse> {
+    const { project_id, page, limit } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.GET('/v1/projects/{project_id}/evaluators', {
+        params: { path: { project_id }, query: { page, limit } },
+        ...options,
+      }),
+    );
+  }
+
+  /**
+   * Create an evaluator
+   *
+   * Create a project-scoped evaluator and immutable version 1. Slugs are unique within a project and cannot subsequently be changed. Requires project.evaluator.post; publish=true additionally requires project.evaluator.publish.
+   */
+  public create(
+    request: CreateEvaluatorRequest,
+    options?: FetchOptions,
+  ): Promise<CreateEvaluatorResponse> {
+    const { project_id, ...body } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.POST('/v1/projects/{project_id}/evaluators', {
+        params: { path: { project_id } },
+        body,
+        ...options,
+      }),
+    );
+  }
+
+  /**
+   * Get the latest evaluator version
+   *
+   * Return the latest definition with current lifecycle state, including archived evaluators. Requires project.evaluator.get.
+   */
+  public get(request: GetEvaluatorRequest, options?: FetchOptions): Promise<GetEvaluatorResponse> {
+    const { project_id, evaluator_id_or_slug } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.GET('/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}', {
+        params: { path: { project_id, evaluator_id_or_slug } },
+        ...options,
+      }),
+    );
+  }
+
+  /**
+   * Replace an evaluator definition
+   *
+   * Replace the complete definition of an active evaluator. A changed definition creates the next server-assigned version; an identical definition retains its version and message. Requires project.evaluator.update; publish=true additionally requires project.evaluator.publish. Archived evaluators return 409.
+   */
+  public replace(
+    request: ReplaceEvaluatorRequest,
+    options?: FetchOptions,
+  ): Promise<ReplaceEvaluatorResponse> {
+    const { project_id, evaluator_id_or_slug, ...body } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.PUT('/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}', {
+        params: { path: { project_id, evaluator_id_or_slug } },
+        body,
+        ...options,
+      }),
+    );
+  }
+
+  /**
+   * Archive an evaluator
+   *
+   * Archive and unpublish the evaluator, preserving its slug and immutable history. Repeated archival succeeds without changing its timestamps. Requires project.evaluator.delete.
+   */
+  public archive(
+    request: ArchiveEvaluatorRequest,
+    options?: FetchOptions,
+  ): Promise<ArchiveEvaluatorResponse> {
+    const { project_id, evaluator_id_or_slug } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.DELETE('/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}', {
+        params: { path: { project_id, evaluator_id_or_slug } },
+        ...options,
+      }),
+    );
+  }
+
+  /**
+   * List evaluator versions
+   *
+   * List immutable definitions in descending version order, including archived evaluators. Each item includes current evaluator lifecycle state. Requires project.evaluator.list.
+   */
+  public listVersions(
+    request: ListEvaluatorVersionsRequest,
+    options?: FetchOptions,
+  ): Promise<ListEvaluatorVersionsResponse> {
+    const { project_id, evaluator_id_or_slug, page, limit } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.GET('/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}/versions', {
+        params: { path: { project_id, evaluator_id_or_slug }, query: { page, limit } },
+        ...options,
+      }),
+    );
+  }
+
+  /**
+   * Get a specific evaluator version
+   *
+   * Return the requested immutable definition with current evaluator lifecycle state. The selected version may differ from latest_version and published_version. Requires project.evaluator.get.
+   */
+  public getVersion(
+    request: GetEvaluatorVersionRequest,
+    options?: FetchOptions,
+  ): Promise<GetEvaluatorVersionResponse> {
+    const { project_id, evaluator_id_or_slug, version } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.GET(
+        '/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}/versions/{version}',
+        { params: { path: { project_id, evaluator_id_or_slug, version } }, ...options },
+      ),
+    );
+  }
+
+  /**
+   * Publish an evaluator version
+   *
+   * Select an existing version for automatic evaluation. Repeated publication of the same version is a no-op. Archived evaluators return 409. Requires project.evaluator.publish.
+   */
+  public publish(
+    request: PublishEvaluatorRequest,
+    options?: FetchOptions,
+  ): Promise<PublishEvaluatorResponse> {
+    const { project_id, evaluator_id_or_slug, version } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.POST(
+        '/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}/versions/{version}/publish',
+        { params: { path: { project_id, evaluator_id_or_slug, version } }, ...options },
+      ),
+    );
+  }
+
+  /**
+   * Unpublish an evaluator
+   *
+   * Clear the publication pointer without changing definitions or history. Already-unpublished and archived evaluators succeed. Requires project.evaluator.publish.
+   */
+  public unpublish(
+    request: UnpublishEvaluatorRequest,
+    options?: FetchOptions,
+  ): Promise<UnpublishEvaluatorResponse> {
+    const { project_id, evaluator_id_or_slug } = request;
+    const httpClient = this.#clients.DataPlaneApiKey;
+    return unwrap(
+      httpClient.POST('/v1/projects/{project_id}/evaluators/{evaluator_id_or_slug}/unpublish', {
+        params: { path: { project_id, evaluator_id_or_slug } },
         ...options,
       }),
     );
@@ -1600,6 +1840,7 @@ export class Client {
   readonly charts: ChartsNamespace;
   readonly dataPlaneApiKeys: DataPlaneApiKeysNamespace;
   readonly ingestionApiKeys: IngestionApiKeysNamespace;
+  readonly evaluators: EvaluatorsNamespace;
   readonly metrics: MetricsNamespace;
   readonly metricVersions: MetricVersionsNamespace;
   readonly datapoints: DatapointsNamespace;
@@ -1613,6 +1854,7 @@ export class Client {
     this.charts = new ChartsNamespace(this.#clients);
     this.dataPlaneApiKeys = new DataPlaneApiKeysNamespace(this.#clients);
     this.ingestionApiKeys = new IngestionApiKeysNamespace(this.#clients);
+    this.evaluators = new EvaluatorsNamespace(this.#clients);
     this.metrics = new MetricsNamespace(this.#clients);
     this.metricVersions = new MetricVersionsNamespace(this.#clients);
     this.datapoints = new DatapointsNamespace(this.#clients);

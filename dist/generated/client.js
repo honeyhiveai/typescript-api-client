@@ -592,14 +592,26 @@ class EvaluatorsNamespace {
 /** @inline */
 class MetricsNamespace {
     #clients;
+    #deprecationWarned = new Set();
     constructor(clients) {
         this.#clients = clients;
     }
     /** List all metrics */
     list(request, options) {
-        const { type, id } = request ?? {};
-        const httpClient = this.#clients.BearerAuth;
-        return unwrap(httpClient.GET('/v1/metrics', { params: { query: { type, id } }, ...options }));
+        const { project_id, type, id } = request ?? {};
+        if (project_id === undefined) {
+            if (!this.#deprecationWarned.has('getMetrics')) {
+                this.#deprecationWarned.add('getMetrics');
+                console.warn('[@honeyhive/api-client] Calling metrics.list without project_id is deprecated and will be removed in the next major version. Pass project_id with a data plane API key instead.');
+            }
+            const flatClient = this.#clients.BearerAuth;
+            return unwrap(flatClient.GET('/v1/metrics', { params: { query: { type, id } }, ...options }));
+        }
+        const scopedClient = this.#clients.DataPlaneApiKey;
+        return unwrap(scopedClient.GET('/v1/projects/{project_id}/metrics', {
+            params: { path: { project_id }, query: { type, id } },
+            ...options,
+        }));
     }
     /** Create a new metric */
     create(request, options) {

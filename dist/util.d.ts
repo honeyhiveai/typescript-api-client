@@ -25,12 +25,12 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
      * and events: creating sessions and writing events. Defaults to the
      * `HH_INGESTION_API_KEY` environment variable. A process that only sends
      * traces and events holds this key alone; every other operation then
-     * throws a `MissingApiKeyError`, as it does on a client with no project
+     * throws a `MissingApiKeyError`, as it does on a client with no classic
      * API key configured.
      *
      * A value that is set but is not an ingestion key throws at construction.
-     * For compatibility, a client with a project API key and no ingestion key
-     * sends the project key on the ingestion operations too.
+     * For compatibility, a client with a classic API key and no ingestion key
+     * sends the classic key on the ingestion operations too.
      */
     ingestionApiKey?: string;
     /**
@@ -42,7 +42,7 @@ export interface ClientConfig extends Omit<ClientOptions, 'baseUrl' | 'headers'>
      * A value that is set but is not a fine-grained data plane key throws at
      * construction. Without a data plane key, those operations throw a
      * `MissingApiKeyError` before sending, whatever other key is configured,
-     * because they refuse the project key. A caller-supplied `Authorization`
+     * because they refuse the classic key. A caller-supplied `Authorization`
      * header or middleware is sent in its place.
      */
     dataPlaneApiKey?: string;

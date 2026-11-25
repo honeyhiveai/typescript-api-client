@@ -147,7 +147,7 @@ export function createApiClient(options) {
     // redacts a malformed typed key wholesale.
     if (resolvedVerbose) {
         console.error(`Data plane URL: ${resolvedDataPlaneUrl}`);
-        console.error(`Project API key: ${resolvedApiKey ? maskApiKey(resolvedApiKey) : '(none)'}`);
+        console.error(`Classic API key: ${resolvedApiKey ? maskApiKey(resolvedApiKey) : '(none)'}`);
         console.error(`Ingestion API key: ${rawIngestionApiKey ? maskApiKey(rawIngestionApiKey) : '(none)'}`);
         console.error(`Data plane API key: ${rawDataPlaneApiKey ? maskApiKey(rawDataPlaneApiKey) : '(none)'}`);
         console.error(`Package: ${provenance.package} v${provenance.version}`);

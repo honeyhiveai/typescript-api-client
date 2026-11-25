@@ -18,7 +18,7 @@ export type ApiKeyKind = 'project' | 'ingestion' | 'dataPlane';
 
 const MISSING_API_KEY_MESSAGES: Readonly<Record<ApiKeyKind, string>> = {
   project:
-    'Missing project API key: provide projectApiKey in options or set the HH_PROJECT_API_KEY environment variable',
+    'Missing classic API key: provide projectApiKey in options or set the HH_PROJECT_API_KEY environment variable',
   ingestion:
     'Missing ingestion API key: provide ingestionApiKey in options or set the HH_INGESTION_API_KEY environment variable',
   dataPlane:
@@ -27,7 +27,7 @@ const MISSING_API_KEY_MESSAGES: Readonly<Record<ApiKeyKind, string>> = {
 
 /**
  * Thrown by an operation when no key it can use is configured, before any
- * request is sent. An ingestion operation uses the project API key when no
+ * request is sent. An ingestion operation uses the classic API key when no
  * ingestion key is configured, so it names the ingestion key only when neither
  * is. An operation that takes the data plane key accepts no other key, so it
  * names the data plane key whenever that key is absent. No operation throws it

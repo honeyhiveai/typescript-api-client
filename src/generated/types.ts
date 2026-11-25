@@ -763,8 +763,12 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List all metrics */
-    get: operations['getMetrics'];
+    /**
+     * List all metrics (deprecated)
+     * @deprecated
+     * @description Deprecated. Use `GET /v1/projects/{project_id}/metrics` with a data plane API key instead.
+     */
+    get: operations['getMetricsLegacy'];
     /**
      * Update an existing metric (deprecated)
      * @deprecated
@@ -779,6 +783,23 @@ export interface paths {
      * @description Deprecated. Use `DELETE /v1/metrics/{metric_id}` instead.
      */
     delete: operations['deleteMetricLegacy'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/projects/{project_id}/metrics': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List all metrics */
+    get: operations['getMetrics'];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2696,6 +2717,9 @@ export interface components {
       metrics?: {
         [key: string]: unknown;
       };
+      evaluations?: {
+        [key: string]: unknown;
+      };
       metadata?: {
         [key: string]: unknown;
       };
@@ -3961,6 +3985,9 @@ export interface components {
       event_name?: string;
       event_type?: string;
       metrics?: {
+        [key: string]: unknown;
+      };
+      evaluations?: {
         [key: string]: unknown;
       };
       metadata?: {
@@ -6889,7 +6916,7 @@ export interface operations {
       };
     };
   };
-  getMetrics: {
+  getMetricsLegacy: {
     parameters: {
       query?: {
         /** @description Filter by metric type */
@@ -6980,6 +7007,34 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['DeleteMetricResponse'];
+        };
+      };
+    };
+  };
+  getMetrics: {
+    parameters: {
+      query?: {
+        /** @description Filter by metric type */
+        type?: string;
+        /** @description Filter by specific metric ID */
+        id?: string;
+      };
+      header?: never;
+      path: {
+        /** @description The unique identifier of the project whose metrics are listed */
+        project_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Metrics retrieved successfully */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetMetricsResponse'];
         };
       };
     };

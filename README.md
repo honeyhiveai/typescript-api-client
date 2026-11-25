@@ -112,7 +112,7 @@ The HoneyHive API authenticates requests using an API key sent as a Bearer token
 
 See [API Keys](https://docs.honeyhive.ai/v2/workspace/api-keys) to create the credentials your workload needs. You can also authenticate through [custom middleware](#custom-middleware).
 
-> **Compatibility:** a client configured with a project API key alone still sends it on the ingestion operations too, so existing setups keep working. New setups should give ingestion its own key.
+> **Compatibility:** a client configured with a classic API key alone still sends it on the ingestion operations too, so existing setups keep working. New setups should give ingestion its own key.
 
 ### Data plane API key
 
@@ -131,9 +131,9 @@ console.log(charts.data);
 
 This example requires `project.chart.list`. Copy the project ID and data plane URL from **Settings > Project > API Keys > Data Plane**. Configure a non-default URL with `HH_DATA_PLANE_URL` or `dataPlaneUrl`.
 
-For a method with both legacy and scoped routes, omitting `project_id` selects the legacy route and project key, even if a data plane key is configured. Omitting `project_id` from such a method is deprecated. Passing `project_id` selects the scoped route and requires a data plane key; there is no project-key fallback. See the [credential matrix](https://docs.honeyhive.ai/v2/workspace/api-keys#using-a-data-plane-key).
+For a method with both legacy and scoped routes, omitting `project_id` selects the legacy route and classic key, even if a data plane key is configured. Omitting `project_id` from such a method is deprecated. Passing `project_id` selects the scoped route and requires a data plane key; there is no classic-key fallback. See the [credential matrix](https://docs.honeyhive.ai/v2/workspace/api-keys#using-a-data-plane-key).
 
-Data plane keys cannot send traces. Keep an ingestion key for telemetry and a project key for operations that still require it. A wrong key type or incomplete value in `dataPlaneApiKey` or `HH_DATA_PLANE_API_KEY` throws a `MalformedApiKeyError` at client construction, even if no operation uses that key. Without [custom authentication](#custom-middleware), an operation whose required key is absent throws a `MissingApiKeyError` before sending a request.
+Data plane keys cannot send traces. Keep an ingestion key for telemetry and a classic key for operations that still require it. A wrong key type or incomplete value in `dataPlaneApiKey` or `HH_DATA_PLANE_API_KEY` throws a `MalformedApiKeyError` at client construction, even if no operation uses that key. Without [custom authentication](#custom-middleware), an operation whose required key is absent throws a `MissingApiKeyError` before sending a request.
 
 ### Evaluator management
 
@@ -149,7 +149,7 @@ const evaluator = await client.evaluators.get({
 
 The `evaluators` namespace provides `create`, `list`, `get`, `replace`, `listVersions`, `getVersion`, `publish`, `unpublish`, and `archive`. PUT uses `replace` to save the complete definition. Grant the matching `project.evaluator.*` permissions; create/replace with `publish: true` also requires `project.evaluator.publish`.
 
-### Project API key
+### Classic API key
 
 #### Environment variable (recommended)
 
@@ -263,7 +263,7 @@ Set `verbose: true` (or the `HH_VERBOSE` environment variable to `true`) to log 
 ```typescript
 const client = new Client({ verbose: true });
 // Data plane URL: https://api.dp1.us.honeyhive.ai
-// Project API key: hh_****5Qrg
+// Classic API key: hh_****5Qrg
 // Ingestion API key: hh_ingst_Ab12Cd34Ef56Gh78Ij90Kl12_******
 // Data plane API key: hh_fgdp_Ab12Cd34Ef56Gh78Ij90Kl12_******
 // Package: @honeyhive/api-client v1.0.0
@@ -273,4 +273,4 @@ const client = new Client({ verbose: true });
 HH_VERBOSE=true node my-script.js
 ```
 
-Output is written via `console.error` (stderr in Node, devtools in the browser) and only fires once per client construction. An explicit `verbose: false` overrides `HH_VERBOSE`. All three credential slots are logged; a credential that is not configured logs as `(none)`. A classic project API key shows a recognized prefix and the last 4 characters. Ingestion and data plane fine-grained keys show their prefix and key id with the secret replaced by `******`, matching the masked forms shown in the HoneyHive app. A typed key with a missing or malformed key id is replaced entirely with asterisks.
+Output is written via `console.error` (stderr in Node, devtools in the browser) and only fires once per client construction. An explicit `verbose: false` overrides `HH_VERBOSE`. All three credential slots are logged; a credential that is not configured logs as `(none)`. A classic API key shows a recognized prefix and the last 4 characters. Ingestion and data plane fine-grained keys show their prefix and key id with the secret replaced by `******`, matching the masked forms shown in the HoneyHive app. A typed key with a missing or malformed key id is replaced entirely with asterisks.

@@ -402,6 +402,10 @@ export interface UnpublishEvaluatorRequest {
 }
 
 export interface GetMetricsRequest {
+  /**
+   * @description The unique identifier of the project whose metrics are listed. Omitting it is deprecated, and it becomes required in the next major version. Pass it with a data plane API key.
+   */
+  project_id?: string;
   /** @description Filter by metric type */
   type?: string;
   /** @description Filter by specific metric ID */
@@ -2125,6 +2129,9 @@ export type Event = {
   metrics?: {
     [key: string]: unknown;
   };
+  evaluations?: {
+    [key: string]: unknown;
+  };
   metadata?: {
     [key: string]: unknown;
   };
@@ -3241,6 +3248,9 @@ export type PostSessionRequest = {
   event_name?: string;
   event_type?: string;
   metrics?: {
+    [key: string]: unknown;
+  };
+  evaluations?: {
     [key: string]: unknown;
   };
   metadata?: {

@@ -1,5 +1,18 @@
 # TypeScript API SDK Changelog
 
+## [1.9.0] - 2026-11-25
+
+### What's New
+- `client.metrics.list()` accepts an optional `project_id`. With `project_id`, it lists that project's metrics through the project-scoped route and uses the data plane API key (`dataPlaneApiKey` / `HH_DATA_PLANE_API_KEY`). It never falls back to the classic API key.
+- `Event` and `PostSessionRequest` have a new optional `evaluations` field, which holds evaluation results recorded on an event or session.
+
+### Fixes & Improvements
+- `MissingApiKeyError` messages and `verbose` output now call the key configured by `projectApiKey` / `HH_PROJECT_API_KEY` a "classic API key". The option and the environment variable keep their names. If you match on the message text or the `Project API key:` verbose line, update the match.
+- Upgraded the `axios` runtime dependency to 1.21.1. That version pulls in a fixed `follow-redirects` release for a published security advisory.
+
+### Compatibility & Deprecations
+- Calling `client.metrics.list()` without `project_id` is deprecated. It logs a one-time `console.warn` and still uses the legacy route with the classic API key. Pass `project_id` with a data plane API key before the next major version, which makes `project_id` required.
+
 ## [1.8.0] - 2026-11-18
 
 ### What's New
